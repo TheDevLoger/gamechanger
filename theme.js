@@ -17,11 +17,7 @@
 
   window.addEventListener("DOMContentLoaded", () => {
     const theme = localStorage.getItem("theme") || "retro";
-    const link = document.createElement("link");
-    link.id = "theme-link";
-    link.rel = "stylesheet";
-    link.href = THEMES[theme];
-    document.head.appendChild(link);
+    document.getElementById("theme-link").setAttribute("href", THEMES[theme]);
   });
 </script>
 
