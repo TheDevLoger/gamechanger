@@ -46,7 +46,21 @@
             const logoutTime = Date.now();
             const duration = logoutTime - loginTime;
 
-            // Bestehende Summe holen (oder 0) und neue Zeit addieren
+            // Benutzername auslesen
+            const user = localStorage.getItem("eingeloggt");
+
+            // Datum im Format YYYY-MM-DD
+            const today = new Date().toISOString().split("T")[0];
+
+            const protokollKey = "zeitprotokoll_" + user;
+            const protokoll = JSON.parse(localStorage.getItem(protokollKey)) || {};
+
+            // Addiere zur heutigen Zeit
+            protokoll[today] = (protokoll[today] || 0) + duration;
+
+            localStorage.setItem(protokollKey, JSON.stringify(protokoll));
+
+            // Für Gesamtsumme (falls weiterhin verwendet)
             const key = "gesamtzeit_" + user;
             const previous = parseInt(localStorage.getItem(key)) || 0;
             localStorage.setItem(key, previous + duration);
@@ -55,6 +69,7 @@
             localStorage.removeItem("loginZeit");
             window.location.href = "index.html";
         }
+
 
         setInterval(updateTime, 1000);
         updateTime();

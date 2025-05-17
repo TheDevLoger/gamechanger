@@ -18,46 +18,92 @@
 
     <button onclick="logout()">Logout</button>
 
-    <script>const user = localStorage.getItem("eingeloggt");
-    if (user !== "Admin") {
-      window.location.href = "index.html";
-    }
+    <script>
+    const user = localStorage.getItem("eingeloggt");
+        if (user !== "Admin") {
+            window.location.href = "index.html";
+        }
 
-    function logout() {
-      localStorage.removeItem("eingeloggt");
-      localStorage.removeItem("loginZeit");
-      window.location.href = "index.html";
-    }
+        function logout() {
+            localStorage.removeItem("eingeloggt");
+            localStorage.removeItem("loginZeit");
+            window.location.href = "index.html";
+        }
 
-    function formatTime(ms) {
-      const sec = Math.floor(ms / 1000) % 60;
-      const min = Math.floor(ms / (1000 * 60)) % 60;
-      const hrs = Math.floor(ms / (1000 * 60 * 60));
-      return `${hrs.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
-    }
+        function formatTime(ms) {
+            const sec = Math.floor(ms / 1000) % 60;
+            const min = Math.floor(ms / (1000 * 60)) % 60;
+            const hrs = Math.floor(ms / (1000 * 60 * 60));
+            return `${hrs.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+        }
 
-    function updateStats() {
-      const aTotal = parseInt(localStorage.getItem("gesamtzeit_BenutzerA")) || 0;
-      const bTotal = parseInt(localStorage.getItem("gesamtzeit_BenutzerB")) || 0;
+        function updateStats() {
+            const aTotal = parseInt(localStorage.getItem("gesamtzeit_BenutzerA")) || 0;
+            const bTotal = parseInt(localStorage.getItem("gesamtzeit_BenutzerB")) || 0;
 
-      const currentUser = localStorage.getItem("eingeloggt");
-      const loginTime = localStorage.getItem("loginZeit");
+            const currentUser = localStorage.getItem("eingeloggt");
+            const loginTime = localStorage.getItem("loginZeit");
 
-      let aLive = 0;
-      let bLive = 0;
+            let aLive = 0;
+            let bLive = 0;
 
-      if (currentUser === "BenutzerA" && loginTime) {
-        aLive = Date.now() - parseInt(loginTime);
-      }
-      if (currentUser === "BenutzerB" && loginTime) {
-        bLive = Date.now() - parseInt(loginTime);
-      }
+            if (currentUser === "BenutzerA" && loginTime) {
+                aLive = Date.now() - parseInt(loginTime);
+            }
+            if (currentUser === "BenutzerB" && loginTime) {
+                bLive = Date.now() - parseInt(loginTime);
+            }
 
-      document.getElementById("a-time").textContent = formatTime(aTotal + aLive);
-      document.getElementById("b-time").textContent = formatTime(bTotal + bLive);
-    }
+            document.getElementById("a-time").textContent = formatTime(aTotal + aLive);
+            document.getElementById("b-time").textContent = formatTime(bTotal + bLive);
+        }
 
-    setInterval(updateStats, 1000);
-    updateStats();</script>
+        function updateDaily(user, elementId) {
+            const protokoll = JSON.parse(localStorage.getItem("zeitprotokoll_" + user)) || {};
+            const container = document.getElementById(elementId);
+            container.innerHTML = `<h3>${user}</h3>`;
+
+            const sortedDates = Object.keys(protokoll).sort();
+            for (const date of sortedDates) {
+                const time = protokoll[date];
+                const p = document.createElement("p");
+                p.textContent = `${date}: ${formatTime(time)}`;
+                container.appendChild(p);
+            }
+        }
+
+        function updateStats() {
+            const aTotal = parseInt(localStorage.getItem("gesamtzeit_BenutzerA")) || 0;
+            const bTotal = parseInt(localStorage.getItem("gesamtzeit_BenutzerB")) || 0;
+
+            const currentUser = localStorage.getItem("eingeloggt");
+            const loginTime = localStorage.getItem("loginZeit");
+
+            let aLive = 0;
+            let bLive = 0;
+
+            if (currentUser === "BenutzerA" && loginTime) {
+                aLive = Date.now() - parseInt(loginTime);
+            }
+            if (currentUser === "BenutzerB" && loginTime) {
+                bLive = Date.now() - parseInt(loginTime);
+            }
+
+            document.getElementById("a-time").textContent = formatTime(aTotal + aLive);
+            document.getElementById("b-time").textContent = formatTime(bTotal + bLive);
+
+            // Neue Tagesübersichten
+            updateDaily("BenutzerA", "tage-a");
+            updateDaily("BenutzerB", "tage-b");
+        }
+
+        setInterval(updateStats, 1000);
+        updateStats();
+    </script>
+
+    <h2>Tagesübersicht</h2>
+    <div id="tage-a"></div>
+    <div id="tage-b"></div>
+
 </body>
 </html>
