@@ -1,68 +1,72 @@
+/* === Google Fonts für Retro-Look === */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap');
+
 /* === Grundlayout === */
 body {
     margin: 0;
     padding: 0;
-    font-family: 'Inter', 'Segoe UI', sans-serif;
-    background-color: #f4f6f8;
-    color: #333;
+    font-family: 'Share Tech Mono', monospace;
+    background-color: #0f0f1c;
+    color: #f2f2f2;
 }
 
 /* === Containerzentrierung === */
 .container {
-    max-width: 800px;
+    max-width: 900px;
     margin: 0 auto;
     padding: 2rem;
 }
 
 /* === Überschriften === */
 h1, h2, h3 {
-    color: #1976d2;
-    margin-bottom: 1rem;
+    font-family: 'Press Start 2P', cursive;
+    color: #ff2cc2;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 0 5px #ff2cc2;
 }
 
-/* === Standardtext === */
-p {
-    margin: 0.5rem 0;
-    line-height: 1.5;
-}
-
-/* === Buttons === */
+/* === Buttons mit Neon-Effekt === */
 button {
-    background-color: #1976d2;
-    color: white;
-    border: none;
-    padding: 0.75rem 1.25rem;
-    border-radius: 8px;
+    background-color: transparent;
+    color: #24ffe2;
+    border: 2px solid #24ffe2;
+    padding: 0.75rem 1.5rem;
     font-size: 1rem;
+    font-family: 'Share Tech Mono', monospace;
+    border-radius: 10px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
-    margin: 0.5rem 0;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 10px #24ffe2, 0 0 20px #24ffe2 inset;
 }
 
     button:hover {
-        background-color: #1565c0;
+        background-color: #24ffe2;
+        color: #0f0f1c;
+        box-shadow: 0 0 20px #24ffe2, 0 0 40px #24ffe2;
     }
 
-/* === Card-Komponenten === */
+/* === Karten für Datenanzeige === */
 .card {
-    background-color: #fff;
+    background-color: #1c1c2b;
+    border: 1px solid #ff2cc2;
     border-radius: 12px;
     padding: 1.5rem;
     margin: 1rem 0;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 0 10px #ff2cc2;
 }
 
-/* === Tabellen / Listenansicht für Zeiterfassung === */
+/* === Zeiteinträge im Stil eines Terminals === */
 #tage-a p, #tage-b p {
-    font-family: monospace;
-    background: #fff;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    margin: 0.25rem 0;
-    box-shadow: inset 0 0 3px rgba(0,0,0,0.05);
+    background: #1c1c2b;
+    color: #24ffe2;
+    font-family: 'Share Tech Mono', monospace;
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+    border-left: 4px solid #ff2cc2;
+    box-shadow: inset 0 0 8px #ff2cc288;
 }
 
-/* === Responsive Verhalten (mobile first) === */
+/* === Responsive Verhalten === */
 @media (max-width: 600px) {
     .container {
         padding: 1rem;
