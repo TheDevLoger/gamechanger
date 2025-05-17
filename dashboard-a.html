@@ -41,6 +41,21 @@
             }
         }
 
+        function logout() {
+            const loginTime = parseInt(localStorage.getItem("loginZeit"));
+            const logoutTime = Date.now();
+            const duration = logoutTime - loginTime;
+
+            // Bestehende Summe holen (oder 0) und neue Zeit addieren
+            const key = "gesamtzeit_" + user;
+            const previous = parseInt(localStorage.getItem(key)) || 0;
+            localStorage.setItem(key, previous + duration);
+
+            localStorage.removeItem("eingeloggt");
+            localStorage.removeItem("loginZeit");
+            window.location.href = "index.html";
+        }
+
         setInterval(updateTime, 1000);
         updateTime();
     </script>

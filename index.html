@@ -12,6 +12,7 @@
     <div class="login-buttons">
         <button onclick="login('BenutzerA')">Login als Benutzer A</button>
         <button onclick="login('BenutzerB')">Login als Benutzer B</button>
+        <button onclick="login('Admin')">Login als Admin</button>
     </div>
 
     <script>
@@ -28,12 +29,14 @@
     <script>
         function login(user) {
             localStorage.setItem("eingeloggt", user);
-            localStorage.setItem("loginZeit", Date.now()); // Speichere Login-Zeit
+            localStorage.setItem("loginZeit", Date.now());
 
             if (user === "BenutzerA") {
                 window.location.href = "dashboard-a.html";
             } else if (user === "BenutzerB") {
                 window.location.href = "dashboard-b.html";
+            } else if (user === "Admin") {
+                window.location.href = "dashboard-admin.html";
             }
         }
     </script>

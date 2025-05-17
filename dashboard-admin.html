@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <h1>Admin Dashboard</h1>
+    <p>Übersicht der Benutzeraktivität</p>
+
+    <div id="user-stats">
+        <h3>Benutzer A</h3>
+        <p>Gesamtzeit: <span id="a-time">00:00:00</span></p>
+        <h3>Benutzer B</h3>
+        <p>Gesamtzeit: <span id="b-time">00:00:00</span></p>
+    </div>
+
+    <button onclick="logout()">Logout</button>
+
+    <script>const user = localStorage.getItem("eingeloggt");
+    if (user !== "Admin") {
+      window.location.href = "index.html";
+    }
+
+    function logout() {
+      localStorage.removeItem("eingeloggt");
+      localStorage.removeItem("loginZeit");
+      window.location.href = "index.html";
+    }
+
+    function formatTime(ms) {
+      const sec = Math.floor(ms / 1000) % 60;
+      const min = Math.floor(ms / (1000 * 60)) % 60;
+      const hrs = Math.floor(ms / (1000 * 60 * 60));
+      return `${hrs.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+    }
+
+    function updateStats() {
+      const aTotal = parseInt(localStorage.getItem("gesamtzeit_BenutzerA")) || 0;
+      const bTotal = parseInt(localStorage.getItem("gesamtzeit_BenutzerB")) || 0;
+
+      const currentUser = localStorage.getItem("eingeloggt");
+      const loginTime = localStorage.getItem("loginZeit");
+
+      let aLive = 0;
+      let bLive = 0;
+
+      if (currentUser === "BenutzerA" && loginTime) {
+        aLive = Date.now() - parseInt(loginTime);
+      }
+      if (currentUser === "BenutzerB" && loginTime) {
+        bLive = Date.now() - parseInt(loginTime);
+      }
+
+      document.getElementById("a-time").textContent = formatTime(aTotal + aLive);
+      document.getElementById("b-time").textContent = formatTime(bTotal + bLive);
+    }
+
+    setInterval(updateStats, 1000);
+    updateStats();</script>
+</body>
+</html>
