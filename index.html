@@ -18,17 +18,6 @@
     <script>
         function login(user) {
             localStorage.setItem("eingeloggt", user);
-            if (user === "BenutzerA") {
-                window.location.href = "dashboard-a.html";
-            } else if (user === "BenutzerB") {
-                window.location.href = "dashboard-b.html";
-            }
-        }
-    </script>
-
-    <script>
-        function login(user) {
-            localStorage.setItem("eingeloggt", user);
             localStorage.setItem("loginZeit", Date.now());
 
             if (user === "BenutzerA") {
