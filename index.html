@@ -3,12 +3,21 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Meine GitHub Page</title>
+    <title>Login-Demo</title>
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <h1>Willkommen auf meiner Website!</h1>
-    <p>Diese Seite wird mit GitHub Pages gehostet.</p>
+    <h1>Login-Demo</h1>
+
+    <div class="login-buttons">
+        <button onclick="login('BenutzerA')">Login als Benutzer A</button>
+        <button onclick="login('BenutzerB')">Login als Benutzer B</button>
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <div id="status" class="status-box">
+        <p>Niemand ist eingeloggt.</p>
+    </div>
 
     <script src="script.js"></script>
 </body>
