@@ -4,77 +4,69 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard B</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 </head>
 <body>
-    <h1>Dashboard von Benutzer B</h1>
-    <p>Willkommen, Benutzer B!</p>
+    <div class="container">
+        <h1>👤 Dashboard B</h1>
 
-    <p>Online seit: <span id="zeit"></span></p>
+        <div class="card">
+            <h2>⏱️ Live-Zeit</h2>
+            <p><span id="time">00:00:00</span></p>
+        </div>
 
-    <button onclick="logout()">Logout</button>
+        <div class="card">
+            <h2>📅 Tagesübersicht</h2>
+            <div id="tage-b"></div>
+        </div>
+
+        <button onclick="logout()">🔒 Logout</button>
+    </div>
 
     <script>
-        const user = localStorage.getItem("eingeloggt");
-        if (user !== "BenutzerB") {
-            window.location.href = "index.html";
-        }
-
-        function logout() {
-            localStorage.removeItem("eingeloggt");
-            localStorage.removeItem("loginZeit");
-            window.location.href = "index.html";
-        }
-
         function formatTime(ms) {
-            const sec = Math.floor(ms / 1000) % 60;
-            const min = Math.floor(ms / (1000 * 60)) % 60;
-            const hrs = Math.floor(ms / (1000 * 60 * 60));
-            return `${hrs.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+            const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+            const seconds = String(totalSeconds % 60).padStart(2, "0");
+            return `${hours}:${minutes}:${seconds}`;
         }
 
         function updateTime() {
-            const loginTime = localStorage.getItem("loginZeit");
-            if (loginTime) {
-                const duration = Date.now() - parseInt(loginTime);
-                document.getElementById("zeit").textContent = formatTime(duration);
+            const loginZeit = parseInt(localStorage.getItem("loginZeit"));
+            const jetzt = Date.now();
+            const dauer = jetzt - loginZeit;
+            document.getElementById("time").textContent = formatTime(dauer);
+
+            const heute = new Date().toISOString().slice(0, 10);
+            const protokoll = JSON.parse(localStorage.getItem("zeitprotokoll_BenutzerB")) || {};
+            const start = parseInt(localStorage.getItem("loginZeit"));
+            protokoll[heute] = dauer + (protokoll[heute] || 0);
+            localStorage.setItem("zeitprotokoll_BenutzerB", JSON.stringify(protokoll));
+
+            localStorage.setItem("gesamtzeit_BenutzerB", (parseInt(localStorage.getItem("gesamtzeit_BenutzerB")) || 0) + 1000);
+            updateProtokoll(protokoll);
+        }
+
+        function updateProtokoll(data) {
+            const el = document.getElementById("tage-b");
+            el.innerHTML = "";
+            const keys = Object.keys(data).sort();
+            for (const tag of keys) {
+                const p = document.createElement("p");
+                p.textContent = `${tag}: ${formatTime(data[tag])}`;
+                el.appendChild(p);
             }
         }
 
         function logout() {
-            const loginTime = parseInt(localStorage.getItem("loginZeit"));
-            const logoutTime = Date.now();
-            const duration = logoutTime - loginTime;
-
-            // Benutzername auslesen
-            const user = localStorage.getItem("eingeloggt");
-
-            // Datum im Format YYYY-MM-DD
-            const today = new Date().toISOString().split("T")[0];
-
-            const protokollKey = "zeitprotokoll_" + user;
-            const protokoll = JSON.parse(localStorage.getItem(protokollKey)) || {};
-
-            // Addiere zur heutigen Zeit
-            protokoll[today] = (protokoll[today] || 0) + duration;
-
-            localStorage.setItem(protokollKey, JSON.stringify(protokoll));
-
-            // Für Gesamtsumme (falls weiterhin verwendet)
-            const key = "gesamtzeit_" + user;
-            const previous = parseInt(localStorage.getItem(key)) || 0;
-            localStorage.setItem(key, previous + duration);
-
             localStorage.removeItem("eingeloggt");
             localStorage.removeItem("loginZeit");
             window.location.href = "index.html";
         }
 
-
         setInterval(updateTime, 1000);
-        updateTime();
     </script>
 </body>
-
 </html>

@@ -1,35 +1,31 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 </head>
 <body>
-    <h1>Login</h1>
+    <div class="container">
+        <h1>🔐 Retro Login Terminal</h1>
 
-    <div class="login-buttons">
-        <button onclick="login('BenutzerA')">Login als Benutzer A</button>
-        <button onclick="login('BenutzerB')">Login als Benutzer B</button>
-        <button onclick="login('Admin')">Login als Admin</button>
+        <div class="card">
+            <h2>Wähle deinen Benutzer:</h2>
+            <button onclick="login('BenutzerA', 'dashboard-a.html')">👤 Benutzer A</button>
+            <button onclick="login('BenutzerB', 'dashboard-b.html')">👤 Benutzer B</button>
+            <button onclick="login('Admin', 'dashboard-admin.html')">🧠 Admin</button>
+        </div>
     </div>
 
     <script>
-        function login(user) {
-            localStorage.setItem("eingeloggt", user);
+        function login(name, redirectTo) {
+            localStorage.setItem("eingeloggt", name);
             localStorage.setItem("loginZeit", Date.now());
-
-            if (user === "BenutzerA") {
-                window.location.href = "dashboard-a.html";
-            } else if (user === "BenutzerB") {
-                window.location.href = "dashboard-b.html";
-            } else if (user === "Admin") {
-                window.location.href = "dashboard-admin.html";
-            }
+            window.location.href = redirectTo;
         }
     </script>
-
 </body>
 </html>
+
