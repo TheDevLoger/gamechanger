@@ -12,8 +12,14 @@
         <h1>👤 Dashboard A</h1>
 
         <div class="card">
-            <h2>⏱️ Live-Zeit</h2>
-            <p><span id="time">00:00:00</span></p>
+            <h2>⏱️ Eingeloggt seit</h2>
+            <p><span id="zeitOnline">00:00:00</span></p>
+        </div>
+
+        <div class="card">
+            <h2>🧰 Arbeitszeit</h2>
+            <p><span id="arbeitszeit">00:00:00</span></p>
+            <button id="arbeitszeitBtn" onclick="toggleArbeitszeit()">🟢 Starten</button>
         </div>
 
         <div class="card">
@@ -21,10 +27,19 @@
             <div id="tage-a"></div>
         </div>
 
+        <div class="card">
+            <h2>📊 Arbeitszeiten Zeitleiste</h2>
+            <div id="zeitleiste-a" class="timeline"></div>
+        </div>
+
         <button onclick="logout()">🔒 Logout</button>
     </div>
 
     <script>
+        const userKey = "BenutzerA";
+        let arbeitsStart = null;
+        let arbeitsTimer = null;
+
         function formatTime(ms) {
             const totalSeconds = Math.floor(ms / 1000);
             const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
@@ -33,22 +48,45 @@
             return `${hours}:${minutes}:${seconds}`;
         }
 
-        function updateTime() {
+        function updateLoginTime() {
             const loginZeit = parseInt(localStorage.getItem("loginZeit"));
             const jetzt = Date.now();
             const dauer = jetzt - loginZeit;
-            document.getElementById("time").textContent = formatTime(dauer);
+            document.getElementById("zeitOnline").textContent = formatTime(dauer);
 
-            // Tagestracking
             const heute = new Date().toISOString().slice(0, 10);
-            const protokoll = JSON.parse(localStorage.getItem("zeitprotokoll_BenutzerA")) || {};
-            const start = parseInt(localStorage.getItem("loginZeit"));
+            const protokoll = JSON.parse(localStorage.getItem("zeitprotokoll_" + userKey)) || {};
             protokoll[heute] = dauer + (protokoll[heute] || 0);
-            localStorage.setItem("zeitprotokoll_BenutzerA", JSON.stringify(protokoll));
-
-            // Gesamtzeit
-            localStorage.setItem("gesamtzeit_BenutzerA", (parseInt(localStorage.getItem("gesamtzeit_BenutzerA")) || 0) + 1000);
+            localStorage.setItem("zeitprotokoll_" + userKey, JSON.stringify(protokoll));
             updateProtokoll(protokoll);
+        }
+
+        function toggleArbeitszeit() {
+            const btn = document.getElementById("arbeitszeitBtn");
+            if (arbeitsStart === null) {
+                arbeitsStart = Date.now();
+                btn.textContent = "🔴 Stoppen";
+                arbeitsTimer = setInterval(updateArbeitszeit, 1000);
+            } else {
+                const ende = Date.now();
+                const dauer = ende - arbeitsStart;
+                const key = "arbeitszeiten_" + userKey;
+                const einträge = JSON.parse(localStorage.getItem(key)) || [];
+                einträge.push({ start: arbeitsStart, ende: ende, dauer: dauer });
+                localStorage.setItem(key, JSON.stringify(einträge));
+                arbeitsStart = null;
+                clearInterval(arbeitsTimer);
+                document.getElementById("arbeitszeit").textContent = "00:00:00";
+                btn.textContent = "🟢 Starten";
+                renderZeitleiste();
+            }
+        }
+
+        function updateArbeitszeit() {
+            if (arbeitsStart !== null) {
+                const dauer = Date.now() - arbeitsStart;
+                document.getElementById("arbeitszeit").textContent = formatTime(dauer);
+            }
         }
 
         function updateProtokoll(data) {
@@ -62,13 +100,41 @@
             }
         }
 
+        function renderZeitleiste() {
+            const zeitleiste = document.getElementById("zeitleiste-a");
+            zeitleiste.innerHTML = "";
+
+            const einträge = JSON.parse(localStorage.getItem("arbeitszeiten_BenutzerA")) || [];
+
+            einträge.forEach(eintrag => {
+                const start = new Date(eintrag.start);
+                const ende = new Date(eintrag.ende);
+                const tag = start.toISOString().slice(0, 10);
+                const stundenGesamt = 24;
+
+                if (tag === new Date().toISOString().slice(0, 10)) {
+                    const startProzent = ((start.getHours() * 60 + start.getMinutes()) / (stundenGesamt * 60)) * 100;
+                    const dauerMin = (ende - start) / 60000;
+                    const breiteProzent = (dauerMin / (stundenGesamt * 60)) * 100;
+
+                    const bar = document.createElement("div");
+                    bar.className = "timeline-bar";
+                    bar.style.left = startProzent + "%";
+                    bar.style.width = breiteProzent + "%";
+                    zeitleiste.appendChild(bar);
+                }
+            });
+        }
+
         function logout() {
             localStorage.removeItem("eingeloggt");
             localStorage.removeItem("loginZeit");
             window.location.href = "index.html";
         }
 
-        setInterval(updateTime, 1000);
+        setInterval(updateLoginTime, 1000);
+        renderZeitleiste();
     </script>
 </body>
 </html>
+
