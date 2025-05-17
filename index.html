@@ -3,22 +3,26 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login-Demo</title>
+    <title>Login</title>
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <h1>Login-Demo</h1>
+    <h1>Login</h1>
 
     <div class="login-buttons">
         <button onclick="login('BenutzerA')">Login als Benutzer A</button>
         <button onclick="login('BenutzerB')">Login als Benutzer B</button>
-        <button onclick="logout()">Logout</button>
     </div>
 
-    <div id="status" class="status-box">
-        <p>Niemand ist eingeloggt.</p>
-    </div>
-
-    <script src="script.js"></script>
+    <script>
+        function login(user) {
+            localStorage.setItem("eingeloggt", user);
+            if (user === "BenutzerA") {
+                window.location.href = "dashboard-a.html";
+            } else if (user === "BenutzerB") {
+                window.location.href = "dashboard-b.html";
+            }
+        }
+    </script>
 </body>
 </html>

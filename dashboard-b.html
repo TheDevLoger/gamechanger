@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard B</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <h1>Dashboard von Benutzer B</h1>
+    <p>Willkommen, Benutzer B!</p>
+    <button onclick="logout()">Logout</button>
+
+    <script>
+        const user = localStorage.getItem("eingeloggt");
+        if (user !== "BenutzerB") {
+            window.location.href = "index.html";
+        }
+
+        function logout() {
+            localStorage.removeItem("eingeloggt");
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>
