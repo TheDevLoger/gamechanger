@@ -9,6 +9,9 @@
 <body>
     <h1>Dashboard von Benutzer B</h1>
     <p>Willkommen, Benutzer B!</p>
+
+    <p>Online seit: <span id="zeit"></span></p>
+
     <button onclick="logout()">Logout</button>
 
     <script>
@@ -19,8 +22,28 @@
 
         function logout() {
             localStorage.removeItem("eingeloggt");
+            localStorage.removeItem("loginZeit");
             window.location.href = "index.html";
         }
+
+        function formatTime(ms) {
+            const sec = Math.floor(ms / 1000) % 60;
+            const min = Math.floor(ms / (1000 * 60)) % 60;
+            const hrs = Math.floor(ms / (1000 * 60 * 60));
+            return `${hrs.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+        }
+
+        function updateTime() {
+            const loginTime = localStorage.getItem("loginZeit");
+            if (loginTime) {
+                const duration = Date.now() - parseInt(loginTime);
+                document.getElementById("zeit").textContent = formatTime(duration);
+            }
+        }
+
+        setInterval(updateTime, 1000);
+        updateTime();
     </script>
 </body>
+
 </html>
