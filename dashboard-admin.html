@@ -9,22 +9,26 @@
 </head>
 <body>
     <div class="container">
-        <h1>🧠 Admin Terminal</h1>
+        <h1>🛠️ Admin Dashboard</h1>
 
         <div class="card">
-            <h2>📊 Gesamtzeiten</h2>
-            <p>👤 Benutzer A: <span id="a-time">00:00:00</span></p>
-            <p>👤 Benutzer B: <span id="b-time">00:00:00</span></p>
-        </div>
-
-        <div class="card">
-            <h2>📅 Tagesübersicht – Benutzer A</h2>
+            <h2>📅 Tagesübersicht Benutzer A</h2>
             <div id="tage-a"></div>
         </div>
 
         <div class="card">
-            <h2>📅 Tagesübersicht – Benutzer B</h2>
+            <h2>📅 Tagesübersicht Benutzer B</h2>
             <div id="tage-b"></div>
+        </div>
+
+        <div class="card">
+            <h2>🧰 Arbeitszeiten Benutzer A</h2>
+            <div id="arbeitszeiten-a"></div>
+        </div>
+
+        <div class="card">
+            <h2>🧰 Arbeitszeiten Benutzer B</h2>
+            <div id="arbeitszeiten-b"></div>
         </div>
 
         <button onclick="logout()">🔒 Logout</button>
@@ -39,53 +43,61 @@
             return `${hours}:${minutes}:${seconds}`;
         }
 
-        function updateDaily(user, elementId) {
-            const protokoll = JSON.parse(localStorage.getItem("zeitprotokoll_" + user)) || {};
-            const container = document.getElementById(elementId);
-            container.innerHTML = "";
-            const sortedDates = Object.keys(protokoll).sort();
-            for (const date of sortedDates) {
-                const time = protokoll[date];
-                const p = document.createElement("p");
-                p.textContent = `${date}: ${formatTime(time)}`;
-                container.appendChild(p);
-            }
+        function showProtokolle() {
+            ["BenutzerA", "BenutzerB"].forEach(user => {
+                const key = "zeitprotokoll_" + user;
+                const daten = JSON.parse(localStorage.getItem(key)) || {};
+                const el = document.getElementById("tage-" + user.slice(-1).toLowerCase());
+                el.innerHTML = "";
+                Object.keys(daten).sort().forEach(tag => {
+                    const p = document.createElement("p");
+                    p.textContent = `${tag}: ${formatTime(daten[tag])}`;
+                    el.appendChild(p);
+                });
+            });
         }
 
-        function updateStats() {
-            const aTotal = parseInt(localStorage.getItem("gesamtzeit_BenutzerA")) || 0;
-            const bTotal = parseInt(localStorage.getItem("gesamtzeit_BenutzerB")) || 0;
+        function showArbeitszeiten() {
+            ["BenutzerA", "BenutzerB"].forEach(user => {
+                const daten = JSON.parse(localStorage.getItem("arbeitszeiten_" + user)) || [];
+                const container = document.getElementById("arbeitszeiten-" + user.slice(-1).toLowerCase());
+                container.innerHTML = "";
 
-            const currentUser = localStorage.getItem("eingeloggt");
-            const loginTime = localStorage.getItem("loginZeit");
+                const gruppiert = {};
+                daten.forEach(e => {
+                    const tag = new Date(e.start).toISOString().slice(0, 10);
+                    if (!gruppiert[tag]) gruppiert[tag] = [];
+                    gruppiert[tag].push(e);
+                });
 
-            let aLive = 0;
-            let bLive = 0;
+                Object.keys(gruppiert).sort().forEach(tag => {
+                    const block = document.createElement("div");
+                    block.className = "arbeits-tag";
+                    const header = document.createElement("h4");
+                    header.textContent = tag;
+                    block.appendChild(header);
 
-            if (currentUser === "BenutzerA" && loginTime) {
-                aLive = Date.now() - parseInt(loginTime);
-            }
-            if (currentUser === "BenutzerB" && loginTime) {
-                bLive = Date.now() - parseInt(loginTime);
-            }
+                    gruppiert[tag].forEach(e => {
+                        const start = new Date(e.start).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+                        const ende = new Date(e.ende).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+                        const dauer = formatTime(e.dauer);
+                        const p = document.createElement("p");
+                        p.textContent = `🕓 ${start} – ${ende} (Dauer: ${dauer})`;
+                        block.appendChild(p);
+                    });
 
-            document.getElementById("a-time").textContent = formatTime(aTotal + aLive);
-            document.getElementById("b-time").textContent = formatTime(bTotal + bLive);
-
-            updateDaily("BenutzerA", "tage-a");
-            updateDaily("BenutzerB", "tage-b");
+                    container.appendChild(block);
+                });
+            });
         }
 
         function logout() {
             localStorage.removeItem("eingeloggt");
-            localStorage.removeItem("loginZeit");
             window.location.href = "index.html";
         }
 
-        // Automatisch aktualisieren
-        updateStats();
-        setInterval(updateStats, 1000);
+        showProtokolle();
+        showArbeitszeiten();
     </script>
 </body>
 </html>
-

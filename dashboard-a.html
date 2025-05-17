@@ -39,6 +39,7 @@
         const userKey = "BenutzerA";
         let arbeitsStart = null;
         let arbeitsTimer = null;
+        let letzteAktualisierung = Date.now();
 
         function formatTime(ms) {
             const totalSeconds = Math.floor(ms / 1000);
@@ -49,15 +50,20 @@
         }
 
         function updateLoginTime() {
-            const loginZeit = parseInt(localStorage.getItem("loginZeit"));
             const jetzt = Date.now();
-            const dauer = jetzt - loginZeit;
-            document.getElementById("zeitOnline").textContent = formatTime(dauer);
+            const loginZeit = parseInt(localStorage.getItem("loginZeit") || jetzt);
+            const onlineDauer = jetzt - loginZeit;
+            document.getElementById("zeitOnline").textContent = formatTime(onlineDauer);
 
             const heute = new Date().toISOString().slice(0, 10);
-            const protokoll = JSON.parse(localStorage.getItem("zeitprotokoll_" + userKey)) || {};
-            protokoll[heute] = dauer + (protokoll[heute] || 0);
-            localStorage.setItem("zeitprotokoll_" + userKey, JSON.stringify(protokoll));
+            const protokollKey = "zeitprotokoll_" + userKey;
+            const protokoll = JSON.parse(localStorage.getItem(protokollKey)) || {};
+
+            const vergangeneMs = jetzt - letzteAktualisierung;
+            protokoll[heute] = (protokoll[heute] || 0) + vergangeneMs;
+            localStorage.setItem(protokollKey, JSON.stringify(protokoll));
+
+            letzteAktualisierung = jetzt;
             updateProtokoll(protokoll);
         }
 
@@ -104,7 +110,7 @@
             const zeitleiste = document.getElementById("zeitleiste-a");
             zeitleiste.innerHTML = "";
 
-            const einträge = JSON.parse(localStorage.getItem("arbeitszeiten_BenutzerA")) || [];
+            const einträge = JSON.parse(localStorage.getItem("arbeitszeiten_" + userKey)) || [];
 
             einträge.forEach(eintrag => {
                 const start = new Date(eintrag.start);
@@ -132,9 +138,14 @@
             window.location.href = "index.html";
         }
 
+        if (!localStorage.getItem("loginZeit")) {
+            localStorage.setItem("loginZeit", Date.now());
+        }
+
         setInterval(updateLoginTime, 1000);
         renderZeitleiste();
     </script>
 </body>
 </html>
+
 
