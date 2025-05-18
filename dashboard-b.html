@@ -147,15 +147,68 @@
             window.location.href = "index.html";
         }
 
+        // Aufgabenlogik
+        function loadTasks() {
+            const tasks = JSON.parse(localStorage.getItem("tasks_" + userKey)) || [];
+            const taskList = document.getElementById("taskList");
+            taskList.innerHTML = "";
+
+            tasks.forEach((task, index) => {
+                const li = document.createElement("li");
+                li.textContent = task.text;
+                if (task.erledigt) li.classList.add("done");
+
+                li.onclick = () => toggleTask(index);
+                const removeBtn = document.createElement("button");
+                removeBtn.textContent = "🗑️";
+                removeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    deleteTask(index);
+                };
+                li.appendChild(removeBtn);
+                taskList.appendChild(li);
+            });
+        }
+
+        function addTask() {
+            const input = document.getElementById("taskInput");
+            const text = input.value.trim();
+            if (text === "") return;
+
+            const tasks = JSON.parse(localStorage.getItem("tasks_" + userKey)) || [];
+            tasks.push({ text: text, erledigt: false });
+            localStorage.setItem("tasks_" + userKey, JSON.stringify(tasks));
+            input.value = "";
+            loadTasks();
+        }
+
+        function toggleTask(index) {
+            const tasks = JSON.parse(localStorage.getItem("tasks_" + userKey)) || [];
+            tasks[index].erledigt = !tasks[index].erledigt;
+            localStorage.setItem("tasks_" + userKey, JSON.stringify(tasks));
+            loadTasks();
+        }
+
+        function deleteTask(index) {
+            const tasks = JSON.parse(localStorage.getItem("tasks_" + userKey)) || [];
+            tasks.splice(index, 1);
+            localStorage.setItem("tasks_" + userKey, JSON.stringify(tasks));
+            loadTasks();
+        }
+
+        document.getElementById("addTaskBtn").addEventListener("click", addTask);
+        document.getElementById("taskInput").addEventListener("keypress", function (e) {
+            if (e.key === "Enter") addTask();
+        });
+
         if (!localStorage.getItem("loginZeit")) {
             localStorage.setItem("loginZeit", Date.now());
         }
 
         setInterval(updateLoginTime, 1000);
         renderZeitleiste();
-
-        src = "todo.js"
-
+        loadTasks();
     </script>
+
 </body>
 </html>
