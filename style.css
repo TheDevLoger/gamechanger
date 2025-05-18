@@ -1,12 +1,98 @@
+/* === Google Fonts für Retro-Look === */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap');
+
+/* === Grundlayout === */
 body {
-  background-color: #f4f4f4;
-  font-family: 'Courier New', monospace;
-  margin: 0;
-  padding: 1rem;
-  color: #222;
+    margin: 0;
+    padding: 0;
+    font-family: 'Share Tech Mono', monospace;
+    background-color: #0f0f1c;
+    color: #f2f2f2;
 }
+
+/* === Containerzentrierung === */
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* === Überschriften === */
+h1, h2, h3 {
+    font-family: 'Press Start 2P', cursive;
+    color: #ff2cc2;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 0 5px #ff2cc2;
+}
+
+/* === Buttons mit Neon-Effekt === */
 button {
-  margin: 0.5rem;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
+    background-color: transparent;
+    color: #24ffe2;
+    border: 2px solid #24ffe2;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-family: 'Share Tech Mono', monospace;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 10px #24ffe2, 0 0 20px #24ffe2 inset;
 }
+
+    button:hover {
+        background-color: #24ffe2;
+        color: #0f0f1c;
+        box-shadow: 0 0 20px #24ffe2, 0 0 40px #24ffe2;
+    }
+
+/* === Karten für Datenanzeige === */
+.card {
+    background-color: #1c1c2b;
+    border: 1px solid #ff2cc2;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    box-shadow: 0 0 10px #ff2cc2;
+}
+
+/* === Zeiteinträge im Stil eines Terminals === */
+#tage-a p, #tage-b p {
+    background: #1c1c2b;
+    color: #24ffe2;
+    font-family: 'Share Tech Mono', monospace;
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+    border-left: 4px solid #ff2cc2;
+    box-shadow: inset 0 0 8px #ff2cc288;
+}
+
+/* === Responsive Verhalten === */
+@media (max-width: 600px) {
+    .container {
+        padding: 1rem;
+    }
+
+    button {
+        width: 100%;
+    }
+}
+
+.timeline {
+    position: relative;
+    height: 60px;
+    background: #1a1a1a;
+    border: 1px solid #444;
+    margin-top: 10px;
+    overflow-x: scroll;
+    white-space: nowrap;
+}
+
+.timeline-bar {
+    position: absolute;
+    top: 10px;
+    height: 40px;
+    background: limegreen;
+    border-radius: 4px;
+    opacity: 0.8;
+}
+

@@ -1,11 +1,23 @@
-const THEMES = {
-  retro: "style.css",
-  stalker: "stalker.css"
-};
+<script>
+    const THEMES = {
+        retro: "style.css",
+    stalker: "stalker.css"
+  };
 
-function switchTheme() {
-  const current = localStorage.getItem("theme") || "retro";
-  const next = current === "retro" ? "stalker" : "retro";
-  localStorage.setItem("theme", next);
-  document.getElementById("theme-link").href = THEMES[next];
-}
+    function setTheme(name) {
+        localStorage.setItem("theme", name);
+    document.getElementById("theme-link").setAttribute("href", THEMES[name]);
+  }
+
+    function toggleTheme() {
+    const current = localStorage.getItem("theme") || "retro";
+    const next = current === "retro" ? "stalker" : "retro";
+    setTheme(next);
+  }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    const theme = localStorage.getItem("theme") || "retro";
+    document.getElementById("theme-link").setAttribute("href", THEMES[theme]);
+  });
+</script>
+

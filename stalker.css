@@ -1,42 +1,58 @@
-:root {
-  --bg-color: #101010;
-  --panel-color: #1a1a1a;
-  --text-color: #A0FFB0;
-  --accent-color: #5aff5a;
-  --button-color: #222;
-  --button-border: #3aff3a;
-  --font-family: 'Consolas', 'Courier New', monospace;
-}
+/* stalker.css - S.T.A.L.K.E.R. Anomaly PDA Style */
 body {
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  font-family: var(--font-family);
-  margin: 0;
-  padding: 0;
+    background: #101820;
+    color: #c0ff9e;
+    font-family: 'Share Tech Mono', monospace;
+    margin: 0;
+    padding: 20px;
 }
-.header, .tab-bar {
-  background-color: var(--panel-color);
-  padding: 0.75rem 1rem;
-  border-bottom: 2px solid var(--accent-color);
-  display: flex;
-  gap: 1rem;
+
+.container {
+    max-width: 900px;
+    margin: auto;
 }
-.tab-button {
-  background-color: var(--button-color);
-  color: var(--text-color);
-  border: 1px solid var(--button-border);
-  padding: 0.4rem 0.8rem;
-  font-weight: bold;
-  text-transform: uppercase;
-  cursor: pointer;
+
+h1, h2, h3, h4 {
+    color: #baff6e;
+    border-bottom: 1px solid #3a4d3f;
+    padding-bottom: 4px;
 }
-.tab-button:hover {
-  background-color: var(--accent-color);
-  color: #000;
+
+.card {
+    background: #1c2420;
+    border: 1px solid #3a4d3f;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 12px #00440044;
 }
-.panel {
-  padding: 1rem;
-  background-color: var(--panel-color);
-  border: 1px solid var(--button-border);
-  margin: 1rem;
+
+button {
+    background: #202f22;
+    color: #c0ff9e;
+    border: 1px solid #5c6;
+    padding: 8px 16px;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.3s;
+}
+
+    button:hover {
+        background: #2a3f2a;
+    }
+
+.timeline {
+    position: relative;
+    height: 20px;
+    background: #111;
+    border: 1px solid #333;
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+.timeline-bar {
+    position: absolute;
+    height: 100%;
+    background: #6f6;
 }

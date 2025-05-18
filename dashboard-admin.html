@@ -1,0 +1,105 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard</title>
+    <link id="theme-link" rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <button onclick="toggleTheme()">🎨 Theme wechseln</button>
+
+        <h1>🛠️ Admin Dashboard</h1>
+
+        <div class="card">
+            <h2>📅 Tagesübersicht Benutzer A</h2>
+            <div id="tage-a"></div>
+        </div>
+
+        <div class="card">
+            <h2>📅 Tagesübersicht Benutzer B</h2>
+            <div id="tage-b"></div>
+        </div>
+
+        <div class="card">
+            <h2>🧰 Arbeitszeiten Benutzer A</h2>
+            <div id="arbeitszeiten-a"></div>
+        </div>
+
+        <div class="card">
+            <h2>🧰 Arbeitszeiten Benutzer B</h2>
+            <div id="arbeitszeiten-b"></div>
+        </div>
+
+        <button onclick="logout()">🔒 Logout</button>
+    </div>
+
+    <script>
+        function formatTime(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+            const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+            const seconds = String(totalSeconds % 60).padStart(2, "0");
+            return `${hours}:${minutes}:${seconds}`;
+        }
+
+        function showProtokolle() {
+            ["BenutzerA", "BenutzerB"].forEach(user => {
+                const key = "zeitprotokoll_" + user;
+                const daten = JSON.parse(localStorage.getItem(key)) || {};
+                const el = document.getElementById("tage-" + user.slice(-1).toLowerCase());
+                el.innerHTML = "";
+                Object.keys(daten).sort().forEach(tag => {
+                    const p = document.createElement("p");
+                    p.textContent = `${tag}: ${formatTime(daten[tag])}`;
+                    el.appendChild(p);
+                });
+            });
+        }
+
+        function showArbeitszeiten() {
+            ["BenutzerA", "BenutzerB"].forEach(user => {
+                const daten = JSON.parse(localStorage.getItem("arbeitszeiten_" + user)) || [];
+                const container = document.getElementById("arbeitszeiten-" + user.slice(-1).toLowerCase());
+                container.innerHTML = "";
+
+                const gruppiert = {};
+                daten.forEach(e => {
+                    const tag = new Date(e.start).toISOString().slice(0, 10);
+                    if (!gruppiert[tag]) gruppiert[tag] = [];
+                    gruppiert[tag].push(e);
+                });
+
+                Object.keys(gruppiert).sort().forEach(tag => {
+                    const block = document.createElement("div");
+                    block.className = "arbeits-tag";
+                    const header = document.createElement("h4");
+                    header.textContent = tag;
+                    block.appendChild(header);
+
+                    gruppiert[tag].forEach(e => {
+                        const start = new Date(e.start).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+                        const ende = new Date(e.ende).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+                        const dauer = formatTime(e.dauer);
+                        const p = document.createElement("p");
+                        p.textContent = `🕓 ${start} – ${ende} (Dauer: ${dauer})`;
+                        block.appendChild(p);
+                    });
+
+                    container.appendChild(block);
+                });
+            });
+        }
+
+        function logout() {
+            localStorage.removeItem("eingeloggt");
+            window.location.href = "index.html";
+        }
+
+        showProtokolle();
+        showArbeitszeiten();
+    </script>
+</body>
+</html>

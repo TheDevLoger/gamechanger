@@ -1,30 +1,33 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Retro Login Terminal</title>
-  <link id="theme-link" rel="stylesheet" href="style.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <link id="theme-link" rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="header">
-    <button onclick="switchTheme()" class="tab-button">🎛 Theme wechseln</button>
-  </div>
-  <main class="panel">
-    <h1>🔐 Retro Login Terminal</h1>
-    <p><strong>Wähle deinen Benutzer:</strong></p>
-    <button onclick="login('a')" class="tab-button">👤 Benutzer A</button>
-    <button onclick="login('b')" class="tab-button">👤 Benutzer B</button>
-    <button onclick="login('admin')" class="tab-button">🧠 Admin</button>
-  </main>
-  <script src="theme.js"></script>
-  <script>
-    function login(user) {
-      window.location.href = `dashboard_${user}.html`;
-    }
+    <div class="container">
+        <button onclick="toggleTheme()">🎨 Theme wechseln</button>
 
-    const theme = localStorage.getItem("theme") || "retro";
-    document.getElementById("theme-link").setAttribute("href", THEMES[theme]);
-  </script>
+        <h1>🔐 Retro Login Terminal</h1>
+
+        <div class="card">
+            <h2>Wähle deinen Benutzer:</h2>
+            <button onclick="login('BenutzerA', 'dashboard-a.html')">👤 Benutzer A</button>
+            <button onclick="login('BenutzerB', 'dashboard-b.html')">👤 Benutzer B</button>
+            <button onclick="login('Admin', 'dashboard-admin.html')">🧠 Admin</button>
+        </div>
+    </div>
+
+    <script>
+        function login(name, redirectTo) {
+            localStorage.setItem("eingeloggt", name);
+            localStorage.setItem("loginZeit", Date.now());
+            window.location.href = redirectTo;
+        }
+    </script>
 </body>
 </html>
+
