@@ -3,40 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login</title>
-  <link id="theme-link" rel="stylesheet" href="">
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <title>Retro Login Terminal</title>
+  <link id="theme-link" rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <button onclick="toggleTheme()">🎨 Theme wechseln</button>
-    <h1>🔒 Retro Login Terminal</h1>
-    <p>Wähle deinen Benutzer:</p>
-    <button>👤 Benutzer A</button>
-    <button>👤 Benutzer B</button>
-    <button>🧠 Admin</button>
+  <div class="header">
+    <button onclick="switchTheme()" class="tab-button">🎛 Theme wechseln</button>
   </div>
+  <main class="panel">
+    <h1>🔐 Retro Login Terminal</h1>
+    <p><strong>Wähle deinen Benutzer:</strong></p>
+    <button onclick="login('a')" class="tab-button">👤 Benutzer A</button>
+    <button onclick="login('b')" class="tab-button">👤 Benutzer B</button>
+    <button onclick="login('admin')" class="tab-button">🧠 Admin</button>
+  </main>
+  <script src="theme.js"></script>
   <script>
-    const THEMES = {
-      retro: "style.css",
-      stalker: "stalker.css"
-    };
-
-    function setTheme(name) {
-      localStorage.setItem("theme", name);
-      document.getElementById("theme-link").setAttribute("href", THEMES[name]);
+    function login(user) {
+      window.location.href = `dashboard_${user}.html`;
     }
 
-    function toggleTheme() {
-      const current = localStorage.getItem("theme") || "retro";
-      const next = current === "retro" ? "stalker" : "retro";
-      setTheme(next);
-    }
-
-    window.addEventListener("DOMContentLoaded", () => {
-      const theme = localStorage.getItem("theme") || "retro";
-      document.getElementById("theme-link").setAttribute("href", THEMES[theme]);
-    });
+    const theme = localStorage.getItem("theme") || "retro";
+    document.getElementById("theme-link").setAttribute("href", THEMES[theme]);
   </script>
 </body>
 </html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
+  <link id="theme-link" rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="header">
+    <button onclick="switchTheme()" class="tab-button">🎛 Theme wechseln</button>
+  </div>
+  <div class="panel">
+    <h2>🧠 Admin Übersicht</h2>
+    <div id="admin-log">
+      <p>Gesammelte Onlinezeiten der Benutzer:</p>
+      <ul id="log-list"></ul>
+    </div>
+  </div>
+  <script src="theme.js"></script>
+  <script src="tracker.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const theme = localStorage.getItem("theme") || "retro";
+      document.getElementById("theme-link").href = THEMES[theme];
+      showAdminData();
+    });
+  </script>
+</body>
+</html>

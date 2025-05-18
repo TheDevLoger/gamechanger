@@ -1,23 +1,42 @@
-/* Stalker PDA Style */
+:root {
+  --bg-color: #101010;
+  --panel-color: #1a1a1a;
+  --text-color: #A0FFB0;
+  --accent-color: #5aff5a;
+  --button-color: #222;
+  --button-border: #3aff3a;
+  --font-family: 'Consolas', 'Courier New', monospace;
+}
 body {
-  background: #101820;
-  color: #c0ff9e;
-  font-family: 'Share Tech Mono', monospace;
-  padding: 2rem;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: var(--font-family);
+  margin: 0;
+  padding: 0;
 }
-.container {
-  max-width: 700px;
-  margin: auto;
+.header, .tab-bar {
+  background-color: var(--panel-color);
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid var(--accent-color);
+  display: flex;
+  gap: 1rem;
 }
-button {
-  margin: 5px;
-  padding: 10px 16px;
-  background-color: #202f22;
-  color: #c0ff9e;
-  border: 1px solid #5c6;
-  border-radius: 6px;
+.tab-button {
+  background-color: var(--button-color);
+  color: var(--text-color);
+  border: 1px solid var(--button-border);
+  padding: 0.4rem 0.8rem;
+  font-weight: bold;
+  text-transform: uppercase;
   cursor: pointer;
 }
-button:hover {
-  background-color: #2a3f2a;
+.tab-button:hover {
+  background-color: var(--accent-color);
+  color: #000;
+}
+.panel {
+  padding: 1rem;
+  background-color: var(--panel-color);
+  border: 1px solid var(--button-border);
+  margin: 1rem;
 }

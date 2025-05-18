@@ -3,18 +3,9 @@ const THEMES = {
   stalker: "stalker.css"
 };
 
-function setTheme(name) {
-  localStorage.setItem("theme", name);
-  document.getElementById("theme-link").setAttribute("href", THEMES[name]);
-}
-
-function toggleTheme() {
+function switchTheme() {
   const current = localStorage.getItem("theme") || "retro";
   const next = current === "retro" ? "stalker" : "retro";
-  setTheme(next);
+  localStorage.setItem("theme", next);
+  document.getElementById("theme-link").href = THEMES[next];
 }
-
-window.addEventListener("DOMContentLoaded", () => {
-  const theme = localStorage.getItem("theme") || "retro";
-  document.getElementById("theme-link").setAttribute("href", THEMES[theme]);
-});

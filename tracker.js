@@ -1,34 +1,60 @@
-let startTime = null;
-let timerInterval = null;
+function formatTime(seconds) {
+  const hrs = String(Math.floor(seconds / 3600)).padStart(2, '0');
+  const mins = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+  const secs = String(seconds % 60).padStart(2, '0');
+  return `${hrs}:${mins}:${secs}`;
+}
 
 function initTracker(user) {
-  const span = document.getElementById("work-time");
-  const key = "worklog_" + user;
+  let onlineTime = 0;
+  let workTime = 0;
+  let workTimer;
+  const startBtn = document.getElementById("start-btn");
+  const stopBtn = document.getElementById("stop-btn");
+  const onlineDisplay = document.getElementById("online-time");
+  const workDisplay = document.getElementById("work-time");
 
-  function updateDisplay(seconds) {
-    span.textContent = seconds + " Sek.";
+  const dateKey = new Date().toISOString().split('T')[0];
+  const workStorageKey = `workTime_${user}_${dateKey}`;
+
+  if (localStorage.getItem(workStorageKey)) {
+    workTime = parseInt(localStorage.getItem(workStorageKey));
   }
 
-  function tick() {
-    const elapsed = Math.floor((Date.now() - startTime) / 1000);
-    updateDisplay(elapsed);
+  setInterval(() => {
+    onlineTime++;
+    onlineDisplay.textContent = formatTime(onlineTime);
+  }, 1000);
+
+  if (startBtn && stopBtn) {
+    startBtn.onclick = () => {
+      if (!workTimer) {
+        workTimer = setInterval(() => {
+          workTime++;
+          localStorage.setItem(workStorageKey, workTime);
+          workDisplay.textContent = formatTime(workTime);
+        }, 1000);
+      }
+    };
+    stopBtn.onclick = () => {
+      clearInterval(workTimer);
+      workTimer = null;
+    };
   }
 
-  window.startTracking = function() {
-    if (startTime) return;
-    startTime = Date.now();
-    timerInterval = setInterval(tick, 1000);
-  };
+  workDisplay.textContent = formatTime(workTime);
+}
 
-  window.stopTracking = function() {
-    if (!startTime) return;
-    clearInterval(timerInterval);
-    const duration = Math.floor((Date.now() - startTime) / 1000);
-    const log = JSON.parse(localStorage.getItem(key) || "[]");
-    const today = new Date().toLocaleDateString();
-    log.push({ date: today, duration });
-    localStorage.setItem(key, JSON.stringify(log));
-    startTime = null;
-    updateDisplay(0);
-  };
+function showAdminData() {
+  const logList = document.getElementById("log-list");
+  const users = ['a', 'b'];
+  const today = new Date().toISOString().split('T')[0];
+
+  users.forEach(user => {
+    const key = `workTime_${user}_${today}`;
+    const time = parseInt(localStorage.getItem(key) || 0);
+    const li = document.createElement("li");
+    li.textContent = `Benutzer ${user.toUpperCase()}: ${formatTime(time)}`;
+    logList.appendChild(li);
+  });
 }
