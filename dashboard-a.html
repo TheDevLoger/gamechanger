@@ -27,6 +27,15 @@
             <div id="tage-a"></div>
         </div>
 
+        <div class="todo-container">
+            <h2>📝 Aufgabenliste</h2>
+            <div class="todo-input">
+                <input type="text" id="taskInput" placeholder="Neue Aufgabe eingeben...">
+                <button id="addTaskBtn">Hinzufügen</button>
+            </div>
+            <ul id="taskList"></ul>
+        </div>
+
         <div class="card">
             <h2>📊 Arbeitszeiten Zeitleiste</h2>
             <div id="zeitleiste-a" class="timeline"></div>
@@ -144,6 +153,9 @@
 
         setInterval(updateLoginTime, 1000);
         renderZeitleiste();
+
+        src="todo.js"
+
     </script>
 </body>
 </html>
