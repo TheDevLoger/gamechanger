@@ -1,153 +1,26 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard A</title>
-    <link id="theme-link" rel="stylesheet" href="">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard A</title>
+  <link id="theme-link" rel="stylesheet" href="">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <button onclick="toggleTheme()">🎨 Theme wechseln</button>
-
-        <h1>👤 Dashboard A</h1>
-
-        <div class="card">
-            <h2>⏱️ Eingeloggt seit</h2>
-            <p><span id="zeitOnline">00:00:00</span></p>
-        </div>
-
-        <div class="card">
-            <h2>🧰 Arbeitszeit</h2>
-            <p><span id="arbeitszeit">00:00:00</span></p>
-            <button id="arbeitszeitBtn" onclick="toggleArbeitszeit()">🟢 Starten</button>
-        </div>
-
-        <div class="card">
-            <h2>📅 Tagesübersicht</h2>
-            <div id="tage-a"></div>
-        </div>
-
-        <div class="card">
-            <h2>📊 Arbeitszeiten Zeitleiste</h2>
-            <div id="zeitleiste-a" class="timeline"></div>
-        </div>
-
-        <button onclick="logout()">🔒 Logout</button>
-    </div>
-
-    <script>
-        const userKey = "BenutzerA";
-        let arbeitsStart = null;
-        let arbeitsTimer = null;
-        let letzteAktualisierung = Date.now();
-
-        function formatTime(ms) {
-            const totalSeconds = Math.floor(ms / 1000);
-            const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
-            const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
-            const seconds = String(totalSeconds % 60).padStart(2, "0");
-            return `${hours}:${minutes}:${seconds}`;
-        }
-
-        function updateLoginTime() {
-            const jetzt = Date.now();
-            const loginZeit = parseInt(localStorage.getItem("loginZeit") || jetzt);
-            const onlineDauer = jetzt - loginZeit;
-            document.getElementById("zeitOnline").textContent = formatTime(onlineDauer);
-
-            const heute = new Date().toISOString().slice(0, 10);
-            const protokollKey = "zeitprotokoll_" + userKey;
-            const protokoll = JSON.parse(localStorage.getItem(protokollKey)) || {};
-
-            const vergangeneMs = jetzt - letzteAktualisierung;
-            protokoll[heute] = (protokoll[heute] || 0) + vergangeneMs;
-            localStorage.setItem(protokollKey, JSON.stringify(protokoll));
-
-            letzteAktualisierung = jetzt;
-            updateProtokoll(protokoll);
-        }
-
-        function toggleArbeitszeit() {
-            const btn = document.getElementById("arbeitszeitBtn");
-            if (arbeitsStart === null) {
-                arbeitsStart = Date.now();
-                btn.textContent = "🔴 Stoppen";
-                arbeitsTimer = setInterval(updateArbeitszeit, 1000);
-            } else {
-                const ende = Date.now();
-                const dauer = ende - arbeitsStart;
-                const key = "arbeitszeiten_" + userKey;
-                const einträge = JSON.parse(localStorage.getItem(key)) || [];
-                einträge.push({ start: arbeitsStart, ende: ende, dauer: dauer });
-                localStorage.setItem(key, JSON.stringify(einträge));
-                arbeitsStart = null;
-                clearInterval(arbeitsTimer);
-                document.getElementById("arbeitszeit").textContent = "00:00:00";
-                btn.textContent = "🟢 Starten";
-                renderZeitleiste();
-            }
-        }
-
-        function updateArbeitszeit() {
-            if (arbeitsStart !== null) {
-                const dauer = Date.now() - arbeitsStart;
-                document.getElementById("arbeitszeit").textContent = formatTime(dauer);
-            }
-        }
-
-        function updateProtokoll(data) {
-            const el = document.getElementById("tage-a");
-            el.innerHTML = "";
-            const keys = Object.keys(data).sort();
-            for (const tag of keys) {
-                const p = document.createElement("p");
-                p.textContent = `${tag}: ${formatTime(data[tag])}`;
-                el.appendChild(p);
-            }
-        }
-
-        function renderZeitleiste() {
-            const zeitleiste = document.getElementById("zeitleiste-a");
-            zeitleiste.innerHTML = "";
-
-            const einträge = JSON.parse(localStorage.getItem("arbeitszeiten_" + userKey)) || [];
-
-            einträge.forEach(eintrag => {
-                const start = new Date(eintrag.start);
-                const ende = new Date(eintrag.ende);
-                const tag = start.toISOString().slice(0, 10);
-                const stundenGesamt = 24;
-
-                if (tag === new Date().toISOString().slice(0, 10)) {
-                    const startProzent = ((start.getHours() * 60 + start.getMinutes()) / (stundenGesamt * 60)) * 100;
-                    const dauerMin = (ende - start) / 60000;
-                    const breiteProzent = (dauerMin / (stundenGesamt * 60)) * 100;
-
-                    const bar = document.createElement("div");
-                    bar.className = "timeline-bar";
-                    bar.style.left = startProzent + "%";
-                    bar.style.width = breiteProzent + "%";
-                    zeitleiste.appendChild(bar);
-                }
-            });
-        }
-
-        function logout() {
-            localStorage.removeItem("eingeloggt");
-            localStorage.removeItem("loginZeit");
-            window.location.href = "index.html";
-        }
-
-        if (!localStorage.getItem("loginZeit")) {
-            localStorage.setItem("loginZeit", Date.now());
-        }
-
-        setInterval(updateLoginTime, 1000);
-        renderZeitleiste();
-    </script>
+  <div class="container">
+    <button onclick="toggleTheme()">🎨 Theme wechseln</button>
+    <h1>📘 Dashboard Benutzer A</h1>
+    <p>Hier könnte dein Dashboard-Inhalt stehen.</p>
+    <button onclick="startTracking()">▶️ Arbeitszeit starten</button>
+    <button onclick="stopTracking()">⏹️ Arbeitszeit stoppen</button>
+    <p>Arbeitszeit heute: <span id="work-time">0 Sek.</span></p>
+  </div>
+  <script src="theme.js"></script>
+  <script src="tracker.js"></script>
+  <script>
+    const user = "a";
+    initTracker(user);
+  </script>
 </body>
 </html>
-
-

@@ -1,33 +1,42 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login</title>
-    <link id="theme-link" rel="stylesheet" href="">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login</title>
+  <link id="theme-link" rel="stylesheet" href="">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <button onclick="toggleTheme()">🎨 Theme wechseln</button>
+  <div class="container">
+    <button onclick="toggleTheme()">🎨 Theme wechseln</button>
+    <h1>🔒 Retro Login Terminal</h1>
+    <p>Wähle deinen Benutzer:</p>
+    <button>👤 Benutzer A</button>
+    <button>👤 Benutzer B</button>
+    <button>🧠 Admin</button>
+  </div>
+  <script>
+    const THEMES = {
+      retro: "style.css",
+      stalker: "stalker.css"
+    };
 
-        <h1>🔐 Retro Login Terminal</h1>
+    function setTheme(name) {
+      localStorage.setItem("theme", name);
+      document.getElementById("theme-link").setAttribute("href", THEMES[name]);
+    }
 
-        <div class="card">
-            <h2>Wähle deinen Benutzer:</h2>
-            <button onclick="login('BenutzerA', 'dashboard-a.html')">👤 Benutzer A</button>
-            <button onclick="login('BenutzerB', 'dashboard-b.html')">👤 Benutzer B</button>
-            <button onclick="login('Admin', 'dashboard-admin.html')">🧠 Admin</button>
-        </div>
-    </div>
+    function toggleTheme() {
+      const current = localStorage.getItem("theme") || "retro";
+      const next = current === "retro" ? "stalker" : "retro";
+      setTheme(next);
+    }
 
-    <script>
-        function login(name, redirectTo) {
-            localStorage.setItem("eingeloggt", name);
-            localStorage.setItem("loginZeit", Date.now());
-            window.location.href = redirectTo;
-        }
-    </script>
+    window.addEventListener("DOMContentLoaded", () => {
+      const theme = localStorage.getItem("theme") || "retro";
+      document.getElementById("theme-link").setAttribute("href", THEMES[theme]);
+    });
+  </script>
 </body>
 </html>
-
