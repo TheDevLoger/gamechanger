@@ -1,0 +1,171 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard</title>
+    <link id="theme-link" rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 2rem;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .dashboard-section {
+            margin-bottom: 3rem;
+        }
+
+        .user-title {
+            margin-top: 2rem;
+            color: #333;
+        }
+
+        .dashboard-wrapper {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .main-content {
+            flex: 2;
+        }
+
+        .todo-container {
+            flex: 1;
+        }
+
+        .card {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .timeline {
+            position: relative;
+            height: 30px;
+            background-color: #eee;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .timeline-bar {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            background-color: #4caf50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Admin Dashboard</h1>
+
+        <div id="users-container"></div>
+
+        <button onclick="logout()">🔒 Logout</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAujeUok4jKYwnr5GEXze_EadszqMdY1y4",
+            authDomain: "gamechanger-78fb4.firebaseapp.com",
+            projectId: "gamechanger-78fb4",
+            storageBucket: "gamechanger-78fb4.appspot.com",
+            messagingSenderId: "510513691722",
+            appId: "1:510513691722:web:c0c1a97141ddfda4377ab3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const userKeys = ["BenutzerA", "BenutzerB"];
+        const usersContainer = document.getElementById("users-container");
+
+        async function renderUserData(userKey) {
+            const zeitenSnap = await getDoc(doc(db, "arbeitszeiten", userKey));
+            const tasksSnap = await getDoc(doc(db, "tasks", userKey));
+
+            const arbeitszeiten = zeitenSnap.exists() ? zeitenSnap.data().zeiten : [];
+            const tasks = tasksSnap.exists() ? tasksSnap.data().list : [];
+
+            const section = document.createElement("div");
+            section.className = "dashboard-section";
+
+            const title = document.createElement("h2");
+            title.className = "user-title";
+            title.textContent = `👤 ${userKey}`;
+            section.appendChild(title);
+
+            const zeitenCard = document.createElement("div");
+            zeitenCard.className = "card";
+            zeitenCard.innerHTML = "<h3>⏱️ Arbeitszeiten heute</h3><div class='timeline'></div><p id='gesamtzeit'></p>";
+            const timeline = zeitenCard.querySelector(".timeline");
+            const totalDisplay = zeitenCard.querySelector("#gesamtzeit");
+
+            const today = new Date().toISOString().slice(0, 10);
+            let totalMin = 0;
+
+            arbeitszeiten.forEach(e => {
+                const start = new Date(e.start);
+                const ende = new Date(e.ende);
+                if (start.toISOString().slice(0, 10) !== today) return;
+                const startMin = start.getHours() * 60 + start.getMinutes();
+                const dauerMin = (ende - start) / 60000;
+                totalMin += dauerMin;
+
+                const left = (startMin / 1440) * 100;
+                const width = (dauerMin / 1440) * 100;
+                const bar = document.createElement("div");
+                bar.className = "timeline-bar";
+                bar.style.left = `${left}%`;
+                bar.style.width = `${width}%`;
+                timeline.appendChild(bar);
+            });
+
+            const stunden = Math.floor(totalMin / 60);
+            const minuten = Math.floor(totalMin % 60);
+            totalDisplay.textContent = `Arbeitszeit heute: ${stunden}h ${minuten}min`;
+
+            section.appendChild(zeitenCard);
+
+            const tasksCard = document.createElement("div");
+            tasksCard.className = "card";
+            tasksCard.innerHTML = "<h3>📝 Aufgaben</h3><ul></ul>";
+            const ul = tasksCard.querySelector("ul");
+
+            tasks.forEach(task => {
+                const li = document.createElement("li");
+                li.textContent = task.text + (task.done ? " ✅" : " ❌");
+                ul.appendChild(li);
+            });
+
+            section.appendChild(tasksCard);
+
+            usersContainer.appendChild(section);
+        }
+
+        function logout() {
+            location.href = "index.html";
+        }
+
+        userKeys.forEach(renderUserData);
+    </script>
+</body>
+</html>
