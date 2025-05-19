@@ -1,98 +1,171 @@
-/* === Google Fonts für Retro-Look === */
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap');
+/* ---- Farben & Variablen ---- */
+:root {
+    --background: #f4f4f7;
+    --card-bg: #ffffff;
+    --primary-text: #222;
+    --secondary-text: #555;
+    --accent: #2a7be4;
+    --accent-hover: #1a5fb4;
+    --border: #ccc;
+    --shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
 
-/* === Grundlayout === */
 body {
+    background: var(--background);
+    color: var(--primary-text);
+    font-family: 'Share Tech Mono', monospace;
     margin: 0;
-    padding: 0;
-    font-family: 'Share Tech Mono', monospace;
-    background-color: #0f0f1c;
-    color: #f2f2f2;
+    padding: 20px;
 }
 
-/* === Containerzentrierung === */
+/* ---- Container & Spaltenlayout ---- */
 .container {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 2rem;
+    max-width: 1200px;
+    margin: auto;
 }
 
-/* === Überschriften === */
-h1, h2, h3 {
-    font-family: 'Press Start 2P', cursive;
-    color: #ff2cc2;
-    margin-bottom: 1.5rem;
-    text-shadow: 0 0 5px #ff2cc2;
+.dashboard-wrapper {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
 }
 
-/* === Buttons mit Neon-Effekt === */
+/* ---- Linke Spalte (Dashboard-Karten) ---- */
+.main-content {
+    flex: 0 0 65%;
+}
+
+/* ---- Rechte Spalte (Aufgabenliste) ---- */
+.todo-container {
+    flex: 0 0 35%;
+    background: var(--card-bg);
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+}
+
+/* ---- Karten ---- */
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+}
+
+/* ---- Typo ---- */
+h1, h2 {
+    color: var(--accent);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+    margin-bottom: 16px;
+}
+
+/* ---- Buttons ---- */
 button {
-    background-color: transparent;
-    color: #24ffe2;
-    border: 2px solid #24ffe2;
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
-    font-family: 'Share Tech Mono', monospace;
-    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    font-family: inherit;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 0 10px #24ffe2, 0 0 20px #24ffe2 inset;
+    border-radius: 5px;
+    transition: background 0.3s;
 }
 
     button:hover {
-        background-color: #24ffe2;
-        color: #0f0f1c;
-        box-shadow: 0 0 20px #24ffe2, 0 0 40px #24ffe2;
+        background: var(--accent-hover);
     }
 
-/* === Karten für Datenanzeige === */
-.card {
-    background-color: #1c1c2b;
-    border: 1px solid #ff2cc2;
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin: 1rem 0;
-    box-shadow: 0 0 10px #ff2cc2;
+.container > button {
+    margin-top: 20px;
+    background: #888;
 }
 
-/* === Zeiteinträge im Stil eines Terminals === */
-#tage-a p, #tage-b p {
-    background: #1c1c2b;
-    color: #24ffe2;
-    font-family: 'Share Tech Mono', monospace;
-    padding: 0.5rem;
-    margin: 0.5rem 0;
-    border-left: 4px solid #ff2cc2;
-    box-shadow: inset 0 0 8px #ff2cc288;
-}
-
-/* === Responsive Verhalten === */
-@media (max-width: 600px) {
-    .container {
-        padding: 1rem;
+    .container > button:hover {
+        background: #666;
     }
 
-    button {
-        width: 100%;
-    }
-}
-
+/* ---- Timeline ---- */
 .timeline {
     position: relative;
-    height: 60px;
-    background: #1a1a1a;
-    border: 1px solid #444;
+    height: 20px;
+    background: #e0e0e0;
+    border: 1px solid #bbb;
     margin-top: 10px;
-    overflow-x: scroll;
-    white-space: nowrap;
+    overflow: hidden;
+    border-radius: 4px;
 }
 
 .timeline-bar {
     position: absolute;
-    top: 10px;
-    height: 40px;
-    background: limegreen;
-    border-radius: 4px;
+    height: 100%;
+    background: var(--accent);
     opacity: 0.8;
 }
 
+/* ---- Aufgabenliste ---- */
+.todo-input {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+    .todo-input input {
+        flex-grow: 1;
+        padding: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+    }
+
+ul#taskList {
+    list-style: none;
+    padding-left: 0;
+}
+
+.task-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.task-text {
+    flex-grow: 1;
+}
+
+    .task-text.done {
+        text-decoration: line-through;
+        color: var(--secondary-text);
+        opacity: 0.6;
+    }
+
+.delete-btn {
+    margin-left: auto;
+    background: transparent;
+    border: none;
+    color: red;
+    cursor: pointer;
+    font-size: 1.2em;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 900px) {
+    .dashboard-wrapper {
+        flex-direction: column;
+    }
+
+    .main-content,
+    .todo-container {
+        flex: 1 1 100%;
+    }
+
+    .todo-container {
+        position: static;
+    }
+}

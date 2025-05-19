@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard Eric Tamme</title>
-    <link id="theme-link" rel="stylesheet" href="office.css">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link id="theme-link" rel="stylesheet" href="stalker.css">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
@@ -44,12 +44,37 @@
         <button onclick="logout()">🔒 Logout</button>
     </div>
 
-    <script>
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, onSnapshot, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAujeUok4jKYwnr5GEXze_EadszqMdY1y4",
+            authDomain: "gamechanger-78fb4.firebaseapp.com",
+            projectId: "gamechanger-78fb4",
+            storageBucket: "gamechanger-78fb4.appspot.com",
+            messagingSenderId: "510513691722",
+            appId: "1:510513691722:web:c0c1a97141ddfda4377ab3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
         const userKey = "BenutzerB";
+        const taskRef = collection(db, `users/${userKey}/tasks`);
+
         let arbeitsStart = null;
         let arbeitsTimer = null;
         let letzteAktualisierung = Date.now();
 
+        const zeitOnlineEl = document.getElementById("zeitOnline");
+        const arbeitszeitEl = document.getElementById("arbeitszeit");
+        const taskInput = document.getElementById("taskInput");
+        const taskList = document.getElementById("taskList");
+        const addTaskBtn = document.getElementById("addTaskBtn");
+
+        // Format helper
         function formatTime(ms) {
             const totalSeconds = Math.floor(ms / 1000);
             const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
@@ -58,25 +83,26 @@
             return `${hours}:${minutes}:${seconds}`;
         }
 
+        // Login-Zeit aktualisieren
         function updateLoginTime() {
             const jetzt = Date.now();
             const loginZeit = parseInt(localStorage.getItem("loginZeit") || jetzt);
             const onlineDauer = jetzt - loginZeit;
-            document.getElementById("zeitOnline").textContent = formatTime(onlineDauer);
+            zeitOnlineEl.textContent = formatTime(onlineDauer);
 
             const heute = new Date().toISOString().slice(0, 10);
-            const protokollKey = "zeitprotokoll_" + userKey;
-            const protokoll = JSON.parse(localStorage.getItem(protokollKey)) || {};
-
             const vergangeneMs = jetzt - letzteAktualisierung;
-            protokoll[heute] = (protokoll[heute] || 0) + vergangeneMs;
-            localStorage.setItem(protokollKey, JSON.stringify(protokoll));
-
             letzteAktualisierung = jetzt;
-            updateProtokoll(protokoll);
         }
 
-        function toggleArbeitszeit() {
+        setInterval(updateLoginTime, 1000);
+
+        if (!localStorage.getItem("loginZeit")) {
+            localStorage.setItem("loginZeit", Date.now());
+        }
+
+        // Arbeitszeit Start/Stop
+        async function toggleArbeitszeit() {
             const btn = document.getElementById("arbeitszeitBtn");
             if (arbeitsStart === null) {
                 arbeitsStart = Date.now();
@@ -85,49 +111,44 @@
             } else {
                 const ende = Date.now();
                 const dauer = ende - arbeitsStart;
-                const key = "arbeitszeiten_" + userKey;
-                const einträge = JSON.parse(localStorage.getItem(key)) || [];
-                einträge.push({ start: arbeitsStart, ende: ende, dauer: dauer });
-                localStorage.setItem(key, JSON.stringify(einträge));
+                await addDoc(collection(db, `users/${userKey}/worklogs`), {
+                    start: arbeitsStart,
+                    ende: ende,
+                    dauer: dauer,
+                    datum: new Date().toISOString().slice(0, 10)
+                });
                 arbeitsStart = null;
                 clearInterval(arbeitsTimer);
-                document.getElementById("arbeitszeit").textContent = "00:00:00";
+                arbeitszeitEl.textContent = "00:00:00";
                 btn.textContent = "🟢 Starten";
                 renderZeitleiste();
+                loadTagesübersicht();
             }
         }
 
         function updateArbeitszeit() {
             if (arbeitsStart !== null) {
                 const dauer = Date.now() - arbeitsStart;
-                document.getElementById("arbeitszeit").textContent = formatTime(dauer);
+                arbeitszeitEl.textContent = formatTime(dauer);
             }
         }
 
-        function updateProtokoll(data) {
-            const el = document.getElementById("tage-b");
-            el.innerHTML = "";
-            const keys = Object.keys(data).sort();
-            for (const tag of keys) {
-                const p = document.createElement("p");
-                p.textContent = `${tag}: ${formatTime(data[tag])}`;
-                el.appendChild(p);
-            }
-        }
-
-        function renderZeitleiste() {
+        // Zeitleiste rendern
+        async function renderZeitleiste() {
             const zeitleiste = document.getElementById("zeitleiste-b");
             zeitleiste.innerHTML = "";
 
-            const einträge = JSON.parse(localStorage.getItem("arbeitszeiten_" + userKey)) || [];
+            const einträge = await getDocs(collection(db, `users/${userKey}/worklogs`));
+            const heute = new Date().toISOString().slice(0, 10);
 
-            einträge.forEach(eintrag => {
+            einträge.forEach(docSnap => {
+                const eintrag = docSnap.data();
                 const start = new Date(eintrag.start);
                 const ende = new Date(eintrag.ende);
-                const tag = start.toISOString().slice(0, 10);
+                const tag = eintrag.datum;
                 const stundenGesamt = 24;
 
-                if (tag === new Date().toISOString().slice(0, 10)) {
+                if (tag === heute) {
                     const startProzent = ((start.getHours() * 60 + start.getMinutes()) / (stundenGesamt * 60)) * 100;
                     const dauerMin = (ende - start) / 60000;
                     const breiteProzent = (dauerMin / (stundenGesamt * 60)) * 100;
@@ -141,75 +162,65 @@
             });
         }
 
+        async function loadTagesübersicht() {
+            const container = document.getElementById("tage-b");
+            container.innerHTML = "";
+            const einträge = await getDocs(collection(db, `users/${userKey}/worklogs`));
+            const daten = {};
+
+            einträge.forEach(docSnap => {
+                const d = docSnap.data();
+                if (!daten[d.datum]) daten[d.datum] = 0;
+                daten[d.datum] += d.dauer;
+            });
+
+            const sorted = Object.entries(daten).sort();
+            for (const [tag, dauer] of sorted) {
+                const p = document.createElement("p");
+                p.textContent = `${tag}: ${formatTime(dauer)}`;
+                container.appendChild(p);
+            }
+        }
+
+        // Aufgaben hinzufügen
+        addTaskBtn.addEventListener("click", async () => {
+            const text = taskInput.value.trim();
+            if (text === "") return;
+            await addDoc(taskRef, { text });
+            taskInput.value = "";
+        });
+
+        // Aufgaben anzeigen
+        onSnapshot(taskRef, snapshot => {
+            taskList.innerHTML = "";
+            snapshot.forEach(docSnap => {
+                const li = document.createElement("li");
+                li.className = "task-item";
+                li.innerHTML = `
+              <span class="task-text">${docSnap.data().text}</span>
+              <button class="delete-btn" data-id="${docSnap.id}">🗑️</button>
+            `;
+                taskList.appendChild(li);
+            });
+        });
+
+        // Aufgaben löschen
+        taskList.addEventListener("click", async (e) => {
+            if (e.target.classList.contains("delete-btn")) {
+                const id = e.target.dataset.id;
+                await deleteDoc(doc(taskRef, id));
+            }
+        });
+
+        // Logout
         function logout() {
             localStorage.removeItem("eingeloggt");
             localStorage.removeItem("loginZeit");
             window.location.href = "index.html";
         }
+
+        renderZeitleiste();
+        loadTagesübersicht();
     </script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-        const taskInput = document.getElementById('taskInput');
-                const addTaskBtn = document.getElementById('addTaskBtn');
-                const taskList = document.getElementById('taskList');
-
-                const storageKey = `tasks_${userKey}`;
-                let tasks = JSON.parse(localStorage.getItem(storageKey)) || [];
-                renderTasks();
-
-        addTaskBtn.addEventListener('click', () => {
-            const taskText = taskInput.value.trim();
-                if (taskText === '') return;
-
-                const newTask = {
-                    id: Date.now(),
-                text: taskText,
-                done: false
-            };
-                tasks.push(newTask);
-                saveAndRender();
-                taskInput.value = '';
-        });
-
-        taskList.addEventListener('click', (e) => {
-            if (e.target.classList.contains('delete-btn')) {
-                const taskId = Number(e.target.dataset.id);
-                tasks = tasks.filter(t => t.id !== taskId);
-                saveAndRender();
-            }
-
-                if (e.target.classList.contains('task-checkbox')) {
-                const taskId = Number(e.target.dataset.id);
-                const task = tasks.find(t => t.id === taskId);
-                if (task) {
-                    task.done = e.target.checked;
-                saveAndRender();
-                }
-            }
-        });
-
-                function saveAndRender() {
-                    localStorage.setItem(storageKey, JSON.stringify(tasks));
-                renderTasks();
-        }
-
-                function renderTasks() {
-                    taskList.innerHTML = '';
-            tasks.forEach(task => {
-                const li = document.createElement('li');
-                li.className = 'task-item';
-
-                li.innerHTML = `
-                <input type="checkbox" class="task-checkbox" data-id="${task.id}" ${task.done ? 'checked' : ''}>
-                    <span class="task-text ${task.done ? 'done' : ''}">${task.text}</span>
-                    <button class="delete-btn" data-id="${task.id}">✖</button>
-                    `;
-                taskList.appendChild(li);
-            });
-        }
-    });
-    </script>
-
 </body>
 </html>
