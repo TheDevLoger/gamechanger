@@ -3,16 +3,17 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard A - Firestore</title>
-    <link rel="stylesheet" href="style.css" />
+    <title>Dashboard Benutzer A</title>
+    <link id="theme-link" rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <h1>👤 Dashboard A</h1>
+        <h1>👤 Dashboard Benutzer A</h1>
 
-        <div class="flex-layout">
-            <div class="left-column">
+        <div class="dashboard-wrapper">
+            <!-- Linke Spalte -->
+            <div class="main-content">
                 <div class="card">
                     <h2>⏱️ Eingeloggt seit</h2>
                     <p><span id="zeitOnline">00:00:00</span></p>
@@ -26,18 +27,17 @@
 
                 <div class="card">
                     <h2>📅 Tagesübersicht</h2>
-                    <div id="tage-b"></div>
+                    <div id="tage-a"></div>
                 </div>
 
                 <div class="card">
                     <h2>📊 Arbeitszeiten Zeitleiste</h2>
-                    <div id="zeitleiste-b" class="timeline"></div>
+                    <div id="zeitleiste-a" class="timeline"></div>
                 </div>
-
-                <button onclick="logout()">🔒 Logout</button>
             </div>
 
-            <div class="right-column todo-container">
+            <!-- Rechte Spalte -->
+            <div class="todo-container">
                 <h2>📝 Aufgabenliste</h2>
                 <div class="todo-input">
                     <input type="text" id="taskInput" placeholder="Neue Aufgabe eingeben...">
@@ -46,73 +46,12 @@
                 <ul id="taskList"></ul>
             </div>
         </div>
+
+        <button onclick="logout()">🔒 Logout</button>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, onSnapshot, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAujeUok4jKYwnr5GEXze_EadszqMdY1y4",
-            authDomain: "gamechanger-78fb4.firebaseapp.com",
-            projectId: "gamechanger-78fb4",
-            storageBucket: "gamechanger-78fb4.firebasestorage.app",
-            messagingSenderId: "510513691722",
-            appId: "1:510513691722:web:c0c1a97141ddfda4377ab3"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // Aufgabenliste
-        const taskInput = document.getElementById("taskInput");
-        const taskList = document.getElementById("taskList");
-        const addTaskBtn = document.getElementById("addTaskBtn");
-
-        addTaskBtn.addEventListener("click", async () => {
-            const taskText = taskInput.value.trim();
-            if (taskText) {
-                await addDoc(collection(db, "aufgaben"), {
-                    text: taskText,
-                    done: false,
-                    timestamp: Date.now()
-                });
-                taskInput.value = "";
-            }
-        });
-
-        onSnapshot(collection(db, "aufgaben"), (snapshot) => {
-            taskList.innerHTML = "";
-            snapshot.forEach((docSnap) => {
-                const task = docSnap.data();
-                const li = document.createElement("li");
-                li.className = "task-item";
-
-                const span = document.createElement("span");
-                span.textContent = task.text;
-                span.className = "task-text" + (task.done ? " done" : "");
-                span.style.cursor = "pointer";
-
-                span.addEventListener("click", () => {
-                    updateDoc(doc(db, "aufgaben", docSnap.id), {
-                        done: !task.done
-                    });
-                });
-
-                const delBtn = document.createElement("button");
-                delBtn.textContent = "🗑️";
-                delBtn.className = "delete-btn";
-                delBtn.addEventListener("click", () => {
-                    deleteDoc(doc(db, "aufgaben", docSnap.id));
-                });
-
-                li.appendChild(span);
-                li.appendChild(delBtn);
-                taskList.appendChild(li);
-            });
-        });
-
-        // Arbeitszeit-Tracking
+    <script>
+        const userKey = "BenutzerA";
         let arbeitsStart = null;
         let arbeitsTimer = null;
         let letzteAktualisierung = Date.now();
@@ -132,7 +71,7 @@
             document.getElementById("zeitOnline").textContent = formatTime(onlineDauer);
 
             const heute = new Date().toISOString().slice(0, 10);
-            const protokollKey = "zeitprotokoll_A";
+            const protokollKey = "zeitprotokoll_" + userKey;
             const protokoll = JSON.parse(localStorage.getItem(protokollKey)) || {};
 
             const vergangeneMs = jetzt - letzteAktualisierung;
@@ -152,7 +91,7 @@
             } else {
                 const ende = Date.now();
                 const dauer = ende - arbeitsStart;
-                const key = "arbeitszeiten_A";
+                const key = "arbeitszeiten_" + userKey;
                 const einträge = JSON.parse(localStorage.getItem(key)) || [];
                 einträge.push({ start: arbeitsStart, ende: ende, dauer: dauer });
                 localStorage.setItem(key, JSON.stringify(einträge));
@@ -172,7 +111,7 @@
         }
 
         function updateProtokoll(data) {
-            const el = document.getElementById("tage-b");
+            const el = document.getElementById("tage-a");
             el.innerHTML = "";
             const keys = Object.keys(data).sort();
             for (const tag of keys) {
@@ -183,10 +122,11 @@
         }
 
         function renderZeitleiste() {
-            const zeitleiste = document.getElementById("zeitleiste-b");
+            const zeitleiste = document.getElementById("zeitleiste-a");
             zeitleiste.innerHTML = "";
 
-            const einträge = JSON.parse(localStorage.getItem("arbeitszeiten_A")) || [];
+            const einträge = JSON.parse(localStorage.getItem("arbeitszeiten_" + userKey)) || [];
+
             einträge.forEach(eintrag => {
                 const start = new Date(eintrag.start);
                 const ende = new Date(eintrag.ende);
@@ -217,8 +157,70 @@
             localStorage.setItem("loginZeit", Date.now());
         }
 
+        // Aufgabenliste Logik
+        const taskInput = document.getElementById("taskInput");
+        const addTaskBtn = document.getElementById("addTaskBtn");
+        const taskList = document.getElementById("taskList");
+        const tasksKey = "tasks_" + userKey;
+
+        function loadTasks() {
+            const tasks = JSON.parse(localStorage.getItem(tasksKey)) || [];
+            taskList.innerHTML = "";
+            tasks.forEach((task, index) => {
+                const li = document.createElement("li");
+                li.className = "task-item";
+
+                const span = document.createElement("span");
+                span.className = "task-text" + (task.done ? " done" : "");
+                span.textContent = task.text;
+                span.onclick = () => toggleTaskDone(index);
+
+                const delBtn = document.createElement("button");
+                delBtn.textContent = "❌";
+                delBtn.className = "delete-btn";
+                delBtn.onclick = () => deleteTask(index);
+
+                li.appendChild(span);
+                li.appendChild(delBtn);
+                taskList.appendChild(li);
+            });
+        }
+
+        function saveTasks(tasks) {
+            localStorage.setItem(tasksKey, JSON.stringify(tasks));
+            loadTasks();
+        }
+
+        function addTask() {
+            const value = taskInput.value.trim();
+            if (!value) return;
+            const tasks = JSON.parse(localStorage.getItem(tasksKey)) || [];
+            tasks.push({ text: value, done: false });
+            saveTasks(tasks);
+            taskInput.value = "";
+        }
+
+        function toggleTaskDone(index) {
+            const tasks = JSON.parse(localStorage.getItem(tasksKey)) || [];
+            tasks[index].done = !tasks[index].done;
+            saveTasks(tasks);
+        }
+
+        function deleteTask(index) {
+            const tasks = JSON.parse(localStorage.getItem(tasksKey)) || [];
+            tasks.splice(index, 1);
+            saveTasks(tasks);
+        }
+
+        addTaskBtn.addEventListener("click", addTask);
+        taskInput.addEventListener("keypress", e => {
+            if (e.key === "Enter") addTask();
+        });
+
+        // Start
         setInterval(updateLoginTime, 1000);
         renderZeitleiste();
+        loadTasks();
     </script>
 </body>
 </html>
