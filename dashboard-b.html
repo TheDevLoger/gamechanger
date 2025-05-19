@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Benutzer B</title>
+    <link id="theme-link" rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>👤 Dashboard Benutzer B</h1>
+
+        <div class="dashboard-wrapper">
+            <div class="main-content">
+                <div class="card">
+                    <h2>⏱️ Eingeloggt seit</h2>
+                    <p><span id="zeitOnline">00:00:00</span></p>
+                </div>
+                <div class="card">
+                    <h2>🧰 Arbeitszeit</h2>
+                    <p><span id="arbeitszeit">00:00:00</span></p>
+                    <button id="arbeitszeitBtn" onclick="toggleArbeitszeit()">🟢 Starten</button>
+                </div>
+                <div class="card">
+                    <h2>📅 Tagesübersicht</h2>
+                    <div id="tage-a"></div>
+                </div>
+                <div class="card">
+                    <h2>📊 Arbeitszeiten Zeitleiste</h2>
+                    <div id="zeitleiste-a" class="timeline"></div>
+                </div>
+            </div>
+            <div class="todo-container">
+                <h2>📝 Aufgabenliste</h2>
+                <div class="todo-input">
+                    <input type="text" id="taskInput" placeholder="Neue Aufgabe eingeben...">
+                    <button id="addTaskBtn">Hinzufügen</button>
+                </div>
+                <ul id="taskList"></ul>
+            </div>
+        </div>
+        <button onclick="logout()">🔒 Logout</button>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // TODO: Firebase Config hier einfügen
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, onSnapshot } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAujeUok4jKYwnr5GEXze_EadszqMdY1y4",
+            authDomain: "gamechanger-78fb4.firebaseapp.com",
+            projectId: "gamechanger-78fb4",
+            storageBucket: "gamechanger-78fb4.appspot.com",
+            messagingSenderId: "510513691722",
+            appId: "1:510513691722:web:c0c1a97141ddfda4377ab3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const userKey = "BenutzerB";
+        const userRef = doc(db, "nutzer", userKey);
+
+        let arbeitsStart = null;
+        let arbeitsTimer = null;
+        let letzteAktualisierung = Date.now();
+        let loginZeit = Date.now();
+
+        async function initUserData() {
+            const userSnap = await getDoc(userRef);
+            if (!userSnap.exists()) {
+                await setDoc(userRef, {
+                    loginZeit: Date.now(),
+                    protokoll: {},
+                    arbeitszeiten: [],
+                    tasks: []
+                });
+            } else {
+                loginZeit = userSnap.data().loginZeit;
+            }
+            renderTasks();
+            renderZeitleiste();
+        }
+
+        function formatTime(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+            const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+            const seconds = String(totalSeconds % 60).padStart(2, "0");
+            return `${hours}:${minutes}:${seconds}`;
+        }
+
+        async function updateLoginTime() {
+            const jetzt = Date.now();
+            const onlineDauer = jetzt - loginZeit;
+            document.getElementById("zeitOnline").textContent = formatTime(onlineDauer);
+
+            const heute = new Date().toISOString().slice(0, 10);
+            const vergangeneMs = jetzt - letzteAktualisierung;
+
+            const userSnap = await getDoc(userRef);
+            const protokoll = userSnap.data().protokoll || {};
+            protokoll[heute] = (protokoll[heute] || 0) + vergangeneMs;
+            await updateDoc(userRef, { protokoll });
+            letzteAktualisierung = jetzt;
+
+            updateProtokoll(protokoll);
+        }
+
+        async function toggleArbeitszeit() {
+            const btn = document.getElementById("arbeitszeitBtn");
+            if (arbeitsStart === null) {
+                arbeitsStart = Date.now();
+                btn.textContent = "🔴 Stoppen";
+                arbeitsTimer = setInterval(updateArbeitszeit, 1000);
+            } else {
+                const ende = Date.now();
+                const dauer = ende - arbeitsStart;
+                const eintrag = { start: arbeitsStart, ende, dauer };
+
+                const userSnap = await getDoc(userRef);
+                const arbeitszeiten = userSnap.data().arbeitszeiten || [];
+                arbeitszeiten.push(eintrag);
+
+                await updateDoc(userRef, { arbeitszeiten });
+                arbeitsStart = null;
+                clearInterval(arbeitsTimer);
+                document.getElementById("arbeitszeit").textContent = "00:00:00";
+                btn.textContent = "🟢 Starten";
+                renderZeitleiste();
+            }
+        }
+
+        function updateArbeitszeit() {
+            if (arbeitsStart !== null) {
+                const dauer = Date.now() - arbeitsStart;
+                document.getElementById("arbeitszeit").textContent = formatTime(dauer);
+            }
+        }
+
+        function updateProtokoll(data) {
+            const el = document.getElementById("tage-a");
+            el.innerHTML = "";
+            const keys = Object.keys(data).sort();
+            for (const tag of keys) {
+                const p = document.createElement("p");
+                p.textContent = `${tag}: ${formatTime(data[tag])}`;
+                el.appendChild(p);
+            }
+        }
+
+        async function renderZeitleiste() {
+            const zeitleiste = document.getElementById("zeitleiste-a");
+            zeitleiste.innerHTML = "";
+            const userSnap = await getDoc(userRef);
+            const einträge = userSnap.data().arbeitszeiten || [];
+
+            einträge.forEach(eintrag => {
+                const start = new Date(eintrag.start);
+                const ende = new Date(eintrag.ende);
+                const tag = start.toISOString().slice(0, 10);
+                const stundenGesamt = 24;
+
+                if (tag === new Date().toISOString().slice(0, 10)) {
+                    const startProzent = ((start.getHours() * 60 + start.getMinutes()) / (stundenGesamt * 60)) * 100;
+                    const dauerMin = (ende - start) / 60000;
+                    const breiteProzent = (dauerMin / (stundenGesamt * 60)) * 100;
+
+                    const bar = document.createElement("div");
+                    bar.className = "timeline-bar";
+                    bar.style.left = startProzent + "%";
+                    bar.style.width = breiteProzent + "%";
+                    zeitleiste.appendChild(bar);
+                }
+            });
+        }
+
+        async function logout() {
+            window.location.href = "index.html";
+        }
+
+        // Aufgabenliste
+        const taskInput = document.getElementById("taskInput");
+        const addTaskBtn = document.getElementById("addTaskBtn");
+        const taskList = document.getElementById("taskList");
+
+        async function renderTasks() {
+            const userSnap = await getDoc(userRef);
+            const tasks = userSnap.data().tasks || [];
+            taskList.innerHTML = "";
+            tasks.forEach((task, index) => {
+                const li = document.createElement("li");
+                li.className = "task-item";
+
+                const span = document.createElement("span");
+                span.className = "task-text" + (task.done ? " done" : "");
+                span.textContent = task.text;
+                span.onclick = async () => toggleTaskDone(index);
+
+                const delBtn = document.createElement("button");
+                delBtn.textContent = "❌";
+                delBtn.className = "delete-btn";
+                delBtn.onclick = async () => deleteTask(index);
+
+                li.appendChild(span);
+                li.appendChild(delBtn);
+                taskList.appendChild(li);
+            });
+        }
+
+        async function saveTasks(tasks) {
+            await updateDoc(userRef, { tasks });
+            renderTasks();
+        }
+
+        async function addTask() {
+            const value = taskInput.value.trim();
+            if (!value) return;
+            const userSnap = await getDoc(userRef);
+            const tasks = userSnap.data().tasks || [];
+            tasks.push({ text: value, done: false });
+            taskInput.value = "";
+            saveTasks(tasks);
+        }
+
+        async function toggleTaskDone(index) {
+            const userSnap = await getDoc(userRef);
+            const tasks = userSnap.data().tasks || [];
+            tasks[index].done = !tasks[index].done;
+            saveTasks(tasks);
+        }
+
+        async function deleteTask(index) {
+            const userSnap = await getDoc(userRef);
+            const tasks = userSnap.data().tasks || [];
+            tasks.splice(index, 1);
+            saveTasks(tasks);
+        }
+
+        addTaskBtn.addEventListener("click", addTask);
+        taskInput.addEventListener("keypress", e => {
+            if (e.key === "Enter") addTask();
+        });
+
+        // Initialisierung
+        initUserData();
+        setInterval(updateLoginTime, 1000);
+    </script>
+</body>
+</html>

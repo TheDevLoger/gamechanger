@@ -1,0 +1,31 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <link id="theme-link" rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Login Terminal</h1>
+
+        <div class="card">
+            <h2>Wähle deinen Benutzer:</h2>
+            <button onclick="login('BenutzerA', 'dashboard-a.html')">👤 Erik Lähner</button>
+            <button onclick="login('BenutzerB', 'dashboard-b.html')">👤 Eric Tamme</button>
+            <button onclick="login('Admin', 'dashboard-admin.html')">🧠 Admin</button>
+        </div>
+    </div>
+
+    <script>
+        function login(name, redirectTo) {
+            localStorage.setItem("eingeloggt", name);
+            localStorage.setItem("loginZeit", Date.now());
+            window.location.href = redirectTo;
+        }
+    </script>
+</body>
+</html>
+
