@@ -3,99 +3,61 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Online-Zeit Tracker</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            padding: 20px;
-        }
-
-        button {
-            margin: 10px;
-            padding: 10px 20px;
-            font-size: 16px;
-        }
-
-        #output {
-            margin-top: 20px;
-            white-space: pre-wrap;
-        }
-    </style>
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <title>Login</title>
+    <link id="theme-link" rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 </head>
 <body>
-    <h1>Online-Zeit Tracker</h1>
+    <div class="container">
+        <h1>🔐 Login Terminal</h1>
 
-    <button onclick="startSession('userA')">Benutzer A</button>
-    <button onclick="startSession('userB')">Benutzer B</button>
-    <button onclick="showAdminView()">Admin</button>
+        <div class="card">
+            <h2>Wähle deinen Benutzer:</h2>
+            <button onclick="login('BenutzerA', 'dashboard-a.html')">👤 Erik Lähner</button>
+            <button onclick="login('BenutzerB', 'dashboard-b.html')">👤 Eric Tamme</button>
+            <button onclick="login('Admin', 'dashboard-admin.html')">🧠 Admin</button>
+        </div>
+    </div>
 
-    <div id="output"></div>
+    <!-- Füge diesen Script-Teil ins HTML <head> oder ganz oben im <script> ein -->
+    <script type="module">
+        // 1. Firebase SDK & Firestore importieren
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    <script>// 🔧 Deine Firebase-Konfiguration hier einfügen:
+        // 2. Deine Firebase-Konfiguration
         const firebaseConfig = {
             apiKey: "AIzaSyAujeUok4jKYwnr5GEXze_EadszqMdY1y4",
             authDomain: "gamechanger-78fb4.firebaseapp.com",
             projectId: "gamechanger-78fb4",
-            storageBucket: "gamechanger-78fb4.appspot.com",
+            storageBucket: "gamechanger-78fb4.firebasestorage.app",
             messagingSenderId: "510513691722",
             appId: "1:510513691722:web:c0c1a97141ddfda4377ab3"
         };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
 
-    let currentUser = null;
-    let loginTime = null;
+        // 3. Firebase initialisieren
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-    function startSession(userId) {
-      currentUser = userId;
-      loginTime = Date.now();
-      document.getElementById('output').textContent = `Angemeldet als ${userId.toUpperCase()}. Onlinezeit läuft...`;
-    }
+        // 4. Login-Funktion mit Firestore
+        async function login(name, redirectTo) {
+            try {
+                await addDoc(collection(db, "logins"), {
+                    name: name,
+                    loginZeit: serverTimestamp()
+                });
+                window.location.href = redirectTo;
+            } catch (e) {
+                console.error("Fehler beim Speichern des Logins:", e);
+                alert("Login fehlgeschlagen");
+            }
+        }
 
-    window.addEventListener('beforeunload', async () => {
-      if (!currentUser || !loginTime) return;
+        // Optional: Beispiel-Aufruf
+        // login("Max Mustermann", "dashboard.html");
+    </script>
 
-      const logoutTime = Date.now();
-      const onlineMinutes = Math.floor((logoutTime - loginTime) / 60000);
-      const today = new Date().toISOString().split('T')[0];
-
-      try {
-        await db.collection('users')
-          .doc(currentUser)
-          .collection('timeTracking')
-          .doc(today)
-          .set({
-            onlineTime: firebase.firestore.FieldValue.increment(onlineMinutes)
-          }, { merge: true });
-        console.log(`Gespeichert: ${currentUser} war ${onlineMinutes} Minuten online.`);
-      } catch (err) {
-        console.error('Fehler beim Speichern:', err);
-      }
-    });
-
-    async function showAdminView() {
-      document.getElementById('output').textContent = 'Lade Daten...';
-      const users = ['userA', 'userB'];
-      let output = '--- ADMIN-DATEN ---\n';
-
-      for (const userId of users) {
-        output += `\n📌 ${userId.toUpperCase()}:\n`;
-        const snapshot = await db.collection('users')
-          .doc(userId)
-          .collection('timeTracking')
-          .get();
-
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          output += `📅 ${doc.id}: ${data.onlineTime} Minuten\n`;
-        });
-      }
-
-      document.getElementById('output').textContent = output;
-    }</script>
 </body>
 </html>
+

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Eric Tamme</title>
+    <link id="theme-link" rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>👤 Dashboard Eric Tamme</h1>
+
+        <div class="dashboard-wrapper">
+            <!-- Linke Spalte -->
+            <div class="main-content">
+                <div class="card">
+                    <h2>⏱️ Eingeloggt seit</h2>
+                    <p><span id="zeitOnline">00:00:00</span></p>
+                </div>
+
+                <div class="card">
+                    <h2>🧰 Arbeitszeit</h2>
+                    <p><span id="arbeitszeit">00:00:00</span></p>
+                    <button id="arbeitszeitBtn" onclick="toggleArbeitszeit()">🟢 Starten</button>
+                </div>
+
+                <div class="card">
+                    <h2>📅 Tagesübersicht</h2>
+                    <div id="tage-b"></div>
+                </div>
+
+                <div class="card">
+                    <h2>📊 Arbeitszeiten Zeitleiste</h2>
+                    <div id="zeitleiste-b" class="timeline"></div>
+                </div>
+            </div>
+
+            <!-- Rechte Spalte -->
+            <div class="todo-container">
+                <h2>📝 Aufgabenliste</h2>
+                <div class="todo-input">
+                    <input type="text" id="taskInput" placeholder="Neue Aufgabe eingeben...">
+                    <button id="addTaskBtn">Hinzufügen</button>
+                </div>
+                <ul id="taskList"></ul>
+            </div>
+        </div>
+
+        <button onclick="logout()">🔒 Logout</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import {
+            getFirestore,
+            doc,
+            setDoc,
+            getDoc,
+            updateDoc,
+            addDoc,
+            collection,
+            serverTimestamp,
+            getDocs
+        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        // 🔧 Deine Firebase-Konfiguration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAujeUok4jKYwnr5GEXze_EadszqMdY1y4",
+            authDomain: "gamechanger-78fb4.firebaseapp.com",
+            projectId: "gamechanger-78fb4",
+            storageBucket: "gamechanger-78fb4.firebasestorage.app",
+            messagingSenderId: "510513691722",
+            appId: "1:510513691722:web:c0c1a97141ddfda4377ab3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const userKey = "BenutzerB";
+        const dashboard = "B";
+
+        let arbeitsStart = null;
+        let arbeitsTimer = null;
+        let letzteAktualisierung = Date.now();
+
+        function formatTime(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+            const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+            const seconds = String(totalSeconds % 60).padStart(2, "0");
+            return `${hours}:${minutes}:${seconds}`;
+        }
+
+        async function saveLoginTime() {
+            const ref = doc(db, "logins", `${userKey}_${dashboard}`);
+            await setDoc(ref, {
+                loginZeit: serverTimestamp()
+            }, { merge: true });
+        }
+
+        async function getLoginTime() {
+            const ref = doc(db, "logins", `${userKey}_${dashboard}`);
+            const snapshot = await getDoc(ref);
+            return snapshot.exists() ? snapshot.data().loginZeit.toMillis?.() || Date.now() : Date.now();
+        }
+
+        async function updateLoginTime() {
+            const jetzt = Date.now();
+            const loginZeit = await getLoginTime();
+            const onlineDauer = jetzt - loginZeit;
+            document.getElementById("zeitOnline").textContent = formatTime(onlineDauer);
+
+            const heute = new Date().toISOString().slice(0, 10);
+            const protokollRef = doc(db, "zeitprotokolle", `${userKey}_${dashboard}`);
+            const snapshot = await getDoc(protokollRef);
+            const vergangeneMs = jetzt - letzteAktualisierung;
+            const alteDauer = snapshot.exists() && snapshot.data()[heute] ? snapshot.data()[heute] : 0;
+
+            await setDoc(protokollRef, {
+                [heute]: alteDauer + vergangeneMs
+            }, { merge: true });
+
+            letzteAktualisierung = jetzt;
+            updateProtokollUI({ [heute]: alteDauer + vergangeneMs });
+        }
+
+        async function toggleArbeitszeit() {
+            const btn = document.getElementById("arbeitszeitBtn");
+            if (arbeitsStart === null) {
+                arbeitsStart = Date.now();
+                btn.textContent = "🔴 Stoppen";
+                arbeitsTimer = setInterval(updateArbeitszeit, 1000);
+            } else {
+                const ende = Date.now();
+                const dauer = ende - arbeitsStart;
+                await addDoc(collection(db, "arbeitszeiten", `${userKey}_${dashboard}`, "eintraege"), {
+                    start: arbeitsStart,
+                    ende: ende,
+                    dauer: dauer
+                });
+                arbeitsStart = null;
+                clearInterval(arbeitsTimer);
+                document.getElementById("arbeitszeit").textContent = "00:00:00";
+                btn.textContent = "🟢 Starten";
+                renderZeitleiste();
+            }
+        }
+
+        function updateArbeitszeit() {
+            if (arbeitsStart !== null) {
+                const dauer = Date.now() - arbeitsStart;
+                document.getElementById("arbeitszeit").textContent = formatTime(dauer);
+            }
+        }
+
+        function updateProtokollUI(data) {
+            const el = document.getElementById("tage-b");
+            el.innerHTML = "";
+            for (const tag in data) {
+                const p = document.createElement("p");
+                p.textContent = `${tag}: ${formatTime(data[tag])}`;
+                el.appendChild(p);
+            }
+        }
+
+        async function renderZeitleiste() {
+            const zeitleiste = document.getElementById("zeitleiste-b");
+            zeitleiste.innerHTML = "";
+            const heute = new Date().toISOString().slice(0, 10);
+
+            const eintraegeSnap = await getDocs(collection(db, "arbeitszeiten", `${userKey}_${dashboard}`, "eintraege"));
+            eintraegeSnap.forEach(docSnap => {
+                const eintrag = docSnap.data();
+                const start = new Date(eintrag.start);
+                const ende = new Date(eintrag.ende);
+                const tag = start.toISOString().slice(0, 10);
+                const stundenGesamt = 24;
+
+                if (tag === heute) {
+                    const startProzent = ((start.getHours() * 60 + start.getMinutes()) / (stundenGesamt * 60)) * 100;
+                    const dauerMin = (ende - start) / 60000;
+                    const breiteProzent = (dauerMin / (stundenGesamt * 60)) * 100;
+
+                    const bar = document.createElement("div");
+                    bar.className = "timeline-bar";
+                    bar.style.left = startProzent + "%";
+                    bar.style.width = breiteProzent + "%";
+                    zeitleiste.appendChild(bar);
+                }
+            });
+        }
+
+        async function logout() {
+            window.location.href = "index.html";
+        }
+
+        // Aufgabenliste
+        const taskInput = document.getElementById("taskInput");
+        const addTaskBtn = document.getElementById("addTaskBtn");
+        const taskList = document.getElementById("taskList");
+
+        async function loadTasks() {
+            const ref = doc(db, "aufgaben", `${userKey}_${dashboard}`);
+            const snapshot = await getDoc(ref);
+            const tasks = snapshot.exists() ? snapshot.data().tasks || [] : [];
+            taskList.innerHTML = "";
+            tasks.forEach((task, index) => {
+                const li = document.createElement("li");
+                li.className = "task-item";
+
+                const span = document.createElement("span");
+                span.className = "task-text" + (task.done ? " done" : "");
+                span.textContent = task.text;
+                span.onclick = () => toggleTaskDone(index);
+
+                const delBtn = document.createElement("button");
+                delBtn.textContent = "❌";
+                delBtn.className = "delete-btn";
+                delBtn.onclick = () => deleteTask(index);
+
+                li.appendChild(span);
+                li.appendChild(delBtn);
+                taskList.appendChild(li);
+            });
+        }
+
+        async function saveTasks(tasks) {
+            const ref = doc(db, "aufgaben", `${userKey}_${dashboard}`);
+            await setDoc(ref, { tasks }, { merge: true });
+            loadTasks();
+        }
+
+        async function addTask() {
+            const value = taskInput.value.trim();
+            if (!value) return;
+            const ref = doc(db, "aufgaben", `${userKey}_${dashboard}`);
+            const snapshot = await getDoc(ref);
+            const tasks = snapshot.exists() ? snapshot.data().tasks || [] : [];
+            tasks.push({ text: value, done: false });
+            await saveTasks(tasks);
+            taskInput.value = "";
+        }
+
+        async function toggleTaskDone(index) {
+            const ref = doc(db, "aufgaben", `${userKey}_${dashboard}`);
+            const snapshot = await getDoc(ref);
+            const tasks = snapshot.exists() ? snapshot.data().tasks || [] : [];
+            tasks[index].done = !tasks[index].done;
+            await saveTasks(tasks);
+        }
+
+        async function deleteTask(index) {
+            const ref = doc(db, "aufgaben", `${userKey}_${dashboard}`);
+            const snapshot = await getDoc(ref);
+            const tasks = snapshot.exists() ? snapshot.data().tasks || [] : [];
+            tasks.splice(index, 1);
+            await saveTasks(tasks);
+        }
+
+        addTaskBtn.addEventListener("click", addTask);
+        taskInput.addEventListener("keypress", e => {
+            if (e.key === "Enter") addTask();
+        });
+
+        // Start
+        await saveLoginTime();
+        setInterval(updateLoginTime, 1000);
+        renderZeitleiste();
+        loadTasks();
+    </script>
+
+</body>
+</html>
