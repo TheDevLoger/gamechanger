@@ -15,13 +15,13 @@ body {
     color: var(--primary-text);
     font-family: 'Share Tech Mono', monospace;
     margin: 0;
-    padding: 20px;
+    padding: 20px 20px 20px 20px;
 }
 
 /* ---- Container & Spaltenlayout ---- */
 .container {
     max-width: 1200px;
-    margin: auto;
+    margin: 0;
 }
 
 .dashboard-wrapper {
@@ -32,12 +32,12 @@ body {
 
 /* ---- Linke Spalte (Dashboard-Karten) ---- */
 .main-content {
-    flex: 0 0 65%;
+    flex: 0 0 55%;
 }
 
 /* ---- Rechte Spalte (Aufgabenliste) ---- */
 .todo-container {
-    flex: 0 0 35%;
+    flex: 0 0 37%;
     background: var(--card-bg);
     padding: 1rem;
     border-radius: 8px;
@@ -169,3 +169,110 @@ ul#taskList {
         position: static;
     }
 }
+
+#calendarTable tr.new-day {
+    border-top: 2px solid #007acc;
+}
+
+.impact-High td {
+    color: red;
+    font-weight: bold;
+}
+
+.impact-Medium td {
+    color: orange;
+    font-weight: bold;
+}
+
+.impact-Low td {
+    color: #555;
+}
+
+.impact-Holiday td {
+    color: #444;
+    font-style: italic;
+}
+
+.left-sidebar {
+    font-family: Arial, sans-serif;
+    background: #f0f0f0;
+    margin: 0;
+    padding: 20px;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+    flex: 0 0 52%;
+    height: 70vh;
+    overflow-y: auto;
+}
+
+    .left-sidebar h1 {
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    .left-sidebar h2 {
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    .left-sidebar #filterContainer {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .left-sidebar select {
+        padding: 6px 10px;
+        font-size: 0.95em;
+    }
+
+    .left-sidebar table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        font-size: 0.9em;
+    }
+
+    .left-sidebar th, td {
+        border: 1px solid #ddd;
+        padding: 4px 6px;
+        text-align: left;
+    }
+
+    .left-sidebar th {
+        background-color: #007acc;
+        color: white;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    .left-sidebar tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    .left-sidebar tr:hover {
+        background-color: #d9ebff;
+        cursor: pointer;
+    }
+
+    .left-sidebar .impact-Low {
+        color: #777;
+    }
+
+    .left-sidebar .impact-Medium {
+        color: orange;
+        font-weight: bold;
+    }
+
+    .left-sidebar .impact-High {
+        color: red;
+        font-weight: bold;
+    }
+
+    .left-sidebar .impact-Holiday {
+        color: #444;
+        font-style: italic;
+    }
+
+    .left-sidebar tr.new-day {
+        border-top: 3px solid #007acc;
+    }
