@@ -11,8 +11,36 @@
     <div class="container">
         <h1>👤 Dashboard Eric Tamme</h1>
 
+        <!-- 🧱 Wrapper für 3-Spalten-Layout -->
         <div class="dashboard-wrapper">
+
             <!-- Linke Spalte -->
+            <div class="left-sidebar">
+                <h2>📆 Wirtschaftskalender</h2>
+                <label for="impactFilter"><strong>Impact filtern:</strong></label>
+                <select id="impactFilter" style="width: 100%; margin-bottom: 10px;">
+                    <option value="All">Alle</option>
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                    <option value="Holiday">Holiday</option>
+                </select>
+                <div style="overflow-x:auto;">
+                    <table id="calendarTable" style="width: 100%; font-size: 0.8em;">
+                        <thead>
+                            <tr>
+                                <th>Datum</th>
+                                <th>Zeit</th>
+                                <th>Währung</th>
+                                <th>Event</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Mittlere Spalte -->
             <div class="main-content">
                 <div class="card">
                     <h2>⏱️ Eingeloggt seit</h2>
@@ -45,10 +73,12 @@
                 </div>
                 <ul id="taskList"></ul>
             </div>
+
         </div>
 
         <button onclick="logout()">🔒 Logout</button>
     </div>
+</body>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -263,7 +293,55 @@
             if (e.key === "Enter") addTask();
         });
 
-        // Start
+        let calendarData = [];
+
+        async function loadCalendar() {
+            const res = await fetch('events.json');
+            const data = await res.json();
+
+            calendarData = data.sort((a, b) => new Date(a.date) - new Date(b.date));
+            renderCalendar(calendarData);
+        }
+
+        function renderCalendar(data) {
+            const tbody = document.querySelector('#calendarTable tbody');
+            tbody.innerHTML = '';
+            let lastDate = '';
+
+            data.forEach(ev => {
+                const dateObj = new Date(ev.date);
+                const datum = dateObj.toLocaleDateString('de-DE');
+                const zeit = dateObj.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+
+                const tr = document.createElement('tr');
+                if (datum !== lastDate) {
+                    tr.classList.add('new-day');
+                    lastDate = datum;
+                }
+
+                tr.innerHTML = `
+                <td>${datum}</td>
+                <td>${zeit}</td>
+                <td>${ev.country}</td>
+                <td title="${ev.title}">${ev.title}</td>
+                `;
+                tr.classList.add(`impact-${ev.impact || 'Low'}`);
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.getElementById('impactFilter').addEventListener('change', function () {
+            const selected = this.value;
+            if (selected === 'All') {
+                renderCalendar(calendarData);
+            } else {
+                const filtered = calendarData.filter(ev => ev.impact === selected);
+                renderCalendar(filtered);
+            }
+        });
+
+        loadCalendar();
+
         await saveLoginTime();
         setInterval(updateLoginTime, 1000);
         renderZeitleiste();
