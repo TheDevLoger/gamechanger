@@ -48,11 +48,9 @@
                 </div>
 
                 <div class="card">
-                    <h2>🧰 Arbeitszeit + Sportzeit</h2>
+                    <h2>🧰 Arbeitszeit</h2>
                     <p><span id="arbeitszeit">00:00:00</span></p>
-                    <button id="arbeitszeitBtn" onclick="toggleArbeitszeit()">🟢 Arbeit Starten</button>
-                    <p><span id="sportzeit">00:00:00</span></p>
-                    <button id="sportzeitBtn" onclick="toggleSportzeit()">🟢 Workout Starten</button>
+                    <button id="arbeitszeitBtn" onclick="toggleArbeitszeit()">🟢 Starten</button>
                 </div>
 
                 <div class="card">
@@ -114,8 +112,6 @@
 
         let arbeitsStart = null;
         let arbeitsTimer = null;
-        let sportStart = null;
-        let sportTimer = null;
         let letzteAktualisierung = Date.now();
 
         function formatTime(ms) {
@@ -176,7 +172,7 @@
                 arbeitsStart = null;
                 clearInterval(arbeitsTimer);
                 document.getElementById("arbeitszeit").textContent = "00:00:00";
-                btn.textContent = "🟢 Arbeit Starten";
+                btn.textContent = "🟢 Starten";
                 renderZeitleiste();
             }
         }
@@ -187,38 +183,6 @@
                 document.getElementById("arbeitszeit").textContent = formatTime(dauer);
             }
         }
-
-        // NEUER BUTTON TEST --------------------------------------------------------------------------------------------------------
-        // NEUER BUTTON TEST --------------------------------------------------------------------------------------------------------
-            async function toggleSportzeit() {
-                const btn = document.getElementById("sportzeitBtn");
-                if (sportStart === null) {
-                    sportStart = Date.now();
-                    btn.textContent = "🔴 Stoppen";
-                    sportTimer = setInterval(updateSportzeit, 1000);
-                } else {
-                    const ende = Date.now();
-                    const dauer = ende - sportStart;
-                    await addDoc(collection(db, "sportzeiten", `${userKey}_${dashboard}`, "eintraege"), {
-                        start: sportStart,
-                        ende: ende,
-                        dauer: dauer
-                    });
-                    sportStart = null;
-                    clearInterval(sportTimer);
-                    document.getElementById("sportzeit").textContent = "00:00:00";
-                    btn.textContent = "🟢 Workout Starten";
-                }
-            }
-
-        function updateSportzeit() {
-            if (sportStart !== null) {
-                const dauer = Date.now() - sportStart;
-                document.getElementById("sportzeit").textContent = formatTime(dauer);
-            }
-        }
-        // NEUER BUTTON TEST --------------------------------------------------------------------------------------------------------
-        // NEUER BUTTON TEST --------------------------------------------------------------------------------------------------------
 
         function updateProtokollUI(data) {
             const el = document.getElementById("tage-a");
@@ -384,7 +348,6 @@
         loadTasks();
 
         window.toggleArbeitszeit = toggleArbeitszeit;
-        window.toggleSportzeit = toggleSportzeit;
         window.logout = logout;
 
     </script>
