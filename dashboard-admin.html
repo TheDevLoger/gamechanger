@@ -9,139 +9,95 @@
 </head>
 <body>
     <div class="container">
-        <div class="dashboard-wrapper">
-            <h1>🛠️ Admin Dashboard</h1>
+        <h1>🛠️ Admin Dashboard</h1>
 
-            <div class="main-content">
-
-                <div class="card">
-                    <h2>📅 Tagesübersicht Erik Lähner</h2>
-                    <div id="tage-a"></div>
-                </div>
-
-                <div class="card">
-                    <h2>🧰 Arbeitszeiten Erik Lähner</h2>
-                    <div id="arbeitszeiten-a"></div>
-                </div>
-            </div>
-            <div class="main-content">
-                <div class="card">
-                    <h2>📅 Tagesübersicht Eric Tamme</h2>
-                    <div id="tage-b"></div>
-                </div>
-
-                <div class="card">
-                    <h2>🧰 Arbeitszeiten Eric Tamme</h2>
-                    <div id="arbeitszeiten-b"></div>
-                </div>
-            </div>
-
-            <button onclick="logout()">🔒 Logout</button>
-        </div>
+        <div class="card">
+            <h2>📅 Tagesübersicht Erik Lähner</h2>
+            <div id="tage-a"></div>
         </div>
 
-        <script type="module">
-            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-            import {
-                getFirestore,
-                doc,
-                getDoc,
-                getDocs,
-                collection
-            } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        <div class="card">
+            <h2>📅 Tagesübersicht Eric Tamme</h2>
+            <div id="tage-b"></div>
+        </div>
 
-            const firebaseConfig = {
-                apiKey: "AIzaSyAujeUok4jKYwnr5GEXze_EadszqMdY1y4",
-                authDomain: "gamechanger-78fb4.firebaseapp.com",
-                projectId: "gamechanger-78fb4",
-                storageBucket: "gamechanger-78fb4.firebasestorage.app",
-                messagingSenderId: "510513691722",
-                appId: "1:510513691722:web:c0c1a97141ddfda4377ab3"
-            };
+        <div class="card">
+            <h2>🧰 Arbeitszeiten Erik Lähner</h2>
+            <div id="arbeitszeiten-a"></div>
+        </div>
 
-            const app = initializeApp(firebaseConfig);
-            const db = getFirestore(app);
+        <div class="card">
+            <h2>🧰 Arbeitszeiten Eric Tamme</h2>
+            <div id="arbeitszeiten-b"></div>
+        </div>
 
-            function formatTime(ms) {
-                const totalSeconds = Math.floor(ms / 1000);
-                const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
-                const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
-                const seconds = String(totalSeconds % 60).padStart(2, "0");
-                return `${hours}:${minutes}:${seconds}`;
-            }
+        <button onclick="logout()">🔒 Logout</button>
+    </div>
 
-            async function showProtokolle() {
-                const benutzerListe = ["BenutzerA_A", "BenutzerB_B"];
+    <script>
+        function formatTime(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+            const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+            const seconds = String(totalSeconds % 60).padStart(2, "0");
+            return `${hours}:${minutes}:${seconds}`;
+        }
 
-                for (let benutzerKey of benutzerListe) {
-                    const [name, dashboard] = benutzerKey.split("_");
-                    const ziel = document.getElementById("tage-" + name.slice(-1).toLowerCase());
-                    ziel.innerHTML = "";
+        function showProtokolle() {
+            ["BenutzerA", "BenutzerB"].forEach(user => {
+                const key = "zeitprotokoll_" + user;
+                const daten = JSON.parse(localStorage.getItem(key)) || {};
+                const el = document.getElementById("tage-" + user.slice(-1).toLowerCase());
+                el.innerHTML = "";
+                Object.keys(daten).sort().forEach(tag => {
+                    const p = document.createElement("p");
+                    p.textContent = `${tag}: ${formatTime(daten[tag])}`;
+                    el.appendChild(p);
+                });
+            });
+        }
 
-                    const ref = doc(db, "zeitprotokolle", benutzerKey);
-                    const snapshot = await getDoc(ref);
+        function showArbeitszeiten() {
+            ["BenutzerA", "BenutzerB"].forEach(user => {
+                const daten = JSON.parse(localStorage.getItem("arbeitszeiten_" + user)) || [];
+                const container = document.getElementById("arbeitszeiten-" + user.slice(-1).toLowerCase());
+                container.innerHTML = "";
 
-                    if (snapshot.exists()) {
-                        const daten = snapshot.data();
-                        Object.keys(daten).sort().forEach(tag => {
-                            const p = document.createElement("p");
-                            p.textContent = `${tag}: ${formatTime(daten[tag])}`;
-                            ziel.appendChild(p);
-                        });
-                    }
-                }
-            }
+                const gruppiert = {};
+                daten.forEach(e => {
+                    const tag = new Date(e.start).toISOString().slice(0, 10);
+                    if (!gruppiert[tag]) gruppiert[tag] = [];
+                    gruppiert[tag].push(e);
+                });
 
-            async function showArbeitszeiten() {
-                const benutzerListe = ["BenutzerA_A", "BenutzerB_B"];
+                Object.keys(gruppiert).sort().forEach(tag => {
+                    const block = document.createElement("div");
+                    block.className = "arbeits-tag";
+                    const header = document.createElement("h4");
+                    header.textContent = tag;
+                    block.appendChild(header);
 
-                for (let benutzerKey of benutzerListe) {
-                    const [name, dashboard] = benutzerKey.split("_");
-                    const ziel = document.getElementById("arbeitszeiten-" + name.slice(-1).toLowerCase());
-                    ziel.innerHTML = "";
-
-                    const eintraegeSnap = await getDocs(collection(db, "arbeitszeiten", benutzerKey, "eintraege"));
-                    const gruppiert = {};
-
-                    eintraegeSnap.forEach(docSnap => {
-                        const e = docSnap.data();
-                        const tag = new Date(e.start).toISOString().slice(0, 10);
-                        if (!gruppiert[tag]) gruppiert[tag] = [];
-                        gruppiert[tag].push(e);
+                    gruppiert[tag].forEach(e => {
+                        const start = new Date(e.start).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+                        const ende = new Date(e.ende).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+                        const dauer = formatTime(e.dauer);
+                        const p = document.createElement("p");
+                        p.textContent = `🕓 ${start} – ${ende} (Dauer: ${dauer})`;
+                        block.appendChild(p);
                     });
 
-                    Object.keys(gruppiert).sort().forEach(tag => {
-                        const block = document.createElement("div");
-                        block.className = "arbeits-tag";
-                        const header = document.createElement("h4");
-                        header.textContent = tag;
-                        block.appendChild(header);
+                    container.appendChild(block);
+                });
+            });
+        }
 
-                        gruppiert[tag].forEach(e => {
-                            const start = new Date(e.start).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
-                            const ende = new Date(e.ende).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
-                            const dauer = formatTime(e.dauer);
-                            const p = document.createElement("p");
-                            p.textContent = `🕓 ${start} – ${ende} (Dauer: ${dauer})`;
-                            block.appendChild(p);
-                        });
+        function logout() {
+            localStorage.removeItem("eingeloggt");
+            window.location.href = "index.html";
+        }
 
-                        ziel.appendChild(block);
-                    });
-                }
-            }
-
-            function logout() {
-                window.location.href = "index.html";
-            }
-
-            // Initialisierung
-            showProtokolle();
-            showArbeitszeiten();
-
-            window.logout = logout;
-
-        </script>
-
+        showProtokolle();
+        showArbeitszeiten();
+    </script>
 </body>
 </html>

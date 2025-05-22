@@ -48,9 +48,11 @@
                 </div>
 
                 <div class="card">
-                    <h2>🧰 Arbeitszeit</h2>
+                    <h2>🧰 Arbeitszeit + 💪 Sportzeit</h2>
                     <p><span id="arbeitszeit">00:00:00</span></p>
                     <button id="arbeitszeitBtn" onclick="toggleArbeitszeit()">🟢 Starten</button>
+                    <p><span id="sportzeit">00:00:00</span></p>
+                    <button id="sportzeitBtn" onclick="toggleSportzeit()">🟢 Workout Starten</button>
                 </div>
 
                 <!--
@@ -214,6 +216,34 @@
             if (arbeitsStart !== null) {
                 const dauer = Date.now() - arbeitsStart;
                 document.getElementById("arbeitszeit").textContent = formatTime(dauer);
+            }
+        }
+
+        async function toggleSportzeit() {
+            const btn = document.getElementById("sportzeitBtn");
+            if (sportStart === null) {
+                sportStart = Date.now();
+                btn.textContent = "🔴 Stoppen";
+                sportTimer = setInterval(updateSportzeit, 1000);
+            } else {
+                const ende = Date.now();
+                const dauer = ende - sportStart;
+                await addDoc(collection(db, "sportzeiten", `${userKey}_${dashboard}`, "eintraege"), {
+                    start: sportStart,
+                    ende: ende,
+                    dauer: dauer
+                });
+                sportStart = null;
+                clearInterval(sportTimer);
+                document.getElementById("sportzeit").textContent = "00:00:00";
+                btn.textContent = "🟢 Workout Starten";
+            }
+        }
+
+        function updateSportzeit() {
+            if (sportStart !== null) {
+                const dauer = Date.now() - sportStart;
+                document.getElementById("sportzeit").textContent = formatTime(dauer);
             }
         }
 
@@ -433,6 +463,7 @@
         loadTasks();
 
         window.toggleArbeitszeit = toggleArbeitszeit;
+        window.toggleSportzeit = toggleSportzeit;
         window.logout = logout;
 
     </script>
