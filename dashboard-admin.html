@@ -42,7 +42,7 @@
 
                 <div class="card">
                     <h2>💪 Workout Zeiten Eric Tamme</h2>
-                    <div id="sportzeiten-a"></div>
+                    <div id="sportzeiten-b"></div>
                 </div>
             </div>
 
@@ -142,11 +142,13 @@
         }
 
         async function showWorkoutZeiten() {
-            const benutzerListe = ["BenutzerA_A"]; // Nur für Erik Lähner, wie im HTML definiert
+            const benutzerListe = ["BenutzerA_A", "BenutzerB_B"];
 
             for (let benutzerKey of benutzerListe) {
                 const [name, dashboard] = benutzerKey.split("_");
                 const ziel = document.getElementById("sportzeiten-" + name.slice(-1).toLowerCase());
+                if (!ziel) continue; // Falls das Ziel-Element nicht existiert
+
                 ziel.innerHTML = "";
 
                 const eintraegeSnap = await getDocs(collection(db, "sportzeiten", benutzerKey, "eintraege"));
