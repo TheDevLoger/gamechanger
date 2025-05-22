@@ -276,3 +276,11 @@ ul#taskList {
     .left-sidebar tr.new-day {
         border-top: 3px solid #007acc;
     }
+
+input, select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}

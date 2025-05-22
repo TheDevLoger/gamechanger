@@ -53,16 +53,49 @@
                     <button id="arbeitszeitBtn" onclick="toggleArbeitszeit()">🟢 Starten</button>
                 </div>
 
+                <!--
                 <div class="card">
                     <h2>📅 Tagesübersicht</h2>
                     <div id="tage-b"></div>
                 </div>
+                -->
 
+                <!-- // DER POSITION SIZE CALCULATOR----------------------------------------------------------------------- -->
                 <div class="card">
-                    <h2>📊 Arbeitszeiten Zeitleiste</h2>
-                    <div id="zeitleiste-b" class="timeline"></div>
+                    <h2>Lot Size Calculator</h2>
+
+                    <label for="balance">Kontogröße (EUR):</label>
+                    <input id="balance" type="number" placeholder="z.B. 10000" step="any" />
+
+                    <label for="risk">Risiko (%):</label>
+                    <input id="risk" type="number" placeholder="z.B. 2" step="any" />
+
+                    <label for="stoploss">Stop-Loss (Pips):</label>
+                    <input id="stoploss" type="number" placeholder="z.B. 50" step="any" />
+
+                    <label for="pair">Währungspaar:</label>
+                    <select id="pair">
+                        <option value="EUR/USD">EUR/USD</option>
+                        <option value="GBP/USD">GBP/USD</option>
+                        <option value="USD/JPY">USD/JPY</option>
+                        <option value="USD/CHF">USD/CHF</option>
+                        <option value="AUD/USD">AUD/USD</option>
+                        <option value="USD/CAD">USD/CAD</option>
+                        <option value="NZD/USD">NZD/USD</option>
+                        <option value="GBP/JPY">GBP/JPY</option>
+                        <option value="EUR/JPY">EUR/JPY</option>
+                        <option value="AUD/JPY">AUD/JPY</option>
+                        <option value="EURNZD">EURNZD</option>
+                        <option value="EUR/GBP">EUR/GBP</option>
+                    </select>
+
+                    <button id="calcBtn">Berechne Lotgröße</button>
+
+                    <div id="result" class="result"></div>
+                    <div id="warning" class="warning"></div>
                 </div>
             </div>
+            <!-- // DER POSITION SIZE CALCULATOR----------------------------------------------------------------------- -->
 
             <!-- Rechte Spalte -->
             <div class="todo-container">
@@ -339,6 +372,58 @@
                 renderCalendar(filtered);
             }
         });
+
+        // RECHNER SKRIPT --------------------------------------------------------------------------------------------------------------------------
+        const pipValues = {
+            "EUR/USD": 10,
+            "GBP/USD": 10,
+            "USD/JPY": 9.1,
+            "USD/CHF": 10.5,
+            "AUD/USD": 10,
+            "USD/CAD": 7.9,
+            "NZD/USD": 10,
+            "GBP/JPY": 7.3,
+            "EUR/JPY": 7.8,
+            "AUD/JPY": 7.4,
+            "EURNZD": 6.9,
+            "EUR/GBP": 11
+        };
+
+        document.getElementById("calcBtn").addEventListener("click", function () {
+            const balance = parseFloat(document.getElementById("balance").value);
+            const riskPercent = parseFloat(document.getElementById("risk").value) / 100;
+            const stopLoss = parseFloat(document.getElementById("stoploss").value);
+            const pair = document.getElementById("pair").value;
+
+            const resultDiv = document.getElementById("result");
+            const warningDiv = document.getElementById("warning");
+
+            if (isNaN(balance) || isNaN(riskPercent) || isNaN(stopLoss) || balance <= 0 || stopLoss <= 0) {
+                resultDiv.innerText = "";
+                warningDiv.innerText = "Bitte gültige Werte eingeben.";
+                return;
+            }
+
+            const pipValue = pipValues[pair] || 10;
+
+            // API-Anfrage für EUR/USD-Wechselkurs
+            fetch('https://api.frankfurter.app/latest?from=EUR&to=USD')
+                .then(response => response.json())
+                .then(data => {
+                    const eurToUsd = data.rates.USD;
+                    const balanceUSD = balance * eurToUsd;
+                    const riskAmount = balanceUSD * riskPercent;
+                    const lotSize = riskAmount / (stopLoss * pipValue);
+
+                    resultDiv.innerText = `Lotgröße: ${lotSize.toFixed(2)} Lots (Kurs EUR/USD: ${eurToUsd.toFixed(4)})`;
+                    warningDiv.innerText = "";
+                })
+                .catch(() => {
+                    warningDiv.innerText = "Fehler beim Abrufen der Wechselkurse.";
+                    resultDiv.innerText = "";
+                });
+        });
+        // RECHNER SKRIPT --------------------------------------------------------------------------------------------------------------------------
 
         loadCalendar();
 
