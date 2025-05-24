@@ -1,0 +1,128 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+}
+
+body {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.column {
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+#notesList {
+    width: 25%;
+    background-color: #f0f0f0;
+    border-right: 1px solid #ccc;
+}
+
+#noteEditor {
+    width: 50%;
+    background-color: #fff;
+    border-right: 1px solid #ccc;
+}
+
+#taskChecklist {
+    width: 25%;
+    background-color: #f9f9f9;
+}
+
+.note-item {
+    padding: 0.5rem;
+    cursor: pointer;
+    border-bottom: 1px solid #ddd;
+}
+
+    .note-item:hover {
+        background-color: #e0e0e0;
+    }
+
+textarea, input[type="text"] {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    padding: 0.5rem 1rem;
+    margin-top: 0.5rem;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+    background-color: #007bff;
+    color: white;
+}
+
+    button:hover {
+        background-color: #0056b3;
+    }
+
+.task-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+    .task-item input[type="checkbox"] {
+        margin-right: 0.5rem;
+    }
+
+.fade-out {
+    opacity: 0;
+    transition: opacity 0.4s ease-out;
+}
+
+#tagContainer span:hover {
+    opacity: 0.8;
+    cursor: default;
+}
+
+.tag-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 12px;
+    padding: 0.3rem 0.6rem;
+    margin-right: 0.4rem;
+    margin-bottom: 0.4rem;
+    color: #fff;
+    font-size: 0.9rem;
+}
+
+.content-area {
+    border: 1px solid #ccc;
+    padding: 1rem;
+    min-height: 200px;
+    border-radius: 8px;
+    background: #fff;
+    overflow-y: auto;
+}
+
+.toolbar {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+    .toolbar button {
+        padding: 0.3rem 0.6rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        background: #eee;
+    }
+
+    .toolbar.hidden {
+        display: none;
+    }
+
+    .toolbar button:hover {
+        background-color: #ddd;
+    }
