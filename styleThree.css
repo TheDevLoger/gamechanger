@@ -1,37 +1,31 @@
-/* ==== Retro Gaming Look - Farben & Variablen ==== */
 :root {
     --background: #000;
-    --card-bg: #111;
-    --primary-text: #39ff14; /* neon green */
-    --secondary-text: #ff00ff; /* neon magenta */
-    --accent: #00ffff; /* cyan */
-    --accent-hover: #ffcc00; /* yellow */
-    --border: #555;
+    --panel-bg: #111;
+    --accent: #39ff14;
+    --accent-secondary: #ff00ff;
+    --text: #00ffff;
+    --danger: #ff0033;
+    --border: #00ffff;
+    --hover: #ffcc00;
     --shadow: none;
+    --font: 'Press Start 2P', monospace;
 }
 
 body {
-    background: var(--background);
-    color: var(--primary-text);
-    font-family: 'Press Start 2P', monospace;
+    background-color: var(--background);
+    font-family: var(--font);
+    color: var(--accent);
+    font-size: 10px;
     margin: 0;
-    padding: 20px;
-    font-size: 12px;
-    text-shadow: 1px 1px 0 #0f0;
+    padding: 10px;
+    text-shadow: 1px 1px #000;
 }
 
-/* ==== Retro Grid/Container ==== */
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-/* ==== Layout ==== */
 .dashboard-wrapper {
     display: flex;
     gap: 16px;
-    align-items: flex-start;
     flex-wrap: wrap;
+    align-items: flex-start;
 }
 
 .main-content {
@@ -40,61 +34,101 @@ body {
 
 .todo-container {
     flex: 1 1 37%;
-    background: var(--card-bg);
+    background: var(--panel-bg);
     padding: 1rem;
-    border: 2px solid var(--accent);
-    box-shadow: inset 0 0 0 2px var(--primary-text);
+    border: 2px solid var(--border);
+    box-shadow: inset 0 0 0 2px var(--accent);
 }
 
-/* ==== Retro Card ==== */
-.card {
-    background: var(--card-bg);
+/* Panels */
+.panel, .card, .todo-container, .lot-size-calculator, .modal-content {
+    background: var(--panel-bg);
     border: 2px dashed var(--accent);
-    padding: 16px;
-    margin-bottom: 20px;
-    animation: flicker 1s infinite alternate;
-}
-
-/* ==== Headlines ==== */
-h1, h2 {
-    color: var(--accent-hover);
-    border-bottom: 2px dotted var(--border);
-    padding-bottom: 8px;
+    padding: 12px;
     margin-bottom: 16px;
+    color: var(--accent);
 }
 
-/* ==== Buttons ==== */
-button {
-    background: var(--accent);
-    color: #000;
-    border: 2px solid #fff;
-    padding: 10px;
-    font-family: inherit;
-    cursor: pointer;
-    box-shadow: 2px 2px #0ff;
+/* Headings */
+h1, h2, h3 {
+    font-size: 10px;
+    color: var(--hover);
+    border-bottom: 1px dashed var(--accent);
+    padding-bottom: 6px;
+    margin-bottom: 12px;
     text-transform: uppercase;
-    transition: all 0.1s;
+}
+
+/* Buttons */
+button {
+    font-family: var(--font);
+    font-size: 10px;
+    padding: 6px 10px;
+    color: #000;
+    background: var(--accent);
+    border: 2px solid #fff;
+    box-shadow: 2px 2px #0ff;
+    cursor: pointer;
+    transition: all 0.1s ease-in-out;
+    text-transform: uppercase;
 }
 
     button:hover {
-        background: var(--accent-hover);
-        color: #000;
+        background: var(--hover);
         box-shadow: 2px 2px #ff0;
         transform: translate(-1px, -1px);
     }
 
-.container > button {
-    background: #222;
-    color: var(--secondary-text);
+.todo-container button,
+.modal-buttons button,
+.save-btn,
+.delete-btn-notes {
+    background: var(--accent-secondary);
+    color: #000;
 }
 
-/* ==== Timeline ==== */
+.save-btn {
+    background: #00ff00;
+}
+
+.delete-btn-notes {
+    background: var(--danger);
+}
+
+/* Inputs */
+input, select, textarea {
+    font-family: var(--font);
+    background: #000;
+    color: var(--text);
+    border: 2px solid var(--border);
+    padding: 6px;
+    font-size: 10px;
+}
+
+/* Task item */
+.task-item {
+    background: #111;
+    color: var(--accent);
+    padding: 8px;
+    border: 1px dashed var(--hover);
+    margin-top: 6px;
+}
+
+    .task-item:hover {
+        background: #222;
+    }
+
+.task-text.done {
+    color: var(--danger);
+    text-decoration: line-through;
+}
+
+/* Timeline */
 .timeline {
+    height: 16px;
     background: #222;
     border: 2px solid var(--accent);
-    height: 20px;
     position: relative;
-    margin-top: 10px;
 }
 
 .timeline-bar {
@@ -104,92 +138,41 @@ button {
     animation: progressBar 2s linear forwards;
 }
 
-/* ==== Tasks ==== */
-.task-item {
-    background: #111;
-    border: 1px dashed var(--accent-hover);
-    padding: 10px;
-    color: var(--primary-text);
-    transition: background 0.2s;
+/* Tables */
+table {
+    width: 100%;
+    background-color: #000;
+    border-collapse: collapse;
+    color: var(--text);
 }
 
-    .task-item:hover {
-        background: #222;
-    }
-
-.task-text.done {
-    color: var(--secondary-text);
-    text-decoration: line-through;
+th, td {
+    border: 1px solid var(--border);
+    padding: 6px;
 }
 
-/* ==== Inputs ==== */
-input, select, textarea {
-    font-family: 'Press Start 2P', monospace;
-    background: #000;
-    color: var(--accent-hover);
-    border: 2px solid var(--accent);
-    padding: 8px;
-    box-sizing: border-box;
-}
-
-/* ==== Modals ==== */
-.modal-content {
-    background: #111;
-    color: var(--accent);
-    border: 3px double var(--accent-hover);
-    font-family: 'Press Start 2P', monospace;
-}
-
-.modal-buttons button {
-    background: var(--secondary-text);
-    color: #000;
-    border: 2px solid #fff;
-}
-
-.save-btn {
-    background: #00ff00;
-}
-
-.delete-btn-notes {
-    background: #ff0033;
-}
-
-/* ==== Retro Table ==== */
-.left-sidebar table {
-    background: #000;
-    color: var(--primary-text);
-    font-size: 0.75em;
-    border: 1px solid var(--accent);
-}
-
-.left-sidebar th {
+th {
     background-color: var(--accent);
     color: #000;
 }
 
-.left-sidebar tr:hover {
-    background-color: #333;
+/* Footer Buttons */
+footer {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
 }
 
-/* ==== Animations ==== */
-
-@keyframes flicker {
-    0% {
-        opacity: 1;
+    footer button {
+        background: #222;
+        border: 2px solid #fff;
+        color: var(--accent-secondary);
     }
 
-    50% {
-        opacity: 0.95;
-    }
-
-    100% {
-        opacity: 1;
-    }
-}
-
+/* Animation */
 @keyframes progressBar {
     0% {
-        width: 0;
+        width: 0%;
     }
 
     100% {
@@ -197,21 +180,6 @@ input, select, textarea {
     }
 }
 
-@keyframes blink {
-    0% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.3;
-    }
-
-    100% {
-        opacity: 1;
-    }
-}
-
-/* ==== Responsive ==== */
 @media (max-width: 900px) {
     .dashboard-wrapper {
         flex-direction: column;
@@ -220,9 +188,5 @@ input, select, textarea {
     .main-content,
     .todo-container {
         flex: 1 1 100%;
-    }
-
-    .todo-container {
-        position: static;
     }
 }
