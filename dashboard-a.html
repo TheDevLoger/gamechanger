@@ -56,12 +56,11 @@
                 </div>
 
                 <!--
-                <div class="card">
-                    <h2>📅 Tagesübersicht</h2>
-                    <div id="tage-a"></div>
-                </div>
-                -->
-
+            <div class="card">
+                <h2>📅 Tagesübersicht</h2>
+                <div id="tage-a"></div>
+            </div>
+            -->
                 <!-- // DER POSITION SIZE CALCULATOR----------------------------------------------------------------------- -->
                 <div class="card">
                     <h2>Lot Size Calculator</h2>
@@ -97,9 +96,8 @@
                     <div id="warning" class="warning"></div>
                 </div>
             </div>
-                <!-- // DER POSITION SIZE CALCULATOR----------------------------------------------------------------------- -->
-
-                <!-- Rechte Spalte -->
+            <!-- // DER POSITION SIZE CALCULATOR----------------------------------------------------------------------- -->
+            <!-- Rechte Spalte -->
             <div class="todo-container">
                 <button onclick="window.open('notes-A.html', '_blank')">Dateiverwaltung</button>
                 <h2>📝 Aufgabenliste</h2>
@@ -110,8 +108,9 @@
                 <ul id="taskList"></ul>
             </div>
 
-            </div>
+        </div>
 
+        <button onclick="toggleTheme()">🎨 Theme wechseln</button>
         <button onclick="logout()">🔒 Logout</button>
     </div>
 </body>
@@ -457,6 +456,19 @@
                 });
         });
         // RECHNER SKRIPT --------------------------------------------------------------------------------------------------------------------------
+
+        function toggleTheme() {
+            const link = document.getElementById("theme-link");
+            const currentHref = link.getAttribute("href");
+
+            if (currentHref === "style.css") {
+                link.setAttribute("href", "styleTwo.css");
+            } else {
+                link.setAttribute("href", "style.css");
+            }
+        }
+
+
 
         loadCalendar();
 

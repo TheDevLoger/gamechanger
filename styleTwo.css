@@ -1,0 +1,286 @@
+/* ---- Farbpalette & Variablen (Dark Neumorphism Style) ---- */
+:root {
+    --background: #1a1a1a;
+    --card-bg: #262626;
+    --primary-text: #f0f0f0;
+    --secondary-text: #a0a0a0;
+    --accent: #00ffe1;
+    --accent-hover: #00ccbb;
+    --border: #333;
+    --shadow: 10px 10px 20px #141414, -10px -10px 20px #1f1f1f;
+    --inset-shadow: inset 2px 2px 6px #141414, inset -2px -2px 6px #1f1f1f;
+    --font: 'Space Grotesk', sans-serif;
+}
+
+/* ---- Grundlayout ---- */
+body {
+    background: var(--background);
+    color: var(--primary-text);
+    font-family: var(--font);
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* ---- Struktur ---- */
+.dashboard-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.left-sidebar,
+.main-content,
+.todo-container {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+}
+
+/* ---- Typografie ---- */
+h1, h2 {
+    color: var(--accent);
+    text-align: center;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.5rem;
+    letter-spacing: 1px;
+}
+
+/* ---- Inputs & Selects ---- */
+input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    background: #1f1f1f;
+    color: var(--primary-text);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--inset-shadow);
+    margin-bottom: 12px;
+    font-family: var(--font);
+}
+
+    input:focus, select:focus, textarea:focus {
+        outline: none;
+        box-shadow: 0 0 6px var(--accent);
+    }
+
+/* ---- Buttons ---- */
+button {
+    background: var(--accent);
+    color: #000;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 12px;
+    font-weight: bold;
+    font-family: var(--font);
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+}
+
+    button:hover {
+        background: var(--accent-hover);
+        transform: scale(1.03);
+    }
+
+.container > button {
+    background: #444;
+}
+
+    .container > button:hover {
+        background: #555;
+    }
+
+/* ---- Economic Calendar ---- */
+.left-sidebar table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.left-sidebar th, .left-sidebar td {
+    padding: 10px;
+    text-align: left;
+    border: 1px solid var(--border);
+}
+
+.left-sidebar th {
+    background-color: var(--accent);
+    color: #000;
+    position: sticky;
+    top: 0;
+}
+
+.left-sidebar tr:nth-child(even) {
+    background-color: #1f1f1f;
+}
+
+.left-sidebar tr:hover {
+    background-color: #333;
+}
+
+/* ---- Impact Styles ---- */
+.impact-High td {
+    color: #ff6b6b;
+    font-weight: bold;
+}
+
+.impact-Medium td {
+    color: #ffa94d;
+    font-weight: bold;
+}
+
+.impact-Low td {
+    color: #ccc;
+}
+
+.impact-Holiday td {
+    color: #888;
+    font-style: italic;
+}
+
+/* ---- Timeline ---- */
+#zeitleiste-a {
+    position: relative;
+    height: 20px;
+    background: #2a2a2a;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--inset-shadow);
+}
+
+.timeline-bar {
+    position: absolute;
+    height: 100%;
+    background: var(--accent);
+    border-radius: 10px;
+    opacity: 0.9;
+}
+
+/* ---- To-Do ---- */
+.todo-input {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+    .todo-input input {
+        flex: 1;
+    }
+
+#taskList {
+    list-style: none;
+    padding: 0;
+}
+
+.task-item {
+    background: #1e1e1e;
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--inset-shadow);
+    transition: background 0.2s;
+}
+
+    .task-item:hover {
+        background: #333;
+    }
+
+.task-text.done {
+    text-decoration: line-through;
+    color: var(--secondary-text);
+    opacity: 0.6;
+}
+
+.delete-btn {
+    background: transparent;
+    border: none;
+    color: #ff4d4d;
+    font-size: 1.3em;
+    cursor: pointer;
+}
+
+/* ---- Modal & Notes ---- */
+#noteModal, #notesListModal {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.modal-content {
+    background: #1f1f1f;
+    color: var(--primary-text);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    padding: 20px;
+}
+
+    .modal-content input,
+    .modal-content textarea {
+        background: #141414;
+        color: var(--primary-text);
+        border: 1px solid var(--border);
+        box-shadow: var(--inset-shadow);
+        border-radius: 12px;
+        padding: 10px;
+        margin-bottom: 12px;
+    }
+
+.modal-buttons button {
+    background: var(--accent);
+    color: #000;
+    border-radius: 12px;
+    padding: 10px 16px;
+}
+
+.save-btn {
+    background: #32cd32;
+}
+
+.delete-btn-notes {
+    background: #dc143c;
+}
+
+.close-btn {
+    color: #ccc;
+    background: transparent;
+    border: none;
+    font-size: 1.2em;
+}
+
+/* ---- Notes List ---- */
+#notesList li {
+    background: #1e1e1e;
+    box-shadow: var(--shadow);
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    transition: background 0.2s ease;
+}
+
+    #notesList li:hover {
+        background: #333;
+    }
+
+/* ---- Responsive ---- */
+@media (max-width: 960px) {
+    .dashboard-wrapper {
+        grid-template-columns: 1fr;
+    }
+
+    .todo-input {
+        flex-direction: column;
+    }
+
+    .todo-container {
+        position: static;
+    }
+}
