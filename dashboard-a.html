@@ -6,6 +6,7 @@
     <title>Dashboard Erik Lähner</title>
     <link id="theme-link" rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
@@ -463,6 +464,8 @@
 
             if (currentHref === "style.css") {
                 link.setAttribute("href", "styleTwo.css");
+            } else if (currentHref === "styleTwo.css") {
+                link.setAttribute("href", "styleThree.css");
             } else {
                 link.setAttribute("href", "style.css");
             }
