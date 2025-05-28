@@ -1,0 +1,163 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trading Journal</title>
+    <link rel="stylesheet" href="journal.css" />
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <h1>📓 Trading Journal</h1>
+
+    <form id="tradeForm">
+        <input type="text" id="symbol" placeholder="Symbol" required />
+        <select id="direction" required>
+            <option value="">Trade-Richtung</option>
+            <option value="Buy">Buy</option>
+            <option value="Sell">Sell</option>
+        </select>
+        <input type="url" id="entryScreenshot" placeholder="Einstieg Link" required />
+        <input type="url" id="exitScreenshot" placeholder="Ausstieg Link" required />
+        <select id="result" required>
+            <option value="TP">TP</option>
+            <option value="BE">BE</option>
+            <option value="SL">SL</option>
+        </select>
+        <input type="number" step="0.01" id="pnl" placeholder="PnL (%)" required />
+        <input type="text" id="strategy" placeholder="Strategie" />
+        <button type="submit">Hinzufügen</button>
+    </form>
+
+    <table id="journal">
+        <thead>
+            <tr>
+                <th>Symbol</th>
+                <th>Richtung</th>
+                <th>Einstieg</th>
+                <th>Ausstieg</th>
+                <th>Ergebnis</th>
+                <th>PnL</th>
+                <th>Strategie</th>
+                <th>Aktion</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <section id="dashboard">
+        <h2>📊 Zusammenfassung</h2>
+        <div class="stats">
+            <p id="totalPnL"></p>
+        </div>
+    </section>
+
+    <div id="noteModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeNoteModal()">×</span>
+            <h3>📝 Notiz zum Trade</h3>
+            <textarea id="noteInput" rows="5" placeholder="Deine Notiz..."></textarea>
+            <button onclick="saveNote()">Speichern</button>
+        </div>
+    </div>
+
+    <script>
+        // Firebase konfigurieren
+        const firebaseConfig = {
+            apiKey: "AIzaSyAujeUok4jKYwnr5GEXze_EadszqMdY1y4",
+            authDomain: "gamechanger-78fb4.firebaseapp.com",
+            projectId: "gamechanger-78fb4",
+            storageBucket: "gamechanger-78fb4.firebasestorage.app",
+            messagingSenderId: "510513691722",
+            appId: "1:510513691722:web:c0c1a97141ddfda4377ab3"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const tradesRef = db.collection("users").doc("b").collection("trades");
+
+        const form = document.getElementById("tradeForm");
+        const tbody = document.querySelector("#journal tbody");
+        let currentNoteId = null;
+
+        async function loadTrades() {
+            const snapshot = await tradesRef.get();
+            const trades = [];
+            tbody.innerHTML = "";
+
+            snapshot.forEach(doc => {
+                const trade = doc.data();
+                trade.id = doc.id;
+                trades.push(trade);
+
+                const pnlClass = trade.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                        <td>${trade.symbol}</td>
+                        <td class="direction ${trade.direction.toLowerCase()}">${trade.direction}</td>
+                        <td><a href="${trade.entryScreenshot}" target="_blank">📸 Einstieg</a></td>
+                        <td><a href="${trade.exitScreenshot}" target="_blank">📸 Ausstieg</a></td>
+                        <td class="result result-${trade.result.toLowerCase()}">${trade.result}</td>
+                        <td class="${pnlClass}">${trade.pnl >= 0 ? '+' : ''}${trade.pnl}%</td>
+                        <td>${trade.strategy || ''}</td>
+                        <td>
+                            <button class="delete-btn" onclick="deleteTrade('${trade.id}')">🗑️</button>
+                            <button class="note-btn" onclick="openNoteModal('${trade.id}', '${trade.note || ''}')">📝</button>
+                        </td>
+                    `;
+                tbody.appendChild(row);
+            });
+
+            const totalPnL = trades.reduce((sum, t) => sum + (t.pnl || 0), 0).toFixed(2);
+            document.getElementById("totalPnL").textContent = `Gesamter PnL: ${totalPnL}%`;
+        }
+
+        async function deleteTrade(id) {
+            await tradesRef.doc(id).delete();
+            loadTrades();
+        }
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const trade = {
+                symbol: document.getElementById("symbol").value,
+                direction: document.getElementById("direction").value,
+                entryScreenshot: document.getElementById("entryScreenshot").value,
+                exitScreenshot: document.getElementById("exitScreenshot").value,
+                result: document.getElementById("result").value,
+                pnl: parseFloat(document.getElementById("pnl").value),
+                strategy: document.getElementById("strategy").value,
+                note: ""
+            };
+
+            await tradesRef.add(trade);
+            form.reset();
+            loadTrades();
+        });
+
+        function openNoteModal(id, note) {
+            currentNoteId = id;
+            document.getElementById("noteInput").value = note;
+            document.getElementById("noteModal").classList.remove("hidden");
+        }
+
+        function closeNoteModal() {
+            document.getElementById("noteModal").classList.add("hidden");
+        }
+
+        async function saveNote() {
+            const note = document.getElementById("noteInput").value;
+            if (currentNoteId) {
+                await tradesRef.doc(currentNoteId).update({ note });
+            }
+            closeNoteModal();
+            loadTrades();
+        }
+
+        loadTrades();
+    </script>
+</body>
+</html>
