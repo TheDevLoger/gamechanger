@@ -94,20 +94,28 @@
 
                 const pnlClass = trade.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
                 const row = document.createElement("tr");
+
                 row.innerHTML = `
-                        <td>${trade.symbol}</td>
-                        <td class="direction ${trade.direction.toLowerCase()}">${trade.direction}</td>
-                        <td><a href="${trade.entryScreenshot}" target="_blank">📸 Einstieg</a></td>
-                        <td><a href="${trade.exitScreenshot}" target="_blank">📸 Ausstieg</a></td>
-                        <td class="result result-${trade.result.toLowerCase()}">${trade.result}</td>
-                        <td class="${pnlClass}">${trade.pnl >= 0 ? '+' : ''}${trade.pnl}%</td>
-                        <td>${trade.strategy || ''}</td>
-                        <td>
-                            <button class="delete-btn" onclick="deleteTrade('${trade.id}')">🗑️</button>
-                            <button class="note-btn" onclick="openNoteModal('${trade.id}', '${trade.note || ''}')">📝</button>
-                        </td>
-                    `;
+            <td>${trade.symbol}</td>
+            <td class="direction ${trade.direction.toLowerCase()}">${trade.direction}</td>
+            <td><a href="${trade.entryScreenshot}" target="_blank">📸 Einstieg</a></td>
+            <td><a href="${trade.exitScreenshot}" target="_blank">📸 Ausstieg</a></td>
+            <td class="result result-${trade.result.toLowerCase()}">${trade.result}</td>
+            <td class="${pnlClass}">${trade.pnl >= 0 ? '+' : ''}${trade.pnl}%</td>
+            <td>${trade.strategy || ''}</td>
+            <td>
+                <button class="note-btn" data-id="${trade.id}">📝</button>
+                <button class="delete-btn" data-id="${trade.id}">🗑️</button>
+            </td>
+        `;
                 tbody.appendChild(row);
+
+                // Jetzt Buttons selektieren und Event-Handler anhängen
+                const deleteBtn = row.querySelector(".delete-btn");
+                deleteBtn.addEventListener("click", () => deleteTrade(trade.id));
+
+                const noteBtn = row.querySelector(".note-btn");
+                noteBtn.addEventListener("click", () => openNoteModal(trade.id, trade.note || ""));
             });
 
             const totalPnL = trades.reduce((sum, t) => sum + (t.pnl || 0), 0).toFixed(2);
