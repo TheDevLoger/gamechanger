@@ -7,6 +7,7 @@
 
 body {
     display: flex;
+    flex-direction: row;
     height: 100vh;
     overflow: hidden;
 }
@@ -14,6 +15,7 @@ body {
 .column {
     padding: 1rem;
     overflow-y: auto;
+    transition: all 0.3s ease;
 }
 
 #notesList {
@@ -37,19 +39,29 @@ body {
     padding: 0.5rem;
     cursor: pointer;
     border-bottom: 1px solid #ddd;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
     .note-item:hover {
         background-color: #e0e0e0;
+        transform: scale(1.01);
     }
 
-textarea, input[type="text"] {
+textarea,
+input[type="text"] {
     width: 100%;
     padding: 0.5rem;
     margin-bottom: 0.5rem;
     border: 1px solid #ccc;
     border-radius: 4px;
+    transition: border-color 0.3s ease;
 }
+
+    textarea:focus,
+    input[type="text"]:focus {
+        border-color: #007bff;
+        outline: none;
+    }
 
 button {
     padding: 0.5rem 1rem;
@@ -59,10 +71,12 @@ button {
     border-radius: 4px;
     background-color: #007bff;
     color: white;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
     button:hover {
         background-color: #0056b3;
+        transform: translateY(-2px);
     }
 
 .task-item {
@@ -94,7 +108,13 @@ button {
     margin-bottom: 0.4rem;
     color: #fff;
     font-size: 0.9rem;
+    background-color: #28a745;
+    transition: transform 0.2s ease;
 }
+
+    .tag-badge:hover {
+        transform: scale(1.05);
+    }
 
 .content-area {
     border: 1px solid #ccc;
@@ -103,7 +123,12 @@ button {
     border-radius: 8px;
     background: #fff;
     overflow-y: auto;
+    transition: box-shadow 0.3s ease;
 }
+
+    .content-area:focus-within {
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    }
 
 .toolbar {
     margin-top: 0.5rem;
@@ -117,12 +142,44 @@ button {
         border-radius: 6px;
         cursor: pointer;
         background: #eee;
+        transition: background-color 0.2s ease;
     }
+
+        .toolbar button:hover {
+            background-color: #ddd;
+        }
 
     .toolbar.hidden {
         display: none;
     }
 
-    .toolbar button:hover {
-        background-color: #ddd;
+/* Responsives Design */
+@media (max-width: 1024px) {
+    body {
+        flex-direction: column;
     }
+
+    #notesList,
+    #noteEditor,
+    #taskChecklist {
+        width: 100%;
+        height: 33.33%;
+        border-right: none;
+        border-bottom: 1px solid #ccc;
+    }
+}
+
+@media (max-width: 600px) {
+    .toolbar {
+        flex-direction: column;
+    }
+
+    button {
+        width: 100%;
+    }
+
+    .tag-badge {
+        font-size: 0.8rem;
+        padding: 0.2rem 0.4rem;
+    }
+}
