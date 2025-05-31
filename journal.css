@@ -352,3 +352,49 @@ textarea:focus {
             white-space: nowrap;
         }
 }
+
+/* === Bearbeitungsmodus Indikator === */
+#editIndicator {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: bold;
+    display: none; /* wird per JS sichtbar */
+}
+
+/* === Eingabefelder im Bearbeitungsmodus === */
+form.editing input,
+form.editing select {
+    border-color: #ffc107;
+    background-color: #fffbe6;
+}
+
+/* === Bearbeiten-Button === */
+.edit-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #007bff;
+    transition: color 0.3s ease, transform 0.3s ease;
+}
+
+    .edit-btn:hover {
+        color: #0056b3;
+        transform: scale(1.2);
+    }
+
+/* === Speichern-Bearbeitung Button (optional für UX-Upgrade) === */
+form.editing button[type="submit"] {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+    form.editing button[type="submit"]:hover {
+        background-color: #e0a800;
+        transform: scale(1.05);
+    }

@@ -13,21 +13,24 @@
 <body>
     <h1>📓 Trading Journal</h1>
 
+    <div id="editIndicator">✏️ Bearbeitungsmodus – Änderungen speichern oder abbrechen</div>
+
     <form id="tradeForm">
-        <input type="text" id="symbol" placeholder="Symbol" required />
-        <select id="direction" required>
+        <input type="text" id="symbol" placeholder="Symbol" />
+        <select id="direction">
             <option value="">Trade-Richtung</option>
             <option value="Buy">Buy</option>
             <option value="Sell">Sell</option>
         </select>
-        <input type="url" id="entryScreenshot" placeholder="Einstieg Link" required />
-        <input type="url" id="exitScreenshot" placeholder="Ausstieg Link" required />
-        <select id="result" required>
+        <input type="url" id="entryScreenshot" placeholder="Einstieg Link" />
+        <input type="url" id="exitScreenshot" placeholder="Ausstieg Link" />
+        <select id="result">
+            <option value="">Ergebnis</option>
             <option value="TP">TP</option>
             <option value="BE">BE</option>
             <option value="SL">SL</option>
         </select>
-        <input type="number" step="0.01" id="pnl" placeholder="PnL (%)" required />
+        <input type="number" step="0.01" id="pnl" placeholder="PnL (%)" />
         <input type="text" id="strategy" placeholder="Strategie" />
         <button type="submit">Hinzufügen</button>
     </form>
@@ -65,7 +68,6 @@
     </div>
 
     <script>
-        // Firebase konfigurieren
         const firebaseConfig = {
             apiKey: "AIzaSyAujeUok4jKYwnr5GEXze_EadszqMdY1y4",
             authDomain: "gamechanger-78fb4.firebaseapp.com",
@@ -80,7 +82,9 @@
 
         const form = document.getElementById("tradeForm");
         const tbody = document.querySelector("#journal tbody");
+        const editIndicator = document.getElementById("editIndicator");
         let currentNoteId = null;
+        let editingTradeId = null;
 
         async function loadTrades() {
             const snapshot = await tradesRef.get();
@@ -96,26 +100,24 @@
                 const row = document.createElement("tr");
 
                 row.innerHTML = `
-            <td>${trade.symbol}</td>
-            <td class="direction ${trade.direction.toLowerCase()}">${trade.direction}</td>
-            <td><a href="${trade.entryScreenshot}" target="_blank">📸 Einstieg</a></td>
-            <td><a href="${trade.exitScreenshot}" target="_blank">📸 Ausstieg</a></td>
-            <td class="result result-${trade.result.toLowerCase()}">${trade.result}</td>
-            <td class="${pnlClass}">${trade.pnl >= 0 ? '+' : ''}${trade.pnl}%</td>
-            <td>${trade.strategy || ''}</td>
-            <td>
-                <button class="note-btn" data-id="${trade.id}">📝</button>
-                <button class="delete-btn" data-id="${trade.id}">🗑️</button>
-            </td>
-        `;
+                        <td>${trade.symbol || ''}</td>
+                        <td class="direction ${trade.direction?.toLowerCase() || ''}">${trade.direction || ''}</td>
+                        <td><a href="${trade.entryScreenshot || '#'}" target="_blank">📸 Einstieg</a></td>
+                        <td><a href="${trade.exitScreenshot || '#'}" target="_blank">📸 Ausstieg</a></td>
+                        <td class="result result-${trade.result?.toLowerCase() || ''}">${trade.result || ''}</td>
+                        <td class="${pnlClass}">${trade.pnl >= 0 ? '+' : ''}${trade.pnl ?? ''}%</td>
+                        <td>${trade.strategy || ''}</td>
+                        <td>
+                            <button class="note-btn" data-id="${trade.id}">📝</button>
+                            <button class="edit-btn" data-id="${trade.id}">✏️</button>
+                            <button class="delete-btn" data-id="${trade.id}">🗑️</button>
+                        </td>
+                    `;
                 tbody.appendChild(row);
 
-                // Jetzt Buttons selektieren und Event-Handler anhängen
-                const deleteBtn = row.querySelector(".delete-btn");
-                deleteBtn.addEventListener("click", () => deleteTrade(trade.id));
-
-                const noteBtn = row.querySelector(".note-btn");
-                noteBtn.addEventListener("click", () => openNoteModal(trade.id, trade.note || ""));
+                row.querySelector(".delete-btn").addEventListener("click", () => deleteTrade(trade.id));
+                row.querySelector(".note-btn").addEventListener("click", () => openNoteModal(trade.id, trade.note || ""));
+                row.querySelector(".edit-btn").addEventListener("click", () => startEdit(trade));
             });
 
             const totalPnL = trades.reduce((sum, t) => sum + (t.pnl || 0), 0).toFixed(2);
@@ -131,20 +133,42 @@
             e.preventDefault();
 
             const trade = {
-                symbol: document.getElementById("symbol").value,
-                direction: document.getElementById("direction").value,
-                entryScreenshot: document.getElementById("entryScreenshot").value,
-                exitScreenshot: document.getElementById("exitScreenshot").value,
-                result: document.getElementById("result").value,
-                pnl: parseFloat(document.getElementById("pnl").value),
-                strategy: document.getElementById("strategy").value,
+                symbol: document.getElementById("symbol").value || '',
+                direction: document.getElementById("direction").value || '',
+                entryScreenshot: document.getElementById("entryScreenshot").value || '',
+                exitScreenshot: document.getElementById("exitScreenshot").value || '',
+                result: document.getElementById("result").value || '',
+                pnl: parseFloat(document.getElementById("pnl").value) || 0,
+                strategy: document.getElementById("strategy").value || '',
                 note: ""
             };
 
-            await tradesRef.add(trade);
+            if (editingTradeId) {
+                await tradesRef.doc(editingTradeId).update(trade);
+                editingTradeId = null;
+                form.classList.remove("editing");
+                editIndicator.style.display = "none";
+            } else {
+                await tradesRef.add(trade);
+            }
+
             form.reset();
             loadTrades();
         });
+
+        function startEdit(trade) {
+            document.getElementById("symbol").value = trade.symbol || '';
+            document.getElementById("direction").value = trade.direction || '';
+            document.getElementById("entryScreenshot").value = trade.entryScreenshot || '';
+            document.getElementById("exitScreenshot").value = trade.exitScreenshot || '';
+            document.getElementById("result").value = trade.result || '';
+            document.getElementById("pnl").value = trade.pnl ?? '';
+            document.getElementById("strategy").value = trade.strategy || '';
+
+            editingTradeId = trade.id;
+            form.classList.add("editing");
+            editIndicator.style.display = "block";
+        }
 
         function openNoteModal(id, note) {
             currentNoteId = id;
