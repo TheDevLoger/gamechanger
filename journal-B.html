@@ -132,11 +132,17 @@
             loadTrades();
         }
 
+        function formatDate(isoDateStr) {
+            if (!isoDateStr) return '';
+            const [year, month, day] = isoDateStr.split("-");
+            return `${day}-${month}-${year}`;
+        }
+
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
 
             const trade = {
-                date: document.getElementById("date").value || '',
+                date: formatDate(document.getElementById("date").value) || '',
                 symbol: document.getElementById("symbol").value || '',
                 direction: document.getElementById("direction").value || '',
                 entryScreenshot: document.getElementById("entryScreenshot").value || '',
@@ -160,8 +166,14 @@
             loadTrades();
         });
 
+        function toISODate(dateStr) {
+            // Erwartet "TT-MM-YYYY", gibt "YYYY-MM-DD" zurück
+            const [day, month, year] = dateStr.split("-");
+            return `${year}-${month}-${day}`;
+        }
+
         function startEdit(trade) {
-            document.getElementById("date").value = trade.date || '';
+            document.getElementById("date").value = toISODate(trade.date || '');
             document.getElementById("symbol").value = trade.symbol || '';
             document.getElementById("direction").value = trade.direction || '';
             document.getElementById("entryScreenshot").value = trade.entryScreenshot || '';
