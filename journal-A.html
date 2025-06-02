@@ -16,6 +16,7 @@
     <div id="editIndicator">✏️ Bearbeitungsmodus – Änderungen speichern oder abbrechen</div>
 
     <form id="tradeForm">
+        <input type="date" id="date" placeholder="Datum" />
         <input type="text" id="symbol" placeholder="Symbol" />
         <select id="direction">
             <option value="">Trade-Richtung</option>
@@ -38,6 +39,7 @@
     <table id="journal">
         <thead>
             <tr>
+                <th>Datum</th>
                 <th>Symbol</th>
                 <th>Richtung</th>
                 <th>Einstieg</th>
@@ -100,6 +102,7 @@
                 const row = document.createElement("tr");
 
                 row.innerHTML = `
+                        <td>${trade.date || ''}</td>
                         <td>${trade.symbol || ''}</td>
                         <td class="direction ${trade.direction?.toLowerCase() || ''}">${trade.direction || ''}</td>
                         <td><a href="${trade.entryScreenshot || '#'}" target="_blank">📸 Einstieg</a></td>
@@ -133,6 +136,7 @@
             e.preventDefault();
 
             const trade = {
+                date: document.getElementById("date").value || '',
                 symbol: document.getElementById("symbol").value || '',
                 direction: document.getElementById("direction").value || '',
                 entryScreenshot: document.getElementById("entryScreenshot").value || '',
@@ -157,6 +161,7 @@
         });
 
         function startEdit(trade) {
+            document.getElementById("date").value = trade.date || '';
             document.getElementById("symbol").value = trade.symbol || '';
             document.getElementById("direction").value = trade.direction || '';
             document.getElementById("entryScreenshot").value = trade.entryScreenshot || '';
