@@ -532,7 +532,6 @@ select {
 .card.collapsible .card-body {
     transition: max-height 0.3s ease, opacity 0.3s ease;
     overflow: hidden;
-    max-height: 1000px;
     opacity: 1;
 }
 
