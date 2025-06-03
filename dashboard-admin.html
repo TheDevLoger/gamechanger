@@ -6,6 +6,7 @@
     <title>Admin Dashboard</title>
     <link id="theme-link" rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
@@ -26,36 +27,55 @@
                         <span class="arrow">▶</span> 📊 Tradingzeiten Erik Lähner
                     </div>
                     <div class="card-body" id="arbeitszeiten-a"></div>
-                    </div>
+                </div>
 
                 <div class="card collapsible">
                     <div class="card-header">
                         <span class="arrow">▶</span> 👾 Gamedevzeiten Erik Lähner
                     </div>
                     <div class="card-body" id="sportzeiten-a"></div>
+                </div>
+
+                <div class="card summary-card">
+                    <div class="card-header">
+                        <span class="arrow">▶</span> 📊 Zeit-Diagramm Erik Lähner
                     </div>
+                    <div class="card-body">
+                        <canvas id="chart-a" width="400" height="200"></canvas>
+                    </div>
+                </div>
             </div>
+
             <div class="main-content">
                 <div class="card collapsible">
                     <div class="card-header">
                         <span class="arrow">▶</span> 📅 Tagesübersicht Eric Tamme
                     </div>
                     <div class="card-body" id="tage-b"></div>
-                    </div>
+                </div>
 
                 <div class="card collapsible">
                     <div class="card-header">
                         <span class="arrow">▶</span> 📊 Tradingzeiten Eric Tamme
                     </div>
                     <div class="card-body" id="arbeitszeiten-b"></div>
-                    </div>
+                </div>
 
                 <div class="card collapsible">
                     <div class="card-header">
                         <span class="arrow">▶</span> 💪 Workoutzeiten Eric Tamme
                     </div>
                     <div class="card-body" id="sportzeiten-b"></div>
+                </div>
+
+                <div class="card summary-card">
+                    <div class="card-header">
+                        <span class="arrow">▶</span> 📊 Zeit-Diagramm Eric Tamme
                     </div>
+                    <div class="card-body">
+                        <canvas id="chart-b" width="400" height="200"></canvas>
+                    </div>
+                </div>
             </div>
 
             <button onclick="logout()">🔒 Logout</button>
@@ -224,10 +244,98 @@
             setupCollapseHandlers();
         });
 
+        async function showGesamtzeiten() {
+            const benutzerListe = [
+                { key: "BenutzerA_A", idSuffix: "a", name: "Erik Lähner" },
+                { key: "BenutzerB_B", idSuffix: "b", name: "Eric Tamme" }
+            ];
+
+            for (let benutzer of benutzerListe) {
+                let zeiten = {
+                    protokoll: 0,
+                    arbeit: 0,
+                    sport: 0
+                };
+
+                // 1. Tagesübersicht
+                const protokollRef = doc(db, "zeitprotokolle", benutzer.key);
+                const protokollSnap = await getDoc(protokollRef);
+                if (protokollSnap.exists()) {
+                    const daten = protokollSnap.data();
+                    for (const tag in daten) {
+                        zeiten.protokoll += daten[tag];
+                    }
+                }
+
+                // 2. Arbeitszeiten
+                const arbeitsSnap = await getDocs(collection(db, "arbeitszeiten", benutzer.key, "eintraege"));
+                arbeitsSnap.forEach(docSnap => {
+                    const e = docSnap.data();
+                    zeiten.arbeit += e.dauer || 0;
+                });
+
+                // 3. Sportzeiten (für Benutzer A ist das Gamedev)
+                const sportSnap = await getDocs(collection(db, "sportzeiten", benutzer.key, "eintraege"));
+                sportSnap.forEach(docSnap => {
+                    const e = docSnap.data();
+                    zeiten.sport += e.dauer || 0;
+                });
+
+                // Diagramm-Etiketten und Farben je nach Benutzer
+                const labels = [
+                    "📅 Tagesübersicht",
+                    "📊 Tradingzeit",
+                    benutzer.idSuffix === "a" ? "👾 Gamedevzeit" : "💪 Sportzeit"
+                ];
+                const daten = [
+                    zeiten.protokoll / 3600000,
+                    zeiten.arbeit / 3600000,
+                    zeiten.sport / 3600000
+                ];
+                const farben = [
+                    "#4e79a7",
+                    "#f28e2b",
+                    benutzer.idSuffix === "a" ? "#af7aa1" : "#59a14f"
+                ];
+
+                // Diagramm erstellen
+                const ctx = document.getElementById("chart-" + benutzer.idSuffix).getContext("2d");
+                new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: "Zeit in Stunden",
+                            data: daten,
+                            backgroundColor: farben
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: "Stunden"
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            }
+        }
+
+
+
         // Initialisierung
         showProtokolle();
         showArbeitszeiten();
         showWorkoutZeiten();
+        showGesamtzeiten();
 
         window.logout = logout;
 
