@@ -516,3 +516,43 @@ select {
         opacity: 1;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+.card.collapsible .card-body {
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+    overflow: hidden;
+    max-height: 1000px;
+    opacity: 1;
+}
+
+    .card.collapsible .card-body.collapsed {
+        max-height: 0;
+        opacity: 0;
+        padding: 0;
+    }
+
+.card-header {
+    background-color: #eee;
+    padding: 0.5rem 1rem;
+    font-weight: bold;
+    border-bottom: 1px solid #ccc;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+    .card-header .arrow {
+        font-size: 0.9rem;
+        transition: transform 0.3s ease;
+    }

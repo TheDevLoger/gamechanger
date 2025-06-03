@@ -14,36 +14,48 @@
 
             <div class="main-content">
 
-                <div class="card">
-                    <h2>📅 Tagesübersicht Erik Lähner</h2>
-                    <div id="tage-a"></div>
+                <div class="card collapsible">
+                    <div class="card-header">
+                        <span class="arrow">▶</span> 📅 Tagesübersicht Erik Lähner
+                    </div>
+                    <div class="card-body" id="tage-a"></div>
                 </div>
 
-                <div class="card">
-                    <h2>📊 Trading Zeiten Erik Lähner</h2>
-                    <div id="arbeitszeiten-a"></div>
-                </div>
+                <div class="card collapsible">
+                    <div class="card-header">
+                        <span class="arrow">▶</span> 🧰 Arbeitszeiten Erik Lähner
+                    </div>
+                    <div class="card-body" id="arbeitszeiten-a"></div>
+                    </div>
 
-                <div class="card">
-                    <h2>👾 GameDev Zeiten Erik Lähner</h2>
-                    <div id="sportzeiten-a"></div>
-                </div>
+                <div class="card collapsible">
+                    <div class="card-header">
+                        <span class="arrow">▶</span> 💪 Workout Zeiten Erik Lähner
+                    </div>
+                    <div class="card-body" id="sportzeiten-a"></div>
+                    </div>
             </div>
             <div class="main-content">
-                <div class="card">
-                    <h2>📅 Tagesübersicht Eric Tamme</h2>
-                    <div id="tage-b"></div>
-                </div>
+                <div class="card collapsible">
+                    <div class="card-header">
+                        <span class="arrow">▶</span> 📅 Tagesübersicht Eric Tamme
+                    </div>
+                    <div class="card-body" id="tage-b"></div>
+                    </div>
 
-                <div class="card">
-                    <h2>📊 Trading Zeiten Eric Tamme</h2>
-                    <div id="arbeitszeiten-b"></div>
-                </div>
+                <div class="card collapsible">
+                    <div class="card-header">
+                        <span class="arrow">▶</span> 🧰 Arbeitszeiten Eric Tamme
+                    </div>
+                    <div class="card-body" id="arbeitszeiten-b"></div>
+                    </div>
 
-                <div class="card">
-                    <h2>💪 Sport Zeiten Eric Tamme</h2>
-                    <div id="sportzeiten-b"></div>
-                </div>
+                <div class="card collapsible">
+                    <div class="card-header">
+                        <span class="arrow">▶</span> 💪 Workout Zeiten Eric Tamme
+                    </div>
+                    <div class="card-body" id="sportzeiten-b"></div>
+                    </div>
             </div>
 
             <button onclick="logout()">🔒 Logout</button>
@@ -185,6 +197,32 @@
         function logout() {
             window.location.href = "index.html";
         }
+
+        // Kacheln ein-/ausklappen
+        function setupCollapseHandlers() {
+            const cards = document.querySelectorAll('.card.collapsible');
+
+            cards.forEach(card => {
+                const header = card.querySelector('.card-header');
+                const body = card.querySelector('.card-body');
+                const arrow = header.querySelector('.arrow');
+
+                // Start eingeklappt
+                body.classList.add("collapsed");
+                arrow.textContent = "▶";
+
+                header.style.cursor = "pointer";
+                header.addEventListener("click", () => {
+                    const isCollapsed = body.classList.toggle("collapsed");
+                    arrow.textContent = isCollapsed ? "▶" : "▼";
+                });
+            });
+        }
+
+        // Nach dem Laden starten
+        window.addEventListener("DOMContentLoaded", () => {
+            setupCollapseHandlers();
+        });
 
         // Initialisierung
         showProtokolle();
