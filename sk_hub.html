@@ -5,6 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Trading Hub</title>
     <style>
+        /* Splash Screen Styles */
+        #splash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        #splash-logo {
+            width: 800px;
+            opacity: 0;
+            animation: logoFadeZoom 4s ease forwards;
+        }
+
+        @keyframes logoFadeZoom {
+            0% {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+        /* Splash Screen Styles ENDE */
+
         body {
             margin: 0;
             font-family: Arial, sans-serif;
@@ -221,6 +258,10 @@
     </style>
 </head>
 <body>
+    <div id="splash">
+        <img src="logo.png" alt="Logo" id="splash-logo" />
+    </div>
+
     <div class="sidebar">
         <h2>Paare</h2>
         <ul id="pairList">
@@ -315,14 +356,14 @@
                             const row = document.createElement("tr");
                             row.classList.add("fade-in");
                             row.innerHTML = `
-                  <td>${new Date(data.date).toLocaleString()}</td>
-                  <td>${data.note || "—"}</td>
-                  <td>${data.link ? `<a href="${data.link}" target="_blank" class="entry-link">🔗 Link</a>` : "—"}</td>
-                  <td class="action-buttons">
-                    <button onclick="editEntry('${doc.id}', \`${data.note?.replace(/`/g, "\\`") || ""}\`, \`${data.link?.replace(/`/g, "\\`") || ""}\`)">✏️</button>
-                    <button onclick="deleteEntry('${doc.id}')">🗑️</button>
-                  </td>
-                `;
+                      <td>${new Date(data.date).toLocaleString()}</td>
+                      <td>${data.note || "—"}</td>
+                      <td>${data.link ? `<a href="${data.link}" target="_blank" class="entry-link">🔗 Link</a>` : "—"}</td>
+                      <td class="action-buttons">
+                        <button onclick="editEntry('${doc.id}', \`${data.note?.replace(/`/g, "\\`") || ""}\`, \`${data.link?.replace(/`/g, "\\`") || ""}\`)">✏️</button>
+                        <button onclick="deleteEntry('${doc.id}')">🗑️</button>
+                      </td>
+                    `;
                             tableBody.appendChild(row);
                         });
                     }
@@ -371,7 +412,15 @@
             });
         }
 
-        window.onload = () => switchPair("EURUSD");
+        // Initiales Laden nach Splash-Screen
+        window.onload = () => {
+            setTimeout(() => {
+                document.getElementById("splash").style.display = "none";
+                document.querySelector(".sidebar").style.display = "block";
+                document.querySelector(".main").style.display = "block";
+                switchPair("EURUSD");
+            }, 4000); // Dauer der Splash-Animation
+        };
     </script>
 </body>
 </html>
