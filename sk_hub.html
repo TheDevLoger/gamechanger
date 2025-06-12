@@ -4,8 +4,24 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>SK HUB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        /* Splash Screen Styles */
+        /* Global Styles */
+        * {
+            box-sizing: border-box;
+            transition: all 0.2s ease-in-out;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            height: 100vh;
+            background: #f9fafb;
+            color: #1f2937;
+        }
+
+        /* Splash */
         #splash {
             position: fixed;
             top: 0;
@@ -20,7 +36,7 @@
         }
 
         #splash-logo {
-            width: 650px;
+            width: 300px;
             opacity: 0;
             animation: logoFadeZoom 4s ease forwards;
         }
@@ -40,206 +56,150 @@
                 transform: scale(1);
             }
         }
-        /* Splash Screen Styles ENDE */
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            display: flex;
-            height: 100vh;
-            background: #f4f4f4;
-        }
-
+        /* Sidebar */
         .sidebar {
-            width: 220px;
+            width: 240px;
             background: #1e1e2f;
             color: white;
-            padding: 20px;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
         }
 
             .sidebar h2 {
-                font-size: 1.2rem;
-                margin-bottom: 10px;
+                font-size: 1.3rem;
+                margin-bottom: 20px;
             }
 
             .sidebar ul {
                 list-style: none;
                 padding: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
             }
 
                 .sidebar ul li {
-                    padding: 10px;
-                    cursor: pointer;
-                    border-radius: 8px;
-                    transition: background 0.3s;
+                    padding: 10px 15px;
+                    border-radius: 10px;
+                    background: transparent;
+                    transition: background 0.3s, transform 0.2s;
                 }
 
-                    .sidebar ul li:hover,
-                    .sidebar ul li.active {
-                        background: #33334d;
+                    .sidebar ul li:hover {
+                        background-color: #3b82f6;
+                        transform: scale(1.03);
+                        cursor: pointer;
                     }
 
+                    .sidebar ul li.active {
+                        background-color: #2563eb;
+                        font-weight: 600;
+                        transform: scale(1.05);
+                    }
+
+        /* Main Content */
         .main {
             flex-grow: 1;
-            padding: 30px;
+            padding: 40px;
             overflow-y: auto;
         }
 
-        .header {
-            margin-bottom: 30px;
+        .header h1 {
+            margin: 0;
+            font-size: 2rem;
         }
-
-            .header h1 {
-                margin: 0;
-            }
 
         .pair-name {
-            font-size: 1.1rem;
-            color: #666;
+            color: #6b7280;
+            margin-top: 4px;
         }
 
-        .form-section,
-        .table-section {
-            margin-bottom: 40px;
+        .form-section, .table-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
 
-            .form-section input,
-            .form-section textarea {
-                display: block;
-                width: 100%;
-                padding: 10px;
-                margin-top: 5px;
-                margin-bottom: 15px;
-                border: 1px solid #ccc;
-                border-radius: 8px;
+            .form-section h2, .table-section h2 {
+                margin-top: 0;
             }
 
-            .form-section button {
-                padding: 10px 20px;
-                background: #2c3e50;
-                color: white;
-                border: none;
-                border-radius: 8px;
-                cursor: pointer;
-                transition: background 0.3s;
+        textarea, input[type="url"] {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+
+            textarea:focus, input[type="url"]:focus {
+                outline: none;
+                border-color: #3b82f6;
+                box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
             }
 
-                .form-section button:hover {
-                    background: #1a252f;
-                }
+        .form-section button {
+            padding: 10px 24px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+            .form-section button:hover {
+                background: #2563eb;
+            }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            background: white;
-            border-radius: 12px;
+            border-radius: 16px;
             overflow: hidden;
         }
 
         th, td {
-            padding: 12px 16px;
-            border-bottom: 1px solid #eee;
+            padding: 16px;
             text-align: left;
+            border-bottom: 1px solid #e5e7eb;
         }
 
         th {
-            background: #fafafa;
+            background: #f3f4f6;
         }
 
         tr:hover {
-            background-color: #f9f9f9;
+            background-color: #f9fafb;
         }
 
         .action-buttons button {
-            margin-right: 5px;
-            padding: 5px 10px;
-            border: none;
+            background: #e5e7eb;
+            margin-right: 6px;
+            padding: 6px 10px;
             border-radius: 6px;
+            border: none;
             cursor: pointer;
-            transition: background 0.2s;
         }
 
             .action-buttons button:hover {
-                background: #ddd;
+                background: #d1d5db;
             }
 
         a.entry-link {
-            color: #2c3e50;
+            color: #3b82f6;
             text-decoration: underline;
         }
 
-        /* Allgemeine Übergänge */
-        * {
-            transition: all 0.2s ease-in-out;
-            box-sizing: border-box;
-        }
-
-        /* Sidebar Hover */
-        .sidebar ul li {
-            transition: background 0.3s, transform 0.2s;
-        }
-
-            .sidebar ul li:hover {
-                background-color: #004b8d;
-                transform: scale(1.03);
-                cursor: pointer;
+            a.entry-link:hover {
+                color: #1d4ed8;
             }
 
-            .sidebar ul li.active {
-                background-color: #007bff;
-                font-weight: bold;
-                transform: scale(1.05);
-            }
-
-        /* Buttons */
-        button {
-            background-color: #007bff;
-            border: none;
-            padding: 6px 12px;
-            color: white;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: transform 0.2s, background-color 0.2s;
-        }
-
-            button:hover {
-                background-color: #0056b3;
-                transform: scale(1.05);
-            }
-
-        /* Eintrag-Links */
-        .entry-link {
-            color: #007bff;
-            text-decoration: underline;
-        }
-
-            .entry-link:hover {
-                color: #0056b3;
-            }
-
-        /* Tabellenzeilen Hover */
-        .table-container tr {
-            transition: background-color 0.2s ease;
-        }
-
-            .table-container tr:hover {
-                background-color: #f1f1f1;
-            }
-
-        /* Form Inputs Hover */
-        input[type="text"] {
-            padding: 6px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-        }
-
-            input[type="text"]:focus {
-                border-color: #007bff;
-                outline: none;
-                box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-            }
-
-        /* Sanftes Einblenden von Einträgen */
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -356,14 +316,14 @@
                             const row = document.createElement("tr");
                             row.classList.add("fade-in");
                             row.innerHTML = `
-                      <td>${new Date(data.date).toLocaleString()}</td>
-                      <td>${data.note || "—"}</td>
-                      <td>${data.link ? `<a href="${data.link}" target="_blank" class="entry-link">🔗 Link</a>` : "—"}</td>
-                      <td class="action-buttons">
-                        <button onclick="editEntry('${doc.id}', \`${data.note?.replace(/`/g, "\\`") || ""}\`, \`${data.link?.replace(/`/g, "\\`") || ""}\`)">✏️</button>
-                        <button onclick="deleteEntry('${doc.id}')">🗑️</button>
-                      </td>
-                    `;
+                          <td>${new Date(data.date).toLocaleString()}</td>
+                          <td>${data.note || "—"}</td>
+                          <td>${data.link ? `<a href="${data.link}" target="_blank" class="entry-link">🔗 Link</a>` : "—"}</td>
+                          <td class="action-buttons">
+                            <button onclick="editEntry('${doc.id}', \`${data.note?.replace(/`/g, "\\`") || ""}\`, \`${data.link?.replace(/`/g, "\\`") || ""}\`)">✏️</button>
+                            <button onclick="deleteEntry('${doc.id}')">🗑️</button>
+                          </td>
+                        `;
                             tableBody.appendChild(row);
                         });
                     }
