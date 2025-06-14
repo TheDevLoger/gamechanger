@@ -375,6 +375,18 @@
             });
         }
 
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+        const auth = getAuth();
+
+        onAuthStateChanged(auth, user => {
+            if (!user) {
+                alert("Bitte zuerst einloggen.");
+                window.location.href = "index.html"; // oder Login-Seite
+            }
+        });
+
+
         // Initiales Laden nach Splash-Screen
         window.onload = () => {
             setTimeout(() => {
