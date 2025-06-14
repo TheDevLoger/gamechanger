@@ -7,6 +7,10 @@
     <link id="theme-link" rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cherry+Bomb+One&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat&family=IBM+Plex+Serif&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans&family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
@@ -102,7 +106,6 @@
             <div class="todo-container">
                 <button onclick="window.open('notes-A.html', '_blank')">Dateiverwaltung</button>
                 <button onclick="window.open('journal-A.html', '_blank')">Journal</button>
-                <button onclick="window.open('sk_hub.html', '_blank')">SK-Hub</button>
                 <h2>📝 Aufgabenliste</h2>
                 <div class="todo-input">
                     <input type="text" id="taskInput" placeholder="Neue Aufgabe eingeben...">
@@ -471,7 +474,16 @@
             }
         }
 
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
+        const auth = getAuth();
+
+        onAuthStateChanged(auth, user => {
+            if (!user) {
+                alert("Bitte zuerst einloggen.");
+                window.location.href = "index.html"; // oder Login-Seite
+            }
+        });
 
         loadCalendar();
 
