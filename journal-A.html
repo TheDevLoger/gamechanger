@@ -16,7 +16,6 @@
     <div id="editIndicator">✏️ Bearbeitungsmodus – Änderungen speichern oder abbrechen</div>
 
     <form id="tradeForm">
-        <input type="date" id="date" placeholder="Datum" required />
         <input type="text" id="symbol" placeholder="Symbol" />
         <select id="direction">
             <option value="">Trade-Richtung</option>
@@ -39,7 +38,6 @@
     <table id="journal">
         <thead>
             <tr>
-                <th>Datum</th>
                 <th>Symbol</th>
                 <th>Richtung</th>
                 <th>Einstieg</th>
@@ -97,36 +95,24 @@
                 const trade = doc.data();
                 trade.id = doc.id;
                 trades.push(trade);
-            });
 
-            // ✅ Sortiere nach Datum (neueste zuerst)
-            trades.sort((a, b) => {
-                const [dayA, monthA, yearA] = (a.date || '01-01-1970').split("-").map(Number);
-                const [dayB, monthB, yearB] = (b.date || '01-01-1970').split("-").map(Number);
-                const dateA = new Date(yearA, monthA - 1, dayA);
-                const dateB = new Date(yearB, monthB - 1, dayB);
-                return dateB - dateA;
-            });
-
-            trades.forEach(trade => {
                 const pnlClass = trade.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
                 const row = document.createElement("tr");
 
                 row.innerHTML = `
-                <td>${trade.date || ''}</td>
-                <td>${trade.symbol || ''}</td>
-                <td class="direction ${trade.direction?.toLowerCase() || ''}">${trade.direction || ''}</td>
-                <td><a href="${trade.entryScreenshot || '#'}" target="_blank">📸 Einstieg</a></td>
-                <td><a href="${trade.exitScreenshot || '#'}" target="_blank">📸 Ausstieg</a></td>
-                <td class="result result-${trade.result?.toLowerCase() || ''}">${trade.result || ''}</td>
-                <td class="${pnlClass}">${trade.pnl >= 0 ? '+' : ''}${trade.pnl ?? ''}%</td>
-                <td>${trade.strategy || ''}</td>
-                <td>
-                    <button class="note-btn" data-id="${trade.id}">📝</button>
-                    <button class="edit-btn" data-id="${trade.id}">✏️</button>
-                    <button class="delete-btn" data-id="${trade.id}">🗑️</button>
-                </td>
-                `;
+                        <td>${trade.symbol || ''}</td>
+                        <td class="direction ${trade.direction?.toLowerCase() || ''}">${trade.direction || ''}</td>
+                        <td><a href="${trade.entryScreenshot || '#'}" target="_blank">📸 Einstieg</a></td>
+                        <td><a href="${trade.exitScreenshot || '#'}" target="_blank">📸 Ausstieg</a></td>
+                        <td class="result result-${trade.result?.toLowerCase() || ''}">${trade.result || ''}</td>
+                        <td class="${pnlClass}">${trade.pnl >= 0 ? '+' : ''}${trade.pnl ?? ''}%</td>
+                        <td>${trade.strategy || ''}</td>
+                        <td>
+                            <button class="note-btn" data-id="${trade.id}">📝</button>
+                            <button class="edit-btn" data-id="${trade.id}">✏️</button>
+                            <button class="delete-btn" data-id="${trade.id}">🗑️</button>
+                        </td>
+                    `;
                 tbody.appendChild(row);
 
                 row.querySelector(".delete-btn").addEventListener("click", () => deleteTrade(trade.id));
@@ -138,23 +124,15 @@
             document.getElementById("totalPnL").textContent = `Gesamter PnL: ${totalPnL}%`;
         }
 
-
         async function deleteTrade(id) {
             await tradesRef.doc(id).delete();
             loadTrades();
-        }
-
-        function formatDate(isoDateStr) {
-            if (!isoDateStr) return '';
-            const [year, month, day] = isoDateStr.split("-");
-            return `${day}-${month}-${year}`;
         }
 
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
 
             const trade = {
-                date: formatDate(document.getElementById("date").value) || '',
                 symbol: document.getElementById("symbol").value || '',
                 direction: document.getElementById("direction").value || '',
                 entryScreenshot: document.getElementById("entryScreenshot").value || '',
@@ -178,14 +156,7 @@
             loadTrades();
         });
 
-        function toISODate(dateStr) {
-            // Erwartet "TT-MM-YYYY", gibt "YYYY-MM-DD" zurück
-            const [day, month, year] = dateStr.split("-");
-            return `${year}-${month}-${day}`;
-        }
-
         function startEdit(trade) {
-            document.getElementById("date").value = toISODate(trade.date || '');
             document.getElementById("symbol").value = trade.symbol || '';
             document.getElementById("direction").value = trade.direction || '';
             document.getElementById("entryScreenshot").value = trade.entryScreenshot || '';
@@ -217,6 +188,17 @@
             closeNoteModal();
             loadTrades();
         }
+
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+        const auth = getAuth();
+
+        onAuthStateChanged(auth, user => {
+            if (!user) {
+                alert("Bitte zuerst einloggen.");
+                window.location.href = "index.html"; // oder Login-Seite
+            }
+        });
 
         loadTrades();
     </script>

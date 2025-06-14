@@ -32,17 +32,6 @@
             <button onclick="colorText('purple')" style="color:purple">Lila</button>
             <button onclick="colorText('black')" style="color:black">Schwarz</button>
             <button onclick="formatText('underline')"><u>U</u></button>
-
-            <select onchange="changeFontSize(this.value)">
-                <option value="">Schriftgröße</option>
-                <option value="1">Sehr klein</option>
-                <option value="2">Klein</option>
-                <option value="3">Normal</option>
-                <option value="4">Groß</option>
-                <option value="5">Sehr groß</option>
-                <option value="6">Riesig</option>
-                <option value="7">Maximal</option>
-            </select>
         </div>
 
         <div style="display: flex; gap: 0.5rem;">
@@ -318,9 +307,16 @@
             document.execCommand("foreColor", false, color);
         }
 
-        function changeFontSize(sizeValue) {
-            document.execCommand("fontSize", false, sizeValue);
-        }
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+        const auth = getAuth();
+
+        onAuthStateChanged(auth, user => {
+            if (!user) {
+                alert("Bitte zuerst einloggen.");
+                window.location.href = "index.html"; // oder Login-Seite
+            }
+        });
 
         // Initialisierung
         loadAllNotesFromFirestore();
