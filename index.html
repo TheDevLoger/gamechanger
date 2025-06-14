@@ -11,21 +11,49 @@
     <div class="container">
         <h1>🔐 Login Terminal</h1>
 
+        <!-- Bestehende Benutzerwahl -->
         <div class="card">
             <h2>Wähle deinen Benutzer:</h2>
             <button onclick="login('BenutzerA', 'dashboard-a.html')">👤 Erik Lähner</button>
             <button onclick="login('BenutzerB', 'dashboard-b.html')">👤 Eric Tamme</button>
             <button onclick="login('Admin', 'dashboard-admin.html')">🧠 Admin</button>
         </div>
+
+        <!-- Neuer Bereich: E-Mail/Passwort Login -->
+        <div class="card">
+            <h2>🔑 Login mit E-Mail & Passwort</h2>
+            <input type="email" id="login-email" placeholder="E-Mail">
+            <input type="password" id="login-password" placeholder="Passwort">
+            <button id="login-btn">Einloggen</button>
+        </div>
+
+        <div class="card">
+            <h2>🆕 Noch kein Konto?</h2>
+            <input type="email" id="register-email" placeholder="E-Mail">
+            <input type="password" id="register-password" placeholder="Passwort">
+            <button id="register-btn">Registrieren</button>
+        </div>
+
+        <div class="card" id="user-info" style="display: none;">
+            Angemeldet als: <span id="user-email"></span>
+            <button id="logout-btn">Logout</button>
+        </div>
     </div>
 
-    <!-- Füge diesen Script-Teil ins HTML <head> oder ganz oben im <script> ein -->
+    <!-- Firebase SDK -->
     <script type="module">
-        // 1. Firebase SDK & Firestore importieren
+        // 🔧 Firebase imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import {
+            getAuth,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            onAuthStateChanged,
+            signOut
+        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-        // 2. Deine Firebase-Konfiguration
+        // 🔧 Firebase-Konfiguration
         const firebaseConfig = {
             apiKey: "AIzaSyAujeUok4jKYwnr5GEXze_EadszqMdY1y4",
             authDomain: "gamechanger-78fb4.firebaseapp.com",
@@ -35,12 +63,12 @@
             appId: "1:510513691722:web:c0c1a97141ddfda4377ab3"
         };
 
-
-        // 3. Firebase initialisieren
+        // 🔧 Initialisierung
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
-        // 4. Login-Funktion mit Firestore
+        // Bestehende Funktion: Button-Login mit Firestore
         async function login(name, redirectTo) {
             try {
                 await addDoc(collection(db, "logins"), {
@@ -53,13 +81,49 @@
                 alert("Login fehlgeschlagen");
             }
         }
-
         window.login = login;
 
-        // Optional: Beispiel-Aufruf
-        // login("Max Mustermann", "dashboard.html");
-    </script>
+        // Registrierung
+        document.getElementById("register-btn").addEventListener("click", async () => {
+            const email = document.getElementById("register-email").value;
+            const password = document.getElementById("register-password").value;
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                alert("Registrierung erfolgreich!");
+            } catch (error) {
+                alert("Fehler bei der Registrierung: " + error.message);
+            }
+        });
 
+        // Login
+        document.getElementById("login-btn").addEventListener("click", async () => {
+            const email = document.getElementById("login-email").value;
+            const password = document.getElementById("login-password").value;
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                alert("Login erfolgreich!");
+            } catch (error) {
+                alert("Login fehlgeschlagen: " + error.message);
+            }
+        });
+
+        // Logout
+        document.getElementById("logout-btn").addEventListener("click", async () => {
+            await signOut(auth);
+            alert("Abgemeldet!");
+        });
+
+        // Nutzerstatus beobachten
+        onAuthStateChanged(auth, user => {
+            const infoBox = document.getElementById("user-info");
+            const emailSpan = document.getElementById("user-email");
+            if (user) {
+                emailSpan.textContent = user.email;
+                infoBox.style.display = "block";
+            } else {
+                infoBox.style.display = "none";
+            }
+        });
+    </script>
 </body>
 </html>
-
