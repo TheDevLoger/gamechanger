@@ -16,7 +16,7 @@
     <div id="editIndicator">✏️ Bearbeitungsmodus – Änderungen speichern oder abbrechen</div>
 
     <form id="tradeForm">
-        <input type="date" id="date" placeholder="Datum" />
+        <input type="date" id="date" placeholder="Datum" required />
         <input type="text" id="symbol" placeholder="Symbol" />
         <select id="direction">
             <option value="">Trade-Richtung</option>
@@ -217,18 +217,6 @@
             closeNoteModal();
             loadTrades();
         }
-
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-        const auth = getAuth();
-
-        onAuthStateChanged(auth, user => {
-            if (!user) {
-                alert("Bitte zuerst einloggen.");
-                window.location.href = "index.html"; // oder Login-Seite
-            }
-        });
-
 
         loadTrades();
     </script>
