@@ -66,6 +66,9 @@
     </div>
 
     <script>
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+
         const firebaseConfig = {
             apiKey: "AIzaSyAujeUok4jKYwnr5GEXze_EadszqMdY1y4",
             authDomain: "gamechanger-78fb4.firebaseapp.com",
@@ -78,6 +81,14 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const userId = "A"; // Benutzer wechseln: "A" oder "B"
+
+        const auth = getAuth();
+
+        onAuthStateChanged(auth, user => {
+            if (!user) {
+                window.location.href = "index.html"; // Weiterleitung zum Login
+            }
+        });
 
         let notes = [];
         let currentNoteIndex = null;
@@ -321,17 +332,6 @@
         function changeFontSize(sizeValue) {
             document.execCommand("fontSize", false, sizeValue);
         }
-
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-        const auth = getAuth();
-
-        onAuthStateChanged(auth, user => {
-            if (!user) {
-                alert("Bitte zuerst einloggen.");
-                window.location.href = "index.html"; // oder Login-Seite
-            }
-        });
 
 
         // Initialisierung
