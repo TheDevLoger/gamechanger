@@ -289,7 +289,7 @@
 
         function switchPair(pair) {
             currentPair = pair;
-            document.getElementById("currentPairLabel").textContent = `Währungspaar: ${pair.slice(0, 3)}/${pair.slice(3)}`;
+            document.getElementById("currentPairLabel").textContent = `Währungspaar: ${pair.slice(0, 6)}/${pair.slice(6)}`;
             document.querySelectorAll(".sidebar ul li").forEach(el => el.classList.remove("active"));
             document.getElementById("tab_" + pair).classList.add("active");
 
