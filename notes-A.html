@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dateiverwaltung</title>
     <link rel="stylesheet" href="notes.css" />
-
-    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
 </head>
@@ -66,8 +65,6 @@
     </div>
 
     <script>
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAujeUok4jKYwnr5GEXze_EadszqMdY1y4",
@@ -82,11 +79,11 @@
         const db = firebase.firestore();
         const userId = "A"; // Benutzer wechseln: "A" oder "B"
 
-        const auth = getAuth();
+        const auth = firebase.auth();
 
-        onAuthStateChanged(auth, user => {
+        auth.onAuthStateChanged(user => {
             if (!user) {
-                window.location.href = "index.html"; // Weiterleitung zum Login
+                window.location.href = "index.html"; // oder dein Login
             }
         });
 
