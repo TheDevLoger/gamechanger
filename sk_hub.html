@@ -266,9 +266,9 @@
         </div>
     </div>
 
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
 
     <script>
         // 🔧 Deine Firebase-Konfiguration einfügen
@@ -319,14 +319,14 @@
                             const row = document.createElement("tr");
                             row.classList.add("fade-in");
                             row.innerHTML = `
-                          <td>${new Date(data.date).toLocaleString()}</td>
-                          <td>${data.note || "—"}</td>
-                          <td>${data.link ? `<a href="${data.link}" target="_blank" class="entry-link">🔗 Link</a>` : "—"}</td>
-                          <td class="action-buttons">
-                            <button onclick="editEntry('${doc.id}', \`${data.note?.replace(/`/g, "\\`") || ""}\`, \`${data.link?.replace(/`/g, "\\`") || ""}\`)">✏️</button>
-                            <button onclick="deleteEntry('${doc.id}')">🗑️</button>
-                          </td>
-                        `;
+                                  <td>${new Date(data.date).toLocaleString()}</td>
+                                  <td>${data.note || "—"}</td>
+                                  <td>${data.link ? `<a href="${data.link}" target="_blank" class="entry-link">🔗 Link</a>` : "—"}</td>
+                                  <td class="action-buttons">
+                                    <button onclick="editEntry('${doc.id}', \`${data.note?.replace(/`/g, "\\`") || ""}\`, \`${data.link?.replace(/`/g, "\\`") || ""}\`)">✏️</button>
+                                    <button onclick="deleteEntry('${doc.id}')">🗑️</button>
+                                  </td>
+                                `;
                             tableBody.appendChild(row);
                         });
                     }
@@ -374,18 +374,6 @@
                 link: newLink
             });
         }
-
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-        const auth = getAuth();
-
-        onAuthStateChanged(auth, user => {
-            if (!user) {
-                alert("Bitte zuerst einloggen.");
-                window.location.href = "index.html"; // oder Login-Seite
-            }
-        });
-
 
         // Initiales Laden nach Splash-Screen
         window.onload = () => {
