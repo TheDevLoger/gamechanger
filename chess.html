@@ -49,6 +49,7 @@
 
         .selected {
             outline: 3px solid #f00;
+            animation: pulse 2s infinite;
         }
 
         #status {
@@ -60,6 +61,18 @@
             margin: 5px;
             padding: 10px 20px;
             font-size: 16px;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+            }
+
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 0 8px 4px rgba(255, 0, 0, 0.7);
+            }
         }
     </style>
 </head>
