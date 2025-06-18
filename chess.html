@@ -105,8 +105,9 @@
         let selectedSquare = null;
         let isWhiteTurn = true;
         let playerColor = null;
+        let gameDocRef = db.collection("games").doc("demoGame");
 
-        // Rochade-Status speichern
+        // Für Rochade (aus vorheriger Ergänzung)
         let castlingRights = {
             whiteKingMoved: false,
             whiteRookLeftMoved: false,
@@ -115,8 +116,6 @@
             blackRookLeftMoved: false,
             blackRookRightMoved: false
         };
-
-        let gameDocRef = db.collection("games").doc("demoGame");
 
         function selectPlayer(color) {
             playerColor = color;
@@ -174,46 +173,144 @@
             }
         }
 
-        function onSquareClick(e) {
-            const r = parseInt(e.currentTarget.dataset.row);
-            const c = parseInt(e.currentTarget.dataset.col);
-            const piece = board[r][c];
-
-            if ((isWhiteTurn && playerColor !== 'white') || (!isWhiteTurn && playerColor !== 'black')) {
-                alert("Nicht dein Zug!");
-                return;
+        // Hilfsfunktion: Finde Königposition einer Farbe
+        function findKingPosition(board, isWhite) {
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const p = board[r][c];
+                    if (p && (isWhite ? p === 'K' : p === 'k')) return [r, c];
+                }
             }
+            return null;
+        }
 
-            if (selectedSquare) {
-                if (tryMove(selectedSquare, [r, c])) {
-                    selectedSquare = null;
-                    isWhiteTurn = !isWhiteTurn;
-                    saveGame();
-                    drawBoard();
-                    updateStatus();
-                } else {
-                    if (piece && isOwnPiece(piece)) {
-                        selectedSquare = [r, c];
-                        drawBoard();
-                    } else {
-                        selectedSquare = null;
-                        drawBoard();
+        // Prüfe ob gegebene Farbe im Schach steht
+        function isInCheck(board, isWhite) {
+            const [kr, kc] = findKingPosition(board, isWhite);
+            if (kr === null) return true; // Kein König gefunden, also "Schach"
+
+            // Prüfe alle gegnerischen Züge, ob König angegriffen wird
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const p = board[r][c];
+                    if (p && (isWhite ? p === p.toUpperCase() : p === p.toLowerCase()) === false) {
+                        if (canAttackSquare(board, [r, c], [kr, kc])) return true;
                     }
                 }
-            } else {
-                if (piece && isOwnPiece(piece)) {
-                    selectedSquare = [r, c];
-                    drawBoard();
+            }
+            return false;
+        }
+
+        // Prüft, ob von from nach to ein gültiger Angriff möglich ist (für isInCheck)
+        function canAttackSquare(board, from, to) {
+            const [fr, fc] = from;
+            const [tr, tc] = to;
+            const piece = board[fr][fc];
+            if (!piece) return false;
+
+            const dr = tr - fr;
+            const dc = tc - fc;
+            const absDr = Math.abs(dr);
+            const absDc = Math.abs(dc);
+            const isWhite = piece === piece.toUpperCase();
+            const p = piece.toLowerCase();
+
+            function isClearPath() {
+                const steps = Math.max(absDr, absDc);
+                const stepR = dr === 0 ? 0 : dr / absDr;
+                const stepC = dc === 0 ? 0 : dc / absDc;
+                for (let i = 1; i < steps; i++) {
+                    const r = fr + i * stepR;
+                    const c = fc + i * stepC;
+                    if (board[r][c]) return false;
+                }
+                return true;
+            }
+
+            switch (p) {
+                case 'k':
+                    return absDr <= 1 && absDc <= 1;
+                case 'q':
+                    return (dr === 0 || dc === 0 || absDr === absDc) && isClearPath();
+                case 'r':
+                    return (dr === 0 || dc === 0) && isClearPath();
+                case 'b':
+                    return absDr === absDc && isClearPath();
+                case 'n':
+                    return (absDr === 2 && absDc === 1) || (absDr === 1 && absDc === 2);
+                case 'p':
+                    // Bauernangriffe (nur diagonal 1 Feld nach vorne)
+                    const dir = isWhite ? -1 : 1;
+                    return dr === dir && absDc === 1;
+                default:
+                    return false;
+            }
+        }
+
+        // Prüft, ob Spieler noch einen Zug machen kann (für Schachmatt)
+        function hasAnyValidMove(isWhite) {
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const p = board[r][c];
+                    if (p && (isWhite ? p === p.toUpperCase() : p === p.toLowerCase())) {
+                        for (let tr = 0; tr < 8; tr++) {
+                            for (let tc = 0; tc < 8; tc++) {
+                                if (tryMoveSim([r, c], [tr, tc], isWhite)) return true;
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        // Simulierter Zug für Validierung: prüft Zug ohne dauerhaftes Ändern des Boards
+        function tryMoveSim(from, to, currentIsWhite) {
+            const [fr, fc] = from;
+            const [tr, tc] = to;
+            const piece = board[fr][fc];
+            if (!piece) return false;
+
+            // Kein eigener Stein auf Ziel
+            const target = board[tr][tc];
+            if (target && (target === target.toUpperCase()) === (piece === piece.toUpperCase())) return false;
+
+            // Kopie des Boards anfertigen
+            const boardCopy = board.map(row => row.slice());
+
+            // Normaler Zug (ohne Rochade)
+            // Für Rochade und weitere Spezialzüge müsste man hier noch erweitern (vereinfachte Annahme)
+
+            boardCopy[tr][tc] = piece;
+            boardCopy[fr][fc] = null;
+
+            // Prüfe, ob nach dem Zug eigener König im Schach steht
+            if (isInCheck(boardCopy, currentIsWhite)) return false;
+
+            return true;
+        }
+
+        // **Umwandlung**: Prüft nach Zug, ob Bauer letzte Reihe erreicht hat, und fragt den Spieler
+        function checkPromotion() {
+            // Prüfe letzte Reihe auf Bauern
+            const promotionRow = isWhiteTurn ? 0 : 7;
+            for (let c = 0; c < 8; c++) {
+                const piece = board[promotionRow][c];
+                if (piece && (isWhiteTurn ? piece === 'P' : piece === 'p')) {
+                    // Frage nach Umwandlung (hier einfach automatisch Dame)
+                    board[promotionRow][c] = isWhiteTurn ? 'Q' : 'q';
                 }
             }
         }
 
+        // Neue Version von tryMove, die zusätzlich prüft, ob Zug den eigenen König nicht ins Schach bringt
         function tryMove(from, to) {
             const [fr, fc] = from;
             const [tr, tc] = to;
             const piece = board[fr][fc];
             const target = board[tr][tc];
             if (!piece) return false;
+
             if (target && isOwnPiece(target)) return false;
 
             const dr = tr - fr;
@@ -236,189 +333,237 @@
                 return true;
             }
 
-            // Rochade-Logik für König
-            if (p === 'k') {
-                if (!isOwnPiece(piece)) return false;
+            // Speichere alten Zustand fürs Rückgängigmachen bei ungültigem Zug
+            const oldBoard = board.map(row => row.slice());
+            const oldCastlingRights = { ...castlingRights };
 
-                const row = isWhite ? 7 : 0;
-                const kingSide = (tr === row && tc === 6);
-                const queenSide = (tr === row && tc === 2);
+            // Funktion um Zug intern auszuführen
+            function doMove() {
+                // Spezialfall Rochade
+                if (p === 'k') {
+                    // König bewegt => Castling Rechte sperren
+                    if (isWhite) castlingRights.whiteKingMoved = true;
+                    else castlingRights.blackKingMoved = true;
 
-                if (kingSide) {
-                    const rook = board[row][7];
-                    if (
-                        rook === (isWhite ? 'R' : 'r') &&
-                        !board[row][5] && !board[row][6] &&
-                        !castlingRights[isWhite ? 'whiteKingMoved' : 'blackKingMoved'] &&
-                        !castlingRights[isWhite ? 'whiteRookRightMoved' : 'blackRookRightMoved']
-                    ) {
-                        // Rochade Königseite
-                        board[row][6] = piece;
-                        board[row][4] = null;
-                        board[row][5] = rook;
-                        board[row][7] = null;
+                    // Rochade lang
+                    if (dc === -2 && fr === tr) {
+                        if (!canCastleLong(isWhite)) return false;
+                        // Verschiebe Turm
+                        board[tr][tc + 1] = board[tr][0];
+                        board[tr][0] = null;
+                        if (isWhite) castlingRights.whiteRookLeftMoved = true;
+                        else castlingRights.blackRookLeftMoved = true;
+                        // König bewegen
+                        board[tr][tc] = piece;
+                        board[fr][fc] = null;
                         return true;
                     }
-                } else if (queenSide) {
-                    const rook = board[row][0];
-                    if (
-                        rook === (isWhite ? 'R' : 'r') &&
-                        !board[row][1] && !board[row][2] && !board[row][3] &&
-                        !castlingRights[isWhite ? 'whiteKingMoved' : 'blackKingMoved'] &&
-                        !castlingRights[isWhite ? 'whiteRookLeftMoved' : 'blackRookLeftMoved']
-                    ) {
-                        // Rochade Damenflügel
-                        board[row][2] = piece;
-                        board[row][4] = null;
-                        board[row][3] = rook;
-                        board[row][0] = null;
+                    // Rochade kurz
+                    if (dc === 2 && fr === tr) {
+                        if (!canCastleShort(isWhite)) return false;
+                        // Verschiebe Turm
+                        board[tr][tc - 1] = board[tr][7];
+                        board[tr][7] = null;
+                        if (isWhite) castlingRights.whiteRookRightMoved = true;
+                        else castlingRights.blackRookRightMoved = true;
+                        // König bewegen
+                        board[tr][tc] = piece;
+                        board[fr][fc] = null;
                         return true;
                     }
-                }
-            }
-
-            switch (p) {
-                case 'k': // König normaler Zug
+                    // Normaler Königszug
                     if (absDr <= 1 && absDc <= 1) {
                         board[tr][tc] = piece;
                         board[fr][fc] = null;
-                        break;
+                        return true;
                     }
-                    return false;
-                case 'q': // Dame
-                    if ((dr === 0 || dc === 0 || absDr === absDc) && isClearPath()) {
-                        board[tr][tc] = piece;
-                        board[fr][fc] = null;
-                        break;
-                    }
-                    return false;
-                case 'r': // Turm
-                    if ((dr === 0 || dc === 0) && isClearPath()) {
-                        board[tr][tc] = piece;
-                        board[fr][fc] = null;
-                        break;
-                    }
-                    return false;
-                case 'b': // Läufer
-                    if (absDr === absDc && isClearPath()) {
-                        board[tr][tc] = piece;
-                        board[fr][fc] = null;
-                        break;
-                    }
-                    return false;
-                case 'n': // Springer
-                    if ((absDr === 2 && absDc === 1) || (absDr === 1 && absDc === 2)) {
-                        board[tr][tc] = piece;
-                        board[fr][fc] = null;
-                        break;
-                    }
-                    return false;
-                case 'p': { // Bauer
-                    const dir = isWhite ? -1 : 1;
-                    const startRow = isWhite ? 6 : 1;
-
-                    // Vorwärtsbewegung
-                    if (dc === 0) {
-                        if (dr === dir && !target) {
-                            board[tr][tc] = piece;
-                            board[fr][fc] = null;
-                            break;
-                        }
-                        if (fr === startRow && dr === 2 * dir && !board[fr + dir][fc] && !target) {
-                            board[tr][tc] = piece;
-                            board[fr][fc] = null;
-                            break;
-                        }
-                    }
-
-                    // Schlagen
-                    if (absDc === 1 && dr === dir && target && !isOwnPiece(target)) {
-                        board[tr][tc] = piece;
-                        board[fr][fc] = null;
-                        break;
-                    }
-
                     return false;
                 }
-                default:
-                    return false;
+
+                if (p === 'r') {
+                    // Turmzug => Rechte sperren
+                    if (isWhite) {
+                        if (fr === 7 && fc === 0) castlingRights.whiteRookLeftMoved = true;
+                        if (fr === 7 && fc === 7) castlingRights.whiteRookRightMoved = true;
+                    } else {
+                        if (fr === 0 && fc === 0) castlingRights.blackRookLeftMoved = true;
+                        if (fr === 0 && fc === 7) castlingRights.blackRookRightMoved = true;
+                    }
+                }
+
+                switch (p) {
+                    case 'q':
+                        if ((dr === 0 || dc === 0 || absDr === absDc) && isClearPath()) {
+                            board[tr][tc] = piece;
+                            board[fr][fc] = null;
+                            return true;
+                        }
+                        break;
+                    case 'r':
+                        if ((dr === 0 || dc === 0) && isClearPath()) {
+                            board[tr][tc] = piece;
+                            board[fr][fc] = null;
+                            return true;
+                        }
+                        break;
+                    case 'b':
+                        if (absDr === absDc && isClearPath()) {
+                            board[tr][tc] = piece;
+                            board[fr][fc] = null;
+                            return true;
+                        }
+                        break;
+                    case 'n':
+                        if ((absDr === 2 && absDc === 1) || (absDr === 1 && absDc === 2)) {
+                            board[tr][tc] = piece;
+                            board[fr][fc] = null;
+                            return true;
+                        }
+                        break;
+                    case 'p':
+                        const dir = isWhite ? -1 : 1;
+                        // Einfacher Zug
+                        if (dc === 0 && dr === dir && !board[tr][tc]) {
+                            board[tr][tc] = piece;
+                            board[fr][fc] = null;
+                            return true;
+                        }
+                        // Erster Zug 2 Felder
+                        if (dc === 0 && dr === 2 * dir && !board[tr][tc] && !board[fr + dir][fc]) {
+                            board[tr][tc] = piece;
+                            board[fr][fc] = null;
+                            return true;
+                        }
+                        // Schlagzug
+                        if (Math.abs(dc) === 1 && dr === dir && board[tr][tc] && !isOwnPiece(board[tr][tc])) {
+                            board[tr][tc] = piece;
+                            board[fr][fc] = null;
+                            return true;
+                        }
+                        break;
+                }
+                return false;
             }
 
-            // Rochade-Status aktualisieren
-            if (piece === 'K') castlingRights.whiteKingMoved = true;
-            if (piece === 'k') castlingRights.blackKingMoved = true;
-            if (piece === 'R' && fr === 7 && fc === 0) castlingRights.whiteRookLeftMoved = true;
-            if (piece === 'R' && fr === 7 && fc === 7) castlingRights.whiteRookRightMoved = true;
-            if (piece === 'r' && fr === 0 && fc === 0) castlingRights.blackRookLeftMoved = true;
-            if (piece === 'r' && fr === 0 && fc === 7) castlingRights.blackRookRightMoved = true;
+            if (!doMove()) return false;
 
+            // Prüfe, ob eigener König jetzt im Schach ist
+            if (isInCheck(board, isWhite)) {
+                // Zug rückgängig machen
+                board = oldBoard;
+                castlingRights = oldCastlingRights;
+                return false;
+            }
+
+            checkPromotion();
             return true;
         }
 
+        function isOwnPiece(piece) {
+            if (!piece) return false;
+            return (playerColor === 'white') ? (piece === piece.toUpperCase()) : (piece === piece.toLowerCase());
+        }
 
-        function isOwnPiece(p) {
-            return playerColor === 'white' ? p === p.toUpperCase() : p === p.toLowerCase();
+        // Prüfe Rochade Rechte
+        function canCastleShort(isWhite) {
+            if (isWhite) {
+                if (castlingRights.whiteKingMoved || castlingRights.whiteRookRightMoved) return false;
+                if (board[7][5] || board[7][6]) return false;
+                // Nicht im Schach auf den Feldern
+                if (isInCheck(board, true)) return false;
+                // Simuliere König durch Felder
+                let tempBoard = board.map(r => r.slice());
+                tempBoard[7][4] = null; tempBoard[7][5] = 'K'; if (isInCheck(tempBoard, true)) return false;
+                tempBoard[7][5] = null; tempBoard[7][6] = 'K'; if (isInCheck(tempBoard, true)) return false;
+                return true;
+            } else {
+                if (castlingRights.blackKingMoved || castlingRights.blackRookRightMoved) return false;
+                if (board[0][5] || board[0][6]) return false;
+                if (isInCheck(board, false)) return false;
+                let tempBoard = board.map(r => r.slice());
+                tempBoard[0][4] = null; tempBoard[0][5] = 'k'; if (isInCheck(tempBoard, false)) return false;
+                tempBoard[0][5] = null; tempBoard[0][6] = 'k'; if (isInCheck(tempBoard, false)) return false;
+                return true;
+            }
+        }
+        function canCastleLong(isWhite) {
+            if (isWhite) {
+                if (castlingRights.whiteKingMoved || castlingRights.whiteRookLeftMoved) return false;
+                if (board[7][1] || board[7][2] || board[7][3]) return false;
+                if (isInCheck(board, true)) return false;
+                let tempBoard = board.map(r => r.slice());
+                tempBoard[7][4] = null; tempBoard[7][3] = 'K'; if (isInCheck(tempBoard, true)) return false;
+                tempBoard[7][3] = null; tempBoard[7][2] = 'K'; if (isInCheck(tempBoard, true)) return false;
+                return true;
+            } else {
+                if (castlingRights.blackKingMoved || castlingRights.blackRookLeftMoved) return false;
+                if (board[0][1] || board[0][2] || board[0][3]) return false;
+                if (isInCheck(board, false)) return false;
+                let tempBoard = board.map(r => r.slice());
+                tempBoard[0][4] = null; tempBoard[0][3] = 'k'; if (isInCheck(tempBoard, false)) return false;
+                tempBoard[0][3] = null; tempBoard[0][2] = 'k'; if (isInCheck(tempBoard, false)) return false;
+                return true;
+            }
+        }
+
+        function onSquareClick(event) {
+            if (!playerColor) return;
+
+            const r = parseInt(event.currentTarget.dataset.row);
+            const c = parseInt(event.currentTarget.dataset.col);
+
+            if (!selectedSquare) {
+                // Erster Klick: Wähle Stein, wenn der Spieler am Zug ist und der Stein seine Farbe hat
+                const piece = board[r][c];
+                if (!piece) return;
+                if ((playerColor === 'white' && piece !== piece.toUpperCase()) ||
+                    (playerColor === 'black' && piece !== piece.toLowerCase())) {
+                    return;
+                }
+                if ((playerColor === 'white' && !isWhiteTurn) || (playerColor === 'black' && isWhiteTurn)) return;
+
+                selectedSquare = [r, c];
+                drawBoard();
+            } else {
+                // Zweiter Klick: Versuche zu ziehen
+                if (tryMove(selectedSquare, [r, c])) {
+                    isWhiteTurn = !isWhiteTurn;
+                    saveGame();
+                    selectedSquare = null;
+                    updateStatus();
+                    drawBoard();
+                } else {
+                    // Ungültiger Zug
+                    alert("Ungültiger Zug!");
+                    selectedSquare = null;
+                    drawBoard();
+                }
+            }
         }
 
         function updateStatus() {
-            if (!playerColor) {
-                statusEl.textContent = "Spieler nicht gewählt.";
-                return;
-            }
-            if ((isWhiteTurn && playerColor === 'white') || (!isWhiteTurn && playerColor === 'black')) {
-                statusEl.textContent = `Du bist am Zug (${playerColor === 'white' ? 'Weiß' : 'Schwarz'})`;
+            if (isInCheck(board, isWhiteTurn)) {
+                if (!hasAnyValidMove(isWhiteTurn)) {
+                    statusEl.textContent = `Schachmatt! ${isWhiteTurn ? "Schwarz" : "Weiß"} gewinnt!`;
+                    boardEl.style.pointerEvents = 'none';
+                    return;
+                }
+                statusEl.textContent = (isWhiteTurn ? "Weiß" : "Schwarz") + " ist im Schach.";
             } else {
-                statusEl.textContent = `Warte auf Gegner (${isWhiteTurn ? 'Weiß' : 'Schwarz'})`;
+                if (!hasAnyValidMove(isWhiteTurn)) {
+                    statusEl.textContent = "Patt! Unentschieden.";
+                    boardEl.style.pointerEvents = 'none';
+                    return;
+                }
+                statusEl.textContent = (isWhiteTurn ? "Weiß" : "Schwarz") + " ist am Zug.";
             }
+            boardEl.style.pointerEvents = (playerColor === (isWhiteTurn ? 'white' : 'black')) ? 'auto' : 'none';
         }
 
         function initGame() {
-            gameDocRef.get().then(doc => {
-                if (doc.exists) {
-                    const data = doc.data();
-                    board = fenToBoard(data.fen || startFEN);
-                    isWhiteTurn = (data.turn || "white") === "white";
-                    castlingRights = data.castlingRights || castlingRights;
-                } else {
-                    board = fenToBoard(startFEN);
-                    isWhiteTurn = true;
-                    castlingRights = {
-                        whiteKingMoved: false,
-                        whiteRookLeftMoved: false,
-                        whiteRookRightMoved: false,
-                        blackKingMoved: false,
-                        blackRookLeftMoved: false,
-                        blackRookRightMoved: false
-                    };
-                    saveGame();
-                }
-                drawBoard();
-                updateStatus();
-            });
-
-            gameDocRef.onSnapshot(snapshot => {
-                const data = snapshot.data();
-                if (!data) return;
-                board = fenToBoard(data.fen || startFEN);
-                isWhiteTurn = (data.turn || "white") === "white";
-                castlingRights = data.castlingRights || castlingRights;
-                drawBoard();
-                updateStatus();
-            });
-        }
-
-        function saveGame() {
-            gameDocRef.set({
-                fen: boardToFen(board),
-                turn: isWhiteTurn ? "white" : "black",
-                castlingRights: castlingRights,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        }
-
-        resetBtn.addEventListener('click', () => {
             board = fenToBoard(startFEN);
             isWhiteTurn = true;
+            selectedSquare = null;
             castlingRights = {
                 whiteKingMoved: false,
                 whiteRookLeftMoved: false,
@@ -427,10 +572,42 @@
                 blackRookLeftMoved: false,
                 blackRookRightMoved: false
             };
-            saveGame();
-            drawBoard();
+            boardEl.style.pointerEvents = (playerColor === 'white') ? 'auto' : 'none';
             updateStatus();
+            drawBoard();
+            saveGame();
+        }
+
+        resetBtn.addEventListener('click', () => {
+            initGame();
+            boardEl.style.pointerEvents = (playerColor === 'white') ? 'auto' : 'none';
         });
+
+        // Firestore Synchronisation (einfaches Demo, keine Kollisionserkennung)
+        function saveGame() {
+            const fen = boardToFen(board);
+            gameDocRef.set({
+                fen,
+                isWhiteTurn,
+                castlingRights
+            });
+        }
+
+        function loadGame() {
+            gameDocRef.onSnapshot(doc => {
+                if (!doc.exists) return;
+                const data = doc.data();
+                if (!data) return;
+                board = fenToBoard(data.fen);
+                isWhiteTurn = data.isWhiteTurn;
+                castlingRights = data.castlingRights || castlingRights;
+                updateStatus();
+                drawBoard();
+            });
+        }
+
+        loadGame();
+
     </script>
 </body>
 </html>
