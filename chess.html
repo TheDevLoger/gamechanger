@@ -105,6 +105,14 @@
         let selectedSquare = null;
         let isWhiteTurn = true;
         let playerColor = null;
+        let castlingRights = {
+            whiteKingMoved: false,
+            whiteRookLeftMoved: false,
+            whiteRookRightMoved: false,
+            blackKingMoved: false,
+            blackRookLeftMoved: false,
+            blackRookRightMoved: false
+        };
         let gameDocRef = db.collection("games").doc("demoGame");
 
         function selectPlayer(color) {
@@ -213,6 +221,48 @@
             const isWhite = piece === piece.toUpperCase();
             const p = piece.toLowerCase();
 
+            // Rochade prüfen
+            if (p === 'k') {
+                if (!isOwnPiece(piece)) return false;
+
+                const isWhite = piece === 'K';
+                const rights = castlingRights;
+
+                const row = isWhite ? 7 : 0;
+                const kingSide = (tr === row && tc === 6);
+                const queenSide = (tr === row && tc === 2);
+
+                if (kingSide) {
+                    const rook = board[row][7];
+                    if (
+                        rook === (isWhite ? 'R' : 'r') &&
+                        !board[row][5] && !board[row][6] &&
+                        !rights[isWhite ? 'whiteKingMoved' : 'blackKingMoved'] &&
+                        !rights[isWhite ? 'whiteRookRightMoved' : 'blackRookRightMoved']
+                    ) {
+                        board[row][6] = piece;
+                        board[row][4] = null;
+                        board[row][5] = rook;
+                        board[row][7] = null;
+                        return true;
+                    }
+                } else if (queenSide) {
+                    const rook = board[row][0];
+                    if (
+                        rook === (isWhite ? 'R' : 'r') &&
+                        !board[row][1] && !board[row][2] && !board[row][3] &&
+                        !rights[isWhite ? 'whiteKingMoved' : 'blackKingMoved'] &&
+                        !rights[isWhite ? 'whiteRookLeftMoved' : 'blackRookLeftMoved']
+                    ) {
+                        board[row][2] = piece;
+                        board[row][4] = null;
+                        board[row][3] = rook;
+                        board[row][0] = null;
+                        return true;
+                    }
+                }
+            }
+
             function isClearPath() {
                 const steps = Math.max(absDr, absDc);
                 const stepR = dr === 0 ? 0 : dr / absDr;
@@ -291,6 +341,14 @@
                 default:
                     return false;
             }
+
+            // Zug-Status aktualisieren
+            if (piece === 'K') castlingRights.whiteKingMoved = true;
+            if (piece === 'k') castlingRights.blackKingMoved = true;
+            if (piece === 'R' && fr === 7 && fc === 0) castlingRights.whiteRookLeftMoved = true;
+            if (piece === 'R' && fr === 7 && fc === 7) castlingRights.whiteRookRightMoved = true;
+            if (piece === 'r' && fr === 0 && fc === 0) castlingRights.blackRookLeftMoved = true;
+            if (piece === 'r' && fr === 0 && fc === 7) castlingRights.blackRookRightMoved = true;
         }
 
 
@@ -318,6 +376,7 @@
                 await gameDocRef.set({
                     fen: startFEN,
                     turn: "white",
+                    castlingRights = data.castlingRights || castlingRights;
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
             } else {
@@ -345,11 +404,14 @@
         }
 
         function saveGame() {
-            gameDocRef.set({
-                fen: boardToFen(board),
-                turn: isWhiteTurn ? "white" : "black",
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
+            function saveGame() {
+                gameDocRef.set({
+                    fen: boardToFen(board),
+                    turn: isWhiteTurn ? "white" : "black",
+                    castlingRights: castlingRights,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
         }
 
         resetBtn.onclick = async () => {
