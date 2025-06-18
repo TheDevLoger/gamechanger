@@ -202,18 +202,97 @@
             const [tr, tc] = to;
             const piece = board[fr][fc];
             const target = board[tr][tc];
+            if (!piece) return false;
+            if (target && isOwnPiece(target)) return false;
 
-            if (!piece || (target && isOwnPiece(target))) return false;
+            const dr = tr - fr;
+            const dc = tc - fc;
+            const absDr = Math.abs(dr);
+            const absDc = Math.abs(dc);
 
-            const dr = Math.abs(tr - fr);
-            const dc = Math.abs(tc - fc);
-            if (dr <= 1 && dc <= 1) {
-                board[tr][tc] = piece;
-                board[fr][fc] = null;
+            const isWhite = piece === piece.toUpperCase();
+            const p = piece.toLowerCase();
+
+            function isClearPath() {
+                const steps = Math.max(absDr, absDc);
+                const stepR = dr === 0 ? 0 : dr / absDr;
+                const stepC = dc === 0 ? 0 : dc / absDc;
+                for (let i = 1; i < steps; i++) {
+                    const r = fr + i * stepR;
+                    const c = fc + i * stepC;
+                    if (board[r][c]) return false;
+                }
                 return true;
             }
-            return false;
+
+            switch (p) {
+                case 'k': // König
+                    if (absDr <= 1 && absDc <= 1) {
+                        board[tr][tc] = piece;
+                        board[fr][fc] = null;
+                        return true;
+                    }
+                    return false;
+                case 'q': // Dame
+                    if ((dr === 0 || dc === 0 || absDr === absDc) && isClearPath()) {
+                        board[tr][tc] = piece;
+                        board[fr][fc] = null;
+                        return true;
+                    }
+                    return false;
+                case 'r': // Turm
+                    if ((dr === 0 || dc === 0) && isClearPath()) {
+                        board[tr][tc] = piece;
+                        board[fr][fc] = null;
+                        return true;
+                    }
+                    return false;
+                case 'b': // Läufer
+                    if (absDr === absDc && isClearPath()) {
+                        board[tr][tc] = piece;
+                        board[fr][fc] = null;
+                        return true;
+                    }
+                    return false;
+                case 'n': // Springer
+                    if ((absDr === 2 && absDc === 1) || (absDr === 1 && absDc === 2)) {
+                        board[tr][tc] = piece;
+                        board[fr][fc] = null;
+                        return true;
+                    }
+                    return false;
+                case 'p': { // Bauer
+                    const dir = isWhite ? -1 : 1;
+                    const startRow = isWhite ? 6 : 1;
+
+                    // Vorwärtsbewegung
+                    if (dc === 0) {
+                        if (dr === dir && !target) {
+                            board[tr][tc] = piece;
+                            board[fr][fc] = null;
+                            return true;
+                        }
+                        if (fr === startRow && dr === 2 * dir && !board[fr + dir][fc] && !target) {
+                            board[tr][tc] = piece;
+                            board[fr][fc] = null;
+                            return true;
+                        }
+                    }
+
+                    // Schlagen
+                    if (absDc === 1 && dr === dir && target && !isOwnPiece(target)) {
+                        board[tr][tc] = piece;
+                        board[fr][fc] = null;
+                        return true;
+                    }
+
+                    return false;
+                }
+                default:
+                    return false;
+            }
         }
+
 
         function isOwnPiece(p) {
             return playerColor === 'white' ? p === p.toUpperCase() : p === p.toLowerCase();
