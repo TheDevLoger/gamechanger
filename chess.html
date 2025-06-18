@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Online Schach mit Firebase</title>
+    <title>Online Schach mit Spielerwahl</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -18,11 +18,16 @@
             margin-bottom: 10px;
         }
 
+        #playerSelect {
+            margin: 20px 0;
+        }
+
         #board {
             display: grid;
             grid-template-columns: repeat(8, 60px);
             grid-template-rows: repeat(8, 60px);
             border: 2px solid #333;
+            display: none;
         }
 
         .square {
@@ -52,8 +57,8 @@
         }
 
         button {
-            margin-top: 15px;
-            padding: 8px 16px;
+            margin: 5px;
+            padding: 10px 20px;
             font-size: 16px;
         }
     </style>
@@ -61,16 +66,22 @@
 <body>
 
     <h1>Online Schach</h1>
-    <div id="board"></div>
-    <div id="status">Lade Spiel...</div>
-    <button id="resetBtn">Spiel zurücksetzen</button>
 
-    <!-- Firebase SDKs -->
+    <div id="playerSelect">
+        <p>Wähle deine Farbe:</p>
+        <button onclick="selectPlayer('white')">Spiele als Weiß</button>
+        <button onclick="selectPlayer('black')">Spiele als Schwarz</button>
+    </div>
+
+    <div id="board"></div>
+    <div id="status">Bitte Spielerfarbe wählen.</div>
+    <button id="resetBtn" style="display:none;">Spiel zurücksetzen</button>
+
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // Firebase config und Init
         const firebaseConfig = {
             apiKey: "AIzaSyAujeUok4jKYwnr5GEXze_EadszqMdY1y4",
             authDomain: "gamechanger-78fb4.firebaseapp.com",
@@ -85,41 +96,92 @@
         const boardEl = document.getElementById('board');
         const statusEl = document.getElementById('status');
         const resetBtn = document.getElementById('resetBtn');
-
         const pieceUnicode = {
             'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟',
             'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙'
         };
-
-        // Einfaches Board-Array im FEN-Format (Startposition)
         const startFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
-
         let board = [];
         let selectedSquare = null;
         let isWhiteTurn = true;
-        let playerColor = null; // Farbe des Spielers, wird beim Laden gesetzt
-        let gameDocRef = null;
+        let playerColor = null;
+        let gameDocRef = db.collection("games").doc("demoGame");
+
+        function selectPlayer(color) {
+            playerColor = color;
+            document.getElementById('playerSelect').style.display = 'none';
+            boardEl.style.display = 'grid';
+            resetBtn.style.display = 'inline-block';
+            initGame();
+        }
+
+        function fenToBoard(fen) {
+            const rows = fen.split('/');
+            const b = [];
+            for (let r of rows) {
+                const rowArr = [];
+                for (let ch of r) {
+                    if (!isNaN(ch)) for (let i = 0; i < parseInt(ch); i++) rowArr.push(null);
+                    else rowArr.push(ch);
+                }
+                b.push(rowArr);
+            }
+            return b;
+        }
+
+        function boardToFen(b) {
+            return b.map(row => {
+                let str = '', empty = 0;
+                for (let cell of row) {
+                    if (!cell) empty++;
+                    else {
+                        if (empty) str += empty;
+                        str += cell;
+                        empty = 0;
+                    }
+                }
+                return str + (empty ? empty : '');
+            }).join('/');
+        }
+
+        function drawBoard() {
+            boardEl.innerHTML = '';
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const square = document.createElement('div');
+                    square.classList.add('square', (r + c) % 2 === 0 ? 'light' : 'dark');
+                    square.dataset.row = r;
+                    square.dataset.col = c;
+                    const piece = board[r][c];
+                    square.textContent = piece ? pieceUnicode[piece] : '';
+                    if (selectedSquare && selectedSquare[0] === r && selectedSquare[1] === c) {
+                        square.classList.add('selected');
+                    }
+                    square.addEventListener('click', onSquareClick);
+                    boardEl.appendChild(square);
+                }
+            }
+        }
 
         function onSquareClick(e) {
             const r = parseInt(e.currentTarget.dataset.row);
             const c = parseInt(e.currentTarget.dataset.col);
             const piece = board[r][c];
 
-            // Nur erlauben, dass Spieler mit richtiger Farbe zieht
             if ((isWhiteTurn && playerColor !== 'white') || (!isWhiteTurn && playerColor !== 'black')) {
-                alert("Warte auf deinen Zug!");
+                alert("Nicht dein Zug!");
                 return;
             }
 
             if (selectedSquare) {
                 if (tryMove(selectedSquare, [r, c])) {
                     selectedSquare = null;
-                    drawBoard();
-                    isWhiteTurn = !isWhiteTurn; // Zug wechseln
+                    isWhiteTurn = !isWhiteTurn;
                     saveGame();
+                    drawBoard();
                     updateStatus();
                 } else {
-                    if (piece && isPlayerPiece(piece)) {
+                    if (piece && isOwnPiece(piece)) {
                         selectedSquare = [r, c];
                         drawBoard();
                     } else {
@@ -128,29 +190,48 @@
                     }
                 }
             } else {
-                if (piece && isPlayerPiece(piece)) {
+                if (piece && isOwnPiece(piece)) {
                     selectedSquare = [r, c];
                     drawBoard();
                 }
             }
         }
 
-        function isPlayerPiece(p) {
-            if (playerColor === 'white') return p && p === p.toUpperCase();
-            else return p && p === p.toLowerCase();
+        function tryMove(from, to) {
+            const [fr, fc] = from;
+            const [tr, tc] = to;
+            const piece = board[fr][fc];
+            const target = board[tr][tc];
+
+            if (!piece || (target && isOwnPiece(target))) return false;
+
+            const dr = Math.abs(tr - fr);
+            const dc = Math.abs(tc - fc);
+            if (dr <= 1 && dc <= 1) {
+                board[tr][tc] = piece;
+                board[fr][fc] = null;
+                return true;
+            }
+            return false;
+        }
+
+        function isOwnPiece(p) {
+            return playerColor === 'white' ? p === p.toUpperCase() : p === p.toLowerCase();
         }
 
         function updateStatus() {
-            if (isWhiteTurn) {
-                statusEl.textContent = playerColor === 'white' ? "Du bist am Zug (Weiß)" : "Gegner ist am Zug (Weiß)";
+            if (!playerColor) {
+                statusEl.textContent = "Spieler nicht gewählt.";
+                return;
+            }
+            if ((isWhiteTurn && playerColor === 'white') || (!isWhiteTurn && playerColor === 'black')) {
+                statusEl.textContent = `Du bist am Zug (${playerColor === 'white' ? 'Weiß' : 'Schwarz'})`;
             } else {
-                statusEl.textContent = playerColor === 'black' ? "Du bist am Zug (Schwarz)" : "Gegner ist am Zug (Schwarz)";
+                statusEl.textContent = `Gegner ist am Zug`;
             }
         }
 
-        async function init() {
-            gameDocRef = db.collection("games").doc("demoGame");
-
+        async function initGame() {
             const doc = await gameDocRef.get();
             if (!doc.exists) {
                 board = fenToBoard(startFEN);
@@ -166,83 +247,30 @@
                 isWhiteTurn = data.turn === "white";
             }
 
-            // Spielerfarbe festlegen (nur für Demo: erstes Laden = Weiß, zweites Laden = Schwarz)
-            // Für echten Multiplayer müsste man User Auth machen, hier simple Lösung:
-            const gamesCollection = await db.collection("games").get();
-            if (!playerColor) {
-                // Wenn Spiel existiert, Spieler 1 = Weiß, Spieler 2 = Schwarz
-                playerColor = isWhiteTurn ? 'white' : 'black';
-            }
-
             updateStatus();
             drawBoard();
 
-            // Firestore Listener für Updates vom Gegner
             gameDocRef.onSnapshot(doc => {
-                if (!doc.exists) return;
                 const data = doc.data();
                 if (!data) return;
-                // Update Board nur wenn es nicht unser Zug ist (Zug gewechselt)
-                if ((isWhiteTurn && data.turn === "black") || (!isWhiteTurn && data.turn === "white")) {
-                    board = fenToBoard(data.fen);
-                    isWhiteTurn = data.turn === "white";
-                    updateStatus();
+
+                const newFen = data.fen;
+                const newTurn = data.turn;
+                if (boardToFen(board) !== newFen || (isWhiteTurn !== (newTurn === 'white'))) {
+                    board = fenToBoard(newFen);
+                    isWhiteTurn = newTurn === 'white';
                     drawBoard();
+                    updateStatus();
                 }
             });
         }
 
         function saveGame() {
-            if (!gameDocRef) return;
             gameDocRef.set({
                 fen: boardToFen(board),
                 turn: isWhiteTurn ? "white" : "black",
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-        }
-
-        function loadGameFromDoc(doc) {
-            const data = doc.data();
-            if (!data || !data.fen) return;
-            board = fenToBoard(data.fen);
-            isWhiteTurn = data.turn === "white";
-            statusEl.textContent = isWhiteTurn ? "Du bist am Zug (Weiß)" : "Gegner ist am Zug (Schwarz)";
-            drawBoard();
-        }
-
-        async function init() {
-            // Spiel-Dokument laden/erstellen
-            gameDocRef = db.collection("games").doc("demoGame");
-
-            const doc = await gameDocRef.get();
-            if (!doc.exists) {
-                board = fenToBoard(startFEN);
-                isWhiteTurn = true;
-                await gameDocRef.set({
-                    fen: startFEN,
-                    turn: "white",
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            } else {
-                loadGameFromDoc(doc);
-            }
-
-            // Listener auf Änderungen
-            gameDocRef.onSnapshot(doc => {
-                if (!doc.exists) return;
-                const data = doc.data();
-                if (!data) return;
-
-                // Wenn nicht eigener Zug, Board aktualisieren
-                if ((isWhiteTurn && data.turn === "black") || (!isWhiteTurn && data.turn === "white")) {
-                    board = fenToBoard(data.fen);
-                    isWhiteTurn = data.turn === "white";
-                    statusEl.textContent = isWhiteTurn ? "Du bist am Zug (Weiß)" : "Gegner ist am Zug (Schwarz)";
-                    drawBoard();
-                }
-            });
-
-            drawBoard();
         }
 
         resetBtn.onclick = async () => {
@@ -253,11 +281,9 @@
                 turn: "white",
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            statusEl.textContent = "Spiel zurückgesetzt. Du bist am Zug (Weiß)";
             drawBoard();
+            updateStatus();
         }
-
-        init();
     </script>
 
 </body>
