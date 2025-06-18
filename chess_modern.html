@@ -163,7 +163,7 @@
         const statusEl = document.getElementById('status');
         const resetBtn = document.getElementById('resetBtn');
         const pieceUnicode = {
-            'bR': '♜', 'bN': '♞', 'bB': '♝', 'bQ': '♛', 'bK': '♚', 'bP': '♟',
+            'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟',
             'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙'
         };
         const startFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
@@ -230,15 +230,7 @@
                     square.dataset.row = r;
                     square.dataset.col = c;
                     const piece = board[r][c];
-                    if (piece) {
-                        const img = document.createElement('img');
-                        img.src = `img/${piece}.svg`; // z. B. img/P.svg
-                        img.alt = piece;
-                        img.style.width = '100%';
-                        img.style.height = '100%';
-                        img.draggable = false;
-                        square.appendChild(img);
-                    }
+                    square.textContent = piece ? pieceUnicode[piece] : '';
                     if (selectedSquare && selectedSquare[0] === r && selectedSquare[1] === c) {
                         square.classList.add('selected');
                     }
