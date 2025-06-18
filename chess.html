@@ -156,32 +156,6 @@
             };
         }
 
-        function animateMove(from, to, piece) {
-            return new Promise((resolve) => {
-                const fromPos = getSquarePosition(from[0], from[1]);
-                const toPos = getSquarePosition(to[0], to[1]);
-
-                const animPiece = document.createElement('div');
-                animPiece.classList.add('piece-animation');
-                animPiece.textContent = pieceUnicode[piece];
-                animPiece.style.width = fromPos.size + 'px';
-                animPiece.style.height = fromPos.size + 'px';
-                animPiece.style.left = fromPos.x + 'px';
-                animPiece.style.top = fromPos.y + 'px';
-
-                boardEl.appendChild(animPiece);
-
-                requestAnimationFrame(() => {
-                    animPiece.style.transform = `translate(${toPos.x - fromPos.x}px, ${toPos.y - fromPos.y}px)`;
-                });
-
-                animPiece.addEventListener('transitionend', () => {
-                    boardEl.removeChild(animPiece);
-                    resolve();
-                }, { once: true });
-            });
-        }
-
         function selectPlayer(color) {
             playerColor = color;
             document.getElementById('playerSelect').style.display = 'none';
