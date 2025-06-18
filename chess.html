@@ -552,14 +552,13 @@
         }
 
 
-        function onSquareClick(event) {
+        async function onSquareClick(event) {
             if (!playerColor) return;
 
             const r = parseInt(event.currentTarget.dataset.row);
             const c = parseInt(event.currentTarget.dataset.col);
 
             if (!selectedSquare) {
-                // Erster Klick: Wähle Stein, wenn der Spieler am Zug ist und der Stein seine Farbe hat
                 const piece = board[r][c];
                 if (!piece) return;
                 if ((playerColor === 'white' && piece !== piece.toUpperCase()) ||
@@ -571,15 +570,14 @@
                 selectedSquare = [r, c];
                 drawBoard();
             } else {
-                // Zweiter Klick: Versuche zu ziehen
-                if (tryMove(selectedSquare, [r, c])) {
+                const moved = await tryMove(selectedSquare, [r, c]);
+                if (moved) {
                     isWhiteTurn = !isWhiteTurn;
                     saveGame();
                     selectedSquare = null;
                     updateStatus();
                     drawBoard();
                 } else {
-                    // Ungültiger Zug
                     alert("Ungültiger Zug!");
                     selectedSquare = null;
                     drawBoard();
