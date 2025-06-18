@@ -26,6 +26,9 @@
             display: grid;
             grid-template-columns: repeat(8, 60px);
             grid-template-rows: repeat(8, 60px);
+            position: relative;
+            width: 480px;
+            height: 480px;
             border: 2px solid #333;
             display: none;
         }
@@ -37,6 +40,11 @@
             text-align: center;
             font-size: 36px;
             user-select: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            cursor: pointer;
         }
 
         .light {
@@ -61,6 +69,14 @@
             margin: 5px;
             padding: 10px 20px;
             font-size: 16px;
+        }
+
+        .piece-animation {
+            position: absolute;
+            font-size: 40px;
+            pointer-events: none;
+            transition: transform 0.3s ease;
+            z-index: 10;
         }
 
         @keyframes pulse {
@@ -129,6 +145,42 @@
             blackRookLeftMoved: false,
             blackRookRightMoved: false
         };
+
+        function getSquarePosition(row, col) {
+            const boardRect = boardEl.getBoundingClientRect();
+            const squareSize = boardRect.width / 8;
+            return {
+                x: col * squareSize,
+                y: row * squareSize,
+                size: squareSize
+            };
+        }
+
+        function animateMove(from, to, piece) {
+            return new Promise((resolve) => {
+                const fromPos = getSquarePosition(from[0], from[1]);
+                const toPos = getSquarePosition(to[0], to[1]);
+
+                const animPiece = document.createElement('div');
+                animPiece.classList.add('piece-animation');
+                animPiece.textContent = pieceUnicode[piece];
+                animPiece.style.width = fromPos.size + 'px';
+                animPiece.style.height = fromPos.size + 'px';
+                animPiece.style.left = fromPos.x + 'px';
+                animPiece.style.top = fromPos.y + 'px';
+
+                boardEl.appendChild(animPiece);
+
+                requestAnimationFrame(() => {
+                    animPiece.style.transform = `translate(${toPos.x - fromPos.x}px, ${toPos.y - fromPos.y}px)`;
+                });
+
+                animPiece.addEventListener('transitionend', () => {
+                    boardEl.removeChild(animPiece);
+                    resolve();
+                }, { once: true });
+            });
+        }
 
         function selectPlayer(color) {
             playerColor = color;
@@ -316,8 +368,37 @@
             }
         }
 
+        async function animateMove(from, to, piece) {
+            return new Promise((resolve) => {
+                const fromPos = getSquarePosition(from[0], from[1]);
+                const toPos = getSquarePosition(to[0], to[1]);
+
+                // Erzeuge animiertes Div
+                const animPiece = document.createElement('div');
+                animPiece.classList.add('piece-animation');
+                animPiece.textContent = pieceUnicode[piece];
+                animPiece.style.width = fromPos.size + 'px';
+                animPiece.style.height = fromPos.size + 'px';
+                animPiece.style.left = fromPos.x + 'px';
+                animPiece.style.top = fromPos.y + 'px';
+
+                boardEl.appendChild(animPiece);
+
+                // Warte einen Frame, dann verschiebe es
+                requestAnimationFrame(() => {
+                    animPiece.style.transform = `translate(${toPos.x - fromPos.x}px, ${toPos.y - fromPos.y}px)`;
+                });
+
+                // Nach Transition
+                animPiece.addEventListener('transitionend', () => {
+                    boardEl.removeChild(animPiece);
+                    resolve();
+                }, { once: true });
+            });
+        }
+
         // Neue Version von tryMove, die zusätzlich prüft, ob Zug den eigenen König nicht ins Schach bringt
-        function tryMove(from, to) {
+        async function tryMove(from, to) {
             const [fr, fc] = from;
             const [tr, tc] = to;
             const piece = board[fr][fc];
@@ -346,45 +427,34 @@
                 return true;
             }
 
-            // Speichere alten Zustand fürs Rückgängigmachen bei ungültigem Zug
             const oldBoard = board.map(row => row.slice());
             const oldCastlingRights = { ...castlingRights };
 
-            // Funktion um Zug intern auszuführen
             function doMove() {
-                // Spezialfall Rochade
                 if (p === 'k') {
-                    // König bewegt => Castling Rechte sperren
                     if (isWhite) castlingRights.whiteKingMoved = true;
                     else castlingRights.blackKingMoved = true;
 
-                    // Rochade lang
                     if (dc === -2 && fr === tr) {
                         if (!canCastleLong(isWhite)) return false;
-                        // Verschiebe Turm
                         board[tr][tc + 1] = board[tr][0];
                         board[tr][0] = null;
                         if (isWhite) castlingRights.whiteRookLeftMoved = true;
                         else castlingRights.blackRookLeftMoved = true;
-                        // König bewegen
                         board[tr][tc] = piece;
                         board[fr][fc] = null;
                         return true;
                     }
-                    // Rochade kurz
                     if (dc === 2 && fr === tr) {
                         if (!canCastleShort(isWhite)) return false;
-                        // Verschiebe Turm
                         board[tr][tc - 1] = board[tr][7];
                         board[tr][7] = null;
                         if (isWhite) castlingRights.whiteRookRightMoved = true;
                         else castlingRights.blackRookRightMoved = true;
-                        // König bewegen
                         board[tr][tc] = piece;
                         board[fr][fc] = null;
                         return true;
                     }
-                    // Normaler Königszug
                     if (absDr <= 1 && absDc <= 1) {
                         board[tr][tc] = piece;
                         board[fr][fc] = null;
@@ -394,7 +464,6 @@
                 }
 
                 if (p === 'r') {
-                    // Turmzug => Rechte sperren
                     if (isWhite) {
                         if (fr === 7 && fc === 0) castlingRights.whiteRookLeftMoved = true;
                         if (fr === 7 && fc === 7) castlingRights.whiteRookRightMoved = true;
@@ -435,19 +504,16 @@
                         break;
                     case 'p':
                         const dir = isWhite ? -1 : 1;
-                        // Einfacher Zug
                         if (dc === 0 && dr === dir && !board[tr][tc]) {
                             board[tr][tc] = piece;
                             board[fr][fc] = null;
                             return true;
                         }
-                        // Erster Zug 2 Felder
                         if (dc === 0 && dr === 2 * dir && !board[tr][tc] && !board[fr + dir][fc]) {
                             board[tr][tc] = piece;
                             board[fr][fc] = null;
                             return true;
                         }
-                        // Schlagzug
                         if (Math.abs(dc) === 1 && dr === dir && board[tr][tc] && !isOwnPiece(board[tr][tc])) {
                             board[tr][tc] = piece;
                             board[fr][fc] = null;
@@ -458,11 +524,24 @@
                 return false;
             }
 
-            if (!doMove()) return false;
+            // Check ob Zug legal ist, ohne Board zu verändern (wir brauchen Board noch für Animation)
+            const legalMove = doMove();
 
-            // Prüfe, ob eigener König jetzt im Schach ist
+            if (!legalMove) return false;
+
+            // *** Animation abwarten bevor Board aktualisiert wird ***
+            // Rollback Board und Rechte, damit animateMove das Board mit alter Position sieht
+            board = oldBoard.map(row => row.slice());
+            castlingRights = { ...oldCastlingRights };
+
+            // Funktion animateMove erwartet von dir noch die Implementierung (siehe weiter unten)
+            await animateMove(from, to, piece);
+
+            // Nach Animation das Board aktualisieren
+            if (!doMove()) return false; // hier nochmal ausführen, sollte immer true sein
+
+            // Prüfe, ob eigener König im Schach steht
             if (isInCheck(board, isWhite)) {
-                // Zug rückgängig machen
                 board = oldBoard;
                 castlingRights = oldCastlingRights;
                 return false;
@@ -472,52 +551,6 @@
             return true;
         }
 
-        function isOwnPiece(piece) {
-            if (!piece) return false;
-            return (playerColor === 'white') ? (piece === piece.toUpperCase()) : (piece === piece.toLowerCase());
-        }
-
-        // Prüfe Rochade Rechte
-        function canCastleShort(isWhite) {
-            if (isWhite) {
-                if (castlingRights.whiteKingMoved || castlingRights.whiteRookRightMoved) return false;
-                if (board[7][5] || board[7][6]) return false;
-                // Nicht im Schach auf den Feldern
-                if (isInCheck(board, true)) return false;
-                // Simuliere König durch Felder
-                let tempBoard = board.map(r => r.slice());
-                tempBoard[7][4] = null; tempBoard[7][5] = 'K'; if (isInCheck(tempBoard, true)) return false;
-                tempBoard[7][5] = null; tempBoard[7][6] = 'K'; if (isInCheck(tempBoard, true)) return false;
-                return true;
-            } else {
-                if (castlingRights.blackKingMoved || castlingRights.blackRookRightMoved) return false;
-                if (board[0][5] || board[0][6]) return false;
-                if (isInCheck(board, false)) return false;
-                let tempBoard = board.map(r => r.slice());
-                tempBoard[0][4] = null; tempBoard[0][5] = 'k'; if (isInCheck(tempBoard, false)) return false;
-                tempBoard[0][5] = null; tempBoard[0][6] = 'k'; if (isInCheck(tempBoard, false)) return false;
-                return true;
-            }
-        }
-        function canCastleLong(isWhite) {
-            if (isWhite) {
-                if (castlingRights.whiteKingMoved || castlingRights.whiteRookLeftMoved) return false;
-                if (board[7][1] || board[7][2] || board[7][3]) return false;
-                if (isInCheck(board, true)) return false;
-                let tempBoard = board.map(r => r.slice());
-                tempBoard[7][4] = null; tempBoard[7][3] = 'K'; if (isInCheck(tempBoard, true)) return false;
-                tempBoard[7][3] = null; tempBoard[7][2] = 'K'; if (isInCheck(tempBoard, true)) return false;
-                return true;
-            } else {
-                if (castlingRights.blackKingMoved || castlingRights.blackRookLeftMoved) return false;
-                if (board[0][1] || board[0][2] || board[0][3]) return false;
-                if (isInCheck(board, false)) return false;
-                let tempBoard = board.map(r => r.slice());
-                tempBoard[0][4] = null; tempBoard[0][3] = 'k'; if (isInCheck(tempBoard, false)) return false;
-                tempBoard[0][3] = null; tempBoard[0][2] = 'k'; if (isInCheck(tempBoard, false)) return false;
-                return true;
-            }
-        }
 
         function onSquareClick(event) {
             if (!playerColor) return;
