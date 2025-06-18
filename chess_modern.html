@@ -119,6 +119,14 @@
                 transform: scale(1);
             }
         }
+
+        .square img {
+            transition: transform 0.2s ease;
+        }
+
+        .square:hover img {
+            transform: scale(1.1);
+        }
     </style>
 </head>
 <body>
@@ -155,7 +163,7 @@
         const statusEl = document.getElementById('status');
         const resetBtn = document.getElementById('resetBtn');
         const pieceUnicode = {
-            'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟',
+            'bR': '♜', 'bN': '♞', 'bB': '♝', 'bQ': '♛', 'bK': '♚', 'bP': '♟',
             'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙'
         };
         const startFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
@@ -222,7 +230,15 @@
                     square.dataset.row = r;
                     square.dataset.col = c;
                     const piece = board[r][c];
-                    square.textContent = piece ? pieceUnicode[piece] : '';
+                    if (piece) {
+                        const img = document.createElement('img');
+                        img.src = `img/${piece}.svg`; // z. B. img/P.svg
+                        img.alt = piece;
+                        img.style.width = '100%';
+                        img.style.height = '100%';
+                        img.draggable = false;
+                        square.appendChild(img);
+                    }
                     if (selectedSquare && selectedSquare[0] === r && selectedSquare[1] === c) {
                         square.classList.add('selected');
                     }
