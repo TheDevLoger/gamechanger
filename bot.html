@@ -1,0 +1,215 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BotJournal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; transition: all 0.2s ease-in-out; }
+        body {
+            margin: 0;
+            font-family: 'Orbitron', sans-serif;
+            background: radial-gradient(circle, #0a0a0a, #0f0f1e);
+            color: #0ff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        #splash {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #000; display: flex; align-items: center; justify-content: center; z-index: 9999;
+        }
+        #splash-logo {
+            width: 200px; opacity: 0;
+            animation: neonFade 4s forwards;
+        }
+        @keyframes neonFade {
+            0% { opacity: 0; transform: scale(0.5); filter: drop-shadow(0 0 0 #0ff); }
+            50% { opacity: 1; transform: scale(1.2); filter: drop-shadow(0 0 30px #0ff); }
+            100% { transform: scale(1); filter: drop-shadow(0 0 15px #0ff); }
+        }
+        .sidebar {
+            width: 200px; background: #111;
+            padding: 20px; border-right: 2px solid #0ff;
+            box-shadow: 0 0 10px #0ff; min-height: 100vh;
+            animation: pulseBorder 3s infinite alternate;
+        }
+        @keyframes pulseBorder {
+            from { box-shadow: 0 0 10px #0ff; }
+            to { box-shadow: 0 0 20px #0ff; }
+        }
+        .sidebar h2 { color: #0ff; text-shadow: 0 0 10px #0ff; }
+        .sidebar ul { list-style: none; padding: 0; }
+        .sidebar ul li {
+            padding: 10px; margin: 10px 0;
+            border: 1px solid #0ff; border-radius: 8px; cursor: pointer;
+            text-align: center; color: #0ff;
+            animation: float 4s infinite ease-in-out;
+        }
+        .sidebar ul li:hover {
+            background: #0ff; color: #000;
+            box-shadow: 0 0 25px #0ff, 0 0 40px #0ff;
+            transform: scale(1.1);
+        }
+        @keyframes float {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0); }
+        }
+        .main { flex: 1; padding: 20px; }
+        .header h1 {
+            color: #f0f; text-shadow: 0 0 15px #f0f;
+            animation: glowText 3s infinite alternate;
+        }
+        @keyframes glowText {
+            from { text-shadow: 0 0 10px #f0f; }
+            to { text-shadow: 0 0 30px #f0f; }
+        }
+        .form-section, .table-section {
+            background: rgba(10,10,10,0.8); border: 1px solid #0ff;
+            border-radius: 12px; padding: 20px; margin-top: 20px;
+            box-shadow: 0 0 15px #0ff;
+            animation: pulseBox 5s infinite alternate;
+        }
+        @keyframes pulseBox {
+            from { box-shadow: 0 0 10px #0ff; }
+            to { box-shadow: 0 0 30px #0ff; }
+        }
+        textarea, input[type="url"] {
+            width: 100%; padding: 10px; border: 1px solid #0ff; border-radius: 8px;
+            background: #000; color: #0ff;
+        }
+        textarea:focus, input[type="url"]:focus {
+            outline: none; box-shadow: 0 0 15px #0ff;
+        }
+        button {
+            padding: 10px 20px; background: #f0f; color: #000;
+            border: none; border-radius: 8px;
+            box-shadow: 0 0 10px #f0f;
+            cursor: pointer; font-weight: bold;
+            animation: pulseButton 2s infinite alternate;
+        }
+        button:hover {
+            background: #ff0; color: #000;
+            box-shadow: 0 0 25px #ff0, 0 0 35px #ff0;
+            transform: scale(1.05);
+        }
+        @keyframes pulseButton {
+            from { box-shadow: 0 0 10px #f0f; }
+            to { box-shadow: 0 0 20px #f0f; }
+        }
+        table {
+            width: 100%; border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px; border-bottom: 1px solid #0ff; color: #0ff;
+        }
+        tr:hover {
+            background: rgba(0,255,255,0.1);
+            box-shadow: 0 0 10px #0ff;
+        }
+        a.entry-link {
+            color: #ff0; text-decoration: underline;
+        }
+        a.entry-link:hover {
+            color: #f0f; text-shadow: 0 0 10px #f0f;
+        }
+    </style>
+</head>
+<body>
+    <div id="splash">
+        <img src="logo.png" id="splash-logo" alt="Logo" />
+    </div>
+    <div style="display:flex;">
+        <div class="sidebar">
+            <h2>BotJournal</h2>
+            <ul><li class="active">BotJournal</li></ul>
+        </div>
+        <div class="main">
+            <div class="header">
+                <h1>BotJournal</h1>
+            </div>
+            <div class="form-section">
+                <h2>Neuer Eintrag</h2>
+                <label>Notiz</label>
+                <textarea id="note" rows="4"></textarea>
+                <label>Link</label>
+                <input type="url" id="link" placeholder="https://example.com/" />
+                <button onclick="addEntry()">Speichern</button>
+            </div>
+            <div class="table-section">
+                <h2>Gespeicherte Einträge</h2>
+                <table>
+                    <thead><tr><th>Datum</th><th>Notiz</th><th>Link</th><th>Aktionen</th></tr></thead>
+                    <tbody id="entriesTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAujeUok4jKYwnr5GEXze_EadszqMdY1y4",
+            authDomain: "gamechanger-78fb4.firebaseapp.com",
+            projectId: "gamechanger-78fb4",
+            storageBucket: "gamechanger-78fb4.firebasestorage.app",
+            messagingSenderId: "510513691722",
+            appId: "1:510513691722:web:c0c1a97141ddfda4377ab3"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let unsubscribe = null;
+        function subscribeToEntries() {
+            const tableBody = document.getElementById("entriesTable");
+            unsubscribe = db.collection("scalping")
+                .orderBy("date", "desc")
+                .onSnapshot(snapshot => {
+                    tableBody.innerHTML = "";
+                    if (snapshot.empty) {
+                        tableBody.innerHTML = '<tr><td colspan="4">Keine Einträge gefunden.</td></tr>';
+                    } else {
+                        snapshot.forEach(doc => {
+                            const data = doc.data();
+                            const row = document.createElement("tr");
+                            row.innerHTML = `
+                                <td>${new Date(data.date).toLocaleString()}</td>
+                                <td>${data.note || "—"}</td>
+                                <td>${data.link ? '<a href="'+data.link+'" target="_blank" class="entry-link">Link</a>' : "—"}</td>
+                                <td>
+                                    <button onclick="editEntry('${doc.id}', \`${data.note||""}\`, \`${data.link||""}\`)">✏️</button>
+                                    <button onclick="deleteEntry('${doc.id}')">🗑️</button>
+                                </td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+                    }
+                });
+        }
+        async function addEntry() {
+            const note = document.getElementById('note').value.trim();
+            const link = document.getElementById('link').value.trim();
+            if(!note && !link) return alert('Bitte Notiz oder Link angeben.');
+            await db.collection('scalping').add({date:Date.now(), note, link});
+            document.getElementById('note').value=''; document.getElementById('link').value='';
+        }
+        async function deleteEntry(id) {
+            if(confirm('Diesen Eintrag wirklich löschen?')) {
+                await db.collection('scalping').doc(id).delete();
+            }
+        }
+        async function editEntry(id, currentNote, currentLink) {
+            const newNote = prompt('Neue Notiz:', currentNote); if(newNote===null)return;
+            const newLink = prompt('Neuer Link:', currentLink); if(newLink===null)return;
+            await db.collection('scalping').doc(id).update({note:newNote, link:newLink});
+        }
+        window.onload = () => {
+            setTimeout(() => {
+                document.getElementById('splash').style.display='none';
+                subscribeToEntries();
+            },4000);
+        };
+    </script>
+</body>
+</html>
