@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>📅 Minimalistischer Kalender</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FullCalendar von unpkg, vermeidet MIME-Type Fehler -->
+  <link href="https://unpkg.com/fullcalendar@6.1.9/main.min.css" rel="stylesheet" />
+  <script src="https://unpkg.com/fullcalendar@6.1.9/main.global.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <style>
+    .fc-toolbar-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .fc-button {
+      background-color: #e5e7eb !important;
+      border: none !important;
+      color: #111827 !important;
+      border-radius: 0.5rem !important;
+      padding: 0.5rem 1rem !important;
+      font-weight: 500 !important;
+    }
+    .fc-button-primary:disabled {
+      background: #f3f4f6 !important;
+      color: #9ca3af !important;
+    }
+    .fc-event {
+      border-radius: 0.5rem !important;
+      padding: 0.25rem;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-900 min-h-screen">
+  <div class="max-w-6xl mx-auto px-4 py-6">
+    <div
+      class="flex flex-wrap items-center justify-between bg-white shadow rounded-xl px-4 py-3 mb-6 sticky top-0 z-10"
+    >
+      <div class="flex items-center gap-4">
+        <label class="text-sm font-medium">👤 Benutzer:</label>
+        <select id="userSelect" class="bg-gray-100 border rounded-md p-2 text-sm">
+          <option value="userA">Benutzer A</option>
+          <option value="userB">Benutzer B</option>
+        </select>
+      </div>
+      <div class="flex items-center gap-4">
+        <label class="text-sm font-medium">🏷️ Kategorie:</label>
+        <select id="categoryFilter" class="bg-gray-100 border rounded-md p-2 text-sm">
+          <option value="all">Alle</option>
+          <option value="Privat">Privat</option>
+          <option value="Work">Work</option>
+          <option value="Sport">Sport</option>
+        </select>
+      </div>
+    </div>
+    <div id="calendar" class="bg-white rounded-xl shadow overflow-hidden"></div>
+  </div>
+
+  <div
+    id="eventModal"
+    class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center hidden z-50"
+  >
+    <div class="bg-white p-6 rounded-2xl shadow-lg w-full max-w-md">
+      <h2 class="text-lg font-semibold mb-4">Termin bearbeiten</h2>
+      <form id="eventForm" class="space-y-4">
+        <input
+          type="text"
+          id="title"
+          placeholder="Titel"
+          required
+          class="w-full border rounded-md p-2"
+        />
+        <textarea
+          id="description"
+          placeholder="Beschreibung"
+          class="w-full border rounded-md p-2"
+        ></textarea>
+        <select
+          id="category"
+          required
+          class="w-full border rounded-md p-2"
+        >
+          <option value="Privat">Privat</option>
+          <option value="Work">Work</option>
+          <option value="Sport">Sport</option>
+        </select>
+        <input
+          type="color"
+          id="color"
+          value="#3b82f6"
+          class="w-16 h-10 rounded border"
+        />
+        <input
+          type="datetime-local"
+          id="startTime"
+          required
+          class="w-full border rounded-md p-2"
+        />
+        <input
+          type="datetime-local"
+          id="endTime"
+          required
+          class="w-full border rounded-md p-2"
+        />
+        <div class="flex justify-between items-center pt-2">
+          <button
+            type="button"
+            id="deleteBtn"
+            class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 hidden"
+          >
+            Löschen
+          </button>
+          <div class="flex gap-2">
+            <button
+              type="button"
+              onclick="closeModal()"
+              class="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
+            >
+              Abbrechen
+            </button>
+            <button
+              type="submit"
+              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              Speichern
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAujeUok4jKYwnr5GEXze_EadszqMdY1y4",
+      authDomain: "gamechanger-78fb4.firebaseapp.com",
+      projectId: "gamechanger-78fb4",
+      storageBucket: "gamechanger-78fb4.firebasestorage.app",
+      messagingSenderId: "510513691722",
+      appId: "1:510513691722:web:c0c1a97141ddfda4377ab3",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    let calendar,
+      selectedUser = "userA",
+      selectedCategory = "all";
+
+    document.getElementById("userSelect").addEventListener("change", (e) => {
+      selectedUser = e.target.value;
+      calendar.refetchEvents();
+    });
+
+    document
+      .getElementById("categoryFilter")
+      .addEventListener("change", (e) => {
+        selectedCategory = e.target.value;
+        calendar.refetchEvents();
+      });
+
+    function openModal(startDate) {
+      document.getElementById("eventForm").reset();
+      document.getElementById("deleteBtn").classList.add("hidden");
+      document.getElementById("startTime").value = startDate
+        .toISOString()
+        .slice(0, 16);
+      document.getElementById("endTime").value = new Date(
+        startDate.getTime() + 60 * 60 * 1000
+      )
+        .toISOString()
+        .slice(0, 16);
+      document.getElementById("eventModal").classList.remove("hidden");
+    }
+
+    function closeModal() {
+      document.getElementById("eventModal").classList.add("hidden");
+      document.getElementById("eventForm").reset();
+      delete document.getElementById("eventForm").dataset.editId;
+    }
+
+    document.getElementById("eventForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const title = document.getElementById("title").value;
+      const description = document.getElementById("description").value;
+      const category = document.getElementById("category").value;
+      const color = document.getElementById("color").value;
+      const start = document.getElementById("startTime").value;
+      const end = document.getElementById("endTime").value;
+      const editId = e.target.dataset.editId;
+      const event = { title, description, category, color, start, end };
+
+      if (editId) {
+        await db
+          .collection("calendar")
+          .doc(selectedUser)
+          .collection("events")
+          .doc(editId)
+          .update(event);
+        const existing = calendar.getEventById(editId);
+        existing.setProp("title", title);
+        existing.setExtendedProp("description", description);
+        existing.setExtendedProp("category", category);
+        existing.setProp("backgroundColor", color);
+        existing.setStart(start);
+        existing.setEnd(end);
+      } else {
+        const docRef = await db
+          .collection("calendar")
+          .doc(selectedUser)
+          .collection("events")
+          .add(event);
+        calendar.addEvent({ id: docRef.id, ...event });
+      }
+      closeModal();
+    });
+
+    async function loadEventsForUser(userId, categoryFilter) {
+      const snap = await db
+        .collection("calendar")
+        .doc(userId)
+        .collection("events")
+        .get();
+      return snap.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .filter((evt) => categoryFilter === "all" || evt.category === categoryFilter)
+        .map((evt) => ({
+          id: evt.id,
+          title: evt.title,
+          description: evt.description,
+          start: evt.start,
+          end: evt.end,
+          color: evt.color || "#3b82f6",
+          category: evt.category,
+        }));
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const calendarEl = document.getElementById("calendar");
+      calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: "timeGridWeek",
+        headerToolbar: {
+          left: "prev,next today",
+          center: "title",
+          right: "dayGridMonth,timeGridWeek,timeGridDay",
+        },
+        selectable: true,
+        editable: true,
+        select: function (info) {
+          openModal(info.start);
+        },
+        eventClick: async function (info) {
+          const evt = info.event;
+          document.getElementById("title").value = evt.title;
+          document.getElementById("description").value = evt.extendedProps.description || "";
+          document.getElementById("category").value = evt.extendedProps.category || "Privat";
+          document.getElementById("color").value = evt.backgroundColor || "#3b82f6";
+          document.getElementById("startTime").value = evt.start
+            .toISOString()
+            .slice(0, 16);
+          document.getElementById("endTime").value =
+            evt.end?.toISOString().slice(0, 16) || "";
+          document.getElementById("eventForm").dataset.editId = evt.id;
+          const deleteBtn = document.getElementById("deleteBtn");
+          deleteBtn.classList.remove("hidden");
+          deleteBtn.onclick = async () => {
+            if (confirm("Wirklich löschen?")) {
+              await db
+                .collection("calendar")
+                .doc(selectedUser)
+                .collection("events")
+                .doc(evt.id)
+                .delete();
+              evt.remove();
+              closeModal();
+            }
+          };
+          document.getElementById("eventModal").classList.remove("hidden");
+        },
+        eventDrop: async function (info) {
+          await db
+            .collection("calendar")
+            .doc(selectedUser)
+            .collection("events")
+            .doc(info.event.id)
+            .update({
+              start: info.event.start.toISOString(),
+              end: info.event.end?.toISOString() || null,
+            });
+        },
+        events: async function (fetchInfo, successCallback, failureCallback) {
+          try {
+            const events = await loadEventsForUser(selectedUser, selectedCategory);
+            successCallback(events);
+          } catch (err) {
+            failureCallback(err);
+          }
+        },
+      });
+      calendar.render();
+    });
+  </script>
+</body>
+</html>
