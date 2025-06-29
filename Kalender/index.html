@@ -1,35 +1,32 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Kalender App</title>
-    <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <title>Mein Kalender</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="calendar-container">
-        <header>
-            <h1 id="month-year"></h1>
-            <div class="nav-buttons">
-                <button id="prev">&#9664;</button>
-                <button id="next">&#9654;</button>
-            </div>
-        </header>
-        <div class="calendar-grid" id="calendar"></div>
+  <div class="calendar-container">
+    <div class="calendar-header">
+      <h2 id="month-year"></h2>
+      <div class="calendar-nav">
+        <button id="prev">â—€</button>
+        <button id="next">â–¶</button>
+      </div>
     </div>
+    <div class="calendar-grid" id="calendar"></div>
+  </div>
 
-    <!-- Modal für Events -->
-    <div id="modal" class="modal hidden">
-        <div class="modal-content">
-            <h2 id="selected-date"></h2>
-            <input type="text" id="event-input" placeholder="Neues Event eingeben..." />
-            <button id="save-event">Speichern</button>
-            <ul id="event-list"></ul>
-            <button id="close-modal">Schließen</button>
-        </div>
+  <!-- Modal -->
+  <div class="modal hidden" id="modal">
+    <div class="modal-content">
+      <h3 id="selected-date"></h3>
+      <ul id="event-list"></ul>
+      <input type="text" id="event-input" placeholder="Event hinzufÃ¼gen...">
+      <button id="save-event">Speichern</button>
     </div>
+  </div>
 
-    <script src="firebase-config.js"></script>
-    <script src="script.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
