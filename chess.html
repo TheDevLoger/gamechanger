@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8" />
@@ -120,7 +120,7 @@
         let playerColor = null;
         let gameDocRef = db.collection("games").doc("demoGame");
 
-        // Für Rochade (aus vorheriger Ergänzung)
+        // Für Rochade
         let castlingRights = {
             whiteKingMoved: false,
             whiteRookLeftMoved: false,
@@ -187,10 +187,10 @@
         }
 
         // Hilfsfunktion: Finde Königposition einer Farbe
-        function findKingPosition(board, isWhite) {
+        function findKingPosition(testBoard, isWhite) {
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
-                    const p = board[r][c];
+                    const p = testBoard[r][c];
                     if (p && (isWhite ? p === 'K' : p === 'k')) return [r, c];
                 }
             }
@@ -198,16 +198,18 @@
         }
 
         // Prüfe ob gegebene Farbe im Schach steht
-        function isInCheck(board, isWhite) {
-            const [kr, kc] = findKingPosition(board, isWhite);
-            if (kr === null) return true; // Kein König gefunden, also "Schach"
+        function isInCheck(testBoard, isWhite) {
+            const kingPos = findKingPosition(testBoard, isWhite);
+            if (!kingPos) return true; // Kein König gefunden, also "Schach"
+            
+            const [kr, kc] = kingPos;
 
             // Prüfe alle gegnerischen Züge, ob König angegriffen wird
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
-                    const p = board[r][c];
-                    if (p && (isWhite ? p === p.toUpperCase() : p === p.toLowerCase()) === false) {
-                        if (canAttackSquare(board, [r, c], [kr, kc])) return true;
+                    const p = testBoard[r][c];
+                    if (p && (isWhite ? p === p.toLowerCase() : p === p.toUpperCase())) {
+                        if (canAttackSquare(testBoard, [r, c], [kr, kc])) return true;
                     }
                 }
             }
@@ -215,10 +217,10 @@
         }
 
         // Prüft, ob von from nach to ein gültiger Angriff möglich ist (für isInCheck)
-        function canAttackSquare(board, from, to) {
+        function canAttackSquare(testBoard, from, to) {
             const [fr, fc] = from;
             const [tr, tc] = to;
-            const piece = board[fr][fc];
+            const piece = testBoard[fr][fc];
             if (!piece) return false;
 
             const dr = tr - fr;
@@ -235,7 +237,7 @@
                 for (let i = 1; i < steps; i++) {
                     const r = fr + i * stepR;
                     const c = fc + i * stepC;
-                    if (board[r][c]) return false;
+                    if (testBoard[r][c]) return false;
                 }
                 return true;
             }
@@ -260,47 +262,194 @@
             }
         }
 
+        // Prüfe Rochade Rechte
+        function canCastleShort(isWhite, testBoard = board, testCastlingRights = castlingRights) {
+            if (isWhite) {
+                if (testCastlingRights.whiteKingMoved || testCastlingRights.whiteRookRightMoved) return false;
+                if (testBoard[7][5] || testBoard[7][6]) return false;
+                // Nicht im Schach auf den Feldern
+                if (isInCheck(testBoard, true)) return false;
+                // Simuliere König durch Felder
+                let tempBoard = testBoard.map(r => r.slice());
+                tempBoard[7][4] = null; tempBoard[7][5] = 'K'; if (isInCheck(tempBoard, true)) return false;
+                tempBoard[7][5] = null; tempBoard[7][6] = 'K'; if (isInCheck(tempBoard, true)) return false;
+                return true;
+            } else {
+                if (testCastlingRights.blackKingMoved || testCastlingRights.blackRookRightMoved) return false;
+                if (testBoard[0][5] || testBoard[0][6]) return false;
+                if (isInCheck(testBoard, false)) return false;
+                let tempBoard = testBoard.map(r => r.slice());
+                tempBoard[0][4] = null; tempBoard[0][5] = 'k'; if (isInCheck(tempBoard, false)) return false;
+                tempBoard[0][5] = null; tempBoard[0][6] = 'k'; if (isInCheck(tempBoard, false)) return false;
+                return true;
+            }
+        }
+
+        function canCastleLong(isWhite, testBoard = board, testCastlingRights = castlingRights) {
+            if (isWhite) {
+                if (testCastlingRights.whiteKingMoved || testCastlingRights.whiteRookLeftMoved) return false;
+                if (testBoard[7][1] || testBoard[7][2] || testBoard[7][3]) return false;
+                if (isInCheck(testBoard, true)) return false;
+                let tempBoard = testBoard.map(r => r.slice());
+                tempBoard[7][4] = null; tempBoard[7][3] = 'K'; if (isInCheck(tempBoard, true)) return false;
+                tempBoard[7][3] = null; tempBoard[7][2] = 'K'; if (isInCheck(tempBoard, true)) return false;
+                return true;
+            } else {
+                if (testCastlingRights.blackKingMoved || testCastlingRights.blackRookLeftMoved) return false;
+                if (testBoard[0][1] || testBoard[0][2] || testBoard[0][3]) return false;
+                if (isInCheck(testBoard, false)) return false;
+                let tempBoard = testBoard.map(r => r.slice());
+                tempBoard[0][4] = null; tempBoard[0][3] = 'k'; if (isInCheck(tempBoard, false)) return false;
+                tempBoard[0][3] = null; tempBoard[0][2] = 'k'; if (isInCheck(tempBoard, false)) return false;
+                return true;
+            }
+        }
+
+        // Neue vereinheitlichte Funktion für Zugvalidierung mit Rochade-Unterstützung
+        function isValidMove(from, to, currentIsWhite, testBoard = board, testCastlingRights = castlingRights) {
+            const [fr, fc] = from;
+            const [tr, tc] = to;
+            const piece = testBoard[fr][fc];
+            if (!piece) return false;
+
+            // Prüfe ob es der richtige Spieler ist
+            const pieceIsWhite = piece === piece.toUpperCase();
+            if (pieceIsWhite !== currentIsWhite) return false;
+
+            // Kein eigener Stein auf Ziel
+            const target = testBoard[tr][tc];
+            if (target && (target === target.toUpperCase()) === (piece === piece.toUpperCase())) return false;
+
+            const dr = tr - fr;
+            const dc = tc - fc;
+            const absDr = Math.abs(dr);
+            const absDc = Math.abs(dc);
+            const p = piece.toLowerCase();
+
+            function isClearPath() {
+                const steps = Math.max(absDr, absDc);
+                const stepR = dr === 0 ? 0 : dr / absDr;
+                const stepC = dc === 0 ? 0 : dc / absDc;
+                for (let i = 1; i < steps; i++) {
+                    const r = fr + i * stepR;
+                    const c = fc + i * stepC;
+                    if (testBoard[r][c]) return false;
+                }
+                return true;
+            }
+
+            // Prüfe Zugvalidität nach Figur
+            let isValidPieceMove = false;
+            
+            switch (p) {
+                case 'k':
+                    // Rochade kurz
+                    if (dc === 2 && fr === tr) {
+                        isValidPieceMove = canCastleShort(pieceIsWhite, testBoard, testCastlingRights);
+                    }
+                    // Rochade lang
+                    else if (dc === -2 && fr === tr) {
+                        isValidPieceMove = canCastleLong(pieceIsWhite, testBoard, testCastlingRights);
+                    }
+                    // Normaler Königszug
+                    else if (absDr <= 1 && absDc <= 1) {
+                        isValidPieceMove = true;
+                    }
+                    break;
+                case 'q':
+                    isValidPieceMove = (dr === 0 || dc === 0 || absDr === absDc) && isClearPath();
+                    break;
+                case 'r':
+                    isValidPieceMove = (dr === 0 || dc === 0) && isClearPath();
+                    break;
+                case 'b':
+                    isValidPieceMove = absDr === absDc && isClearPath();
+                    break;
+                case 'n':
+                    isValidPieceMove = (absDr === 2 && absDc === 1) || (absDr === 1 && absDc === 2);
+                    break;
+                case 'p':
+                    const dir = pieceIsWhite ? -1 : 1;
+                    const startRow = pieceIsWhite ? 6 : 1;
+                    // Einfacher Zug
+                    if (dc === 0 && dr === dir && !testBoard[tr][tc]) {
+                        isValidPieceMove = true;
+                    }
+                    // Erster Zug 2 Felder
+                    else if (dc === 0 && dr === 2 * dir && fr === startRow && !testBoard[tr][tc] && !testBoard[fr + dir][fc]) {
+                        isValidPieceMove = true;
+                    }
+                    // Schlagzug
+                    else if (Math.abs(dc) === 1 && dr === dir && testBoard[tr][tc] && 
+                             (testBoard[tr][tc] === testBoard[tr][tc].toUpperCase()) !== pieceIsWhite) {
+                        isValidPieceMove = true;
+                    }
+                    break;
+            }
+
+            if (!isValidPieceMove) return false;
+
+            // Simuliere Zug und prüfe ob König im Schach steht
+            const boardCopy = testBoard.map(row => row.slice());
+            const castlingRightsCopy = { ...testCastlingRights };
+
+            // Führe Zug aus
+            if (p === 'k') {
+                // Rochade kurz
+                if (dc === 2 && fr === tr) {
+                    boardCopy[tr][tc - 1] = boardCopy[tr][7];
+                    boardCopy[tr][7] = null;
+                    if (pieceIsWhite) castlingRightsCopy.whiteRookRightMoved = true;
+                    else castlingRightsCopy.blackRookRightMoved = true;
+                }
+                // Rochade lang
+                else if (dc === -2 && fr === tr) {
+                    boardCopy[tr][tc + 1] = boardCopy[tr][0];
+                    boardCopy[tr][0] = null;
+                    if (pieceIsWhite) castlingRightsCopy.whiteRookLeftMoved = true;
+                    else castlingRightsCopy.blackRookLeftMoved = true;
+                }
+                // König bewegt => Castling Rechte sperren
+                if (pieceIsWhite) castlingRightsCopy.whiteKingMoved = true;
+                else castlingRightsCopy.blackKingMoved = true;
+            }
+
+            if (p === 'r') {
+                // Turmzug => Rechte sperren
+                if (pieceIsWhite) {
+                    if (fr === 7 && fc === 0) castlingRightsCopy.whiteRookLeftMoved = true;
+                    if (fr === 7 && fc === 7) castlingRightsCopy.whiteRookRightMoved = true;
+                } else {
+                    if (fr === 0 && fc === 0) castlingRightsCopy.blackRookLeftMoved = true;
+                    if (fr === 0 && fc === 7) castlingRightsCopy.blackRookRightMoved = true;
+                }
+            }
+
+            // Normaler Zug
+            boardCopy[tr][tc] = piece;
+            boardCopy[fr][fc] = null;
+
+            // Prüfe, ob nach dem Zug eigener König im Schach steht
+            return !isInCheck(boardCopy, currentIsWhite);
+        }
+
         // Prüft, ob Spieler noch einen Zug machen kann (für Schachmatt)
-        function hasAnyValidMove(isWhite) {
+        function hasAnyValidMove(currentIsWhite) {
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
                     const p = board[r][c];
-                    if (p && (isWhite ? p === p.toUpperCase() : p === p.toLowerCase())) {
+                    if (p && (currentIsWhite ? p === p.toUpperCase() : p === p.toLowerCase())) {
                         for (let tr = 0; tr < 8; tr++) {
                             for (let tc = 0; tc < 8; tc++) {
-                                if (tryMoveSim([r, c], [tr, tc], isWhite)) return true;
+                                if (isValidMove([r, c], [tr, tc], currentIsWhite)) {
+                                    return true;
+                                }
                             }
                         }
                     }
                 }
             }
             return false;
-        }
-
-        // Simulierter Zug für Validierung: prüft Zug ohne dauerhaftes Ändern des Boards
-        function tryMoveSim(from, to, currentIsWhite) {
-            const [fr, fc] = from;
-            const [tr, tc] = to;
-            const piece = board[fr][fc];
-            if (!piece) return false;
-
-            // Kein eigener Stein auf Ziel
-            const target = board[tr][tc];
-            if (target && (target === target.toUpperCase()) === (piece === piece.toUpperCase())) return false;
-
-            // Kopie des Boards anfertigen
-            const boardCopy = board.map(row => row.slice());
-
-            // Normaler Zug (ohne Rochade)
-            // Für Rochade und weitere Spezialzüge müsste man hier noch erweitern (vereinfachte Annahme)
-
-            boardCopy[tr][tc] = piece;
-            boardCopy[fr][fc] = null;
-
-            // Prüfe, ob nach dem Zug eigener König im Schach steht
-            if (isInCheck(boardCopy, currentIsWhite)) return false;
-
-            return true;
         }
 
         // **Umwandlung**: Prüft nach Zug, ob Bauer letzte Reihe erreicht hat, und fragt den Spieler
@@ -316,157 +465,55 @@
             }
         }
 
-        // Neue Version von tryMove, die zusätzlich prüft, ob Zug den eigenen König nicht ins Schach bringt
-        function tryMove(from, to) {
+        // Führe Zug aus (nur wenn gültig)
+        function executeMove(from, to) {
             const [fr, fc] = from;
             const [tr, tc] = to;
             const piece = board[fr][fc];
-            const target = board[tr][tc];
-            if (!piece) return false;
+            
+            if (!isValidMove(from, to, piece === piece.toUpperCase())) {
+                return false;
+            }
 
-            if (target && isOwnPiece(target)) return false;
-
-            const dr = tr - fr;
-            const dc = tc - fc;
-            const absDr = Math.abs(dr);
-            const absDc = Math.abs(dc);
-
-            const isWhite = piece === piece.toUpperCase();
             const p = piece.toLowerCase();
+            const isWhite = piece === piece.toUpperCase();
 
-            function isClearPath() {
-                const steps = Math.max(absDr, absDc);
-                const stepR = dr === 0 ? 0 : dr / absDr;
-                const stepC = dc === 0 ? 0 : dc / absDc;
-                for (let i = 1; i < steps; i++) {
-                    const r = fr + i * stepR;
-                    const c = fc + i * stepC;
-                    if (board[r][c]) return false;
+            // Spezialfall Rochade
+            if (p === 'k') {
+                // König bewegt => Castling Rechte sperren
+                if (isWhite) castlingRights.whiteKingMoved = true;
+                else castlingRights.blackKingMoved = true;
+
+                // Rochade kurz
+                if (tc - fc === 2) {
+                    board[tr][tc - 1] = board[tr][7];
+                    board[tr][7] = null;
+                    if (isWhite) castlingRights.whiteRookRightMoved = true;
+                    else castlingRights.blackRookRightMoved = true;
                 }
-                return true;
+                // Rochade lang
+                else if (tc - fc === -2) {
+                    board[tr][tc + 1] = board[tr][0];
+                    board[tr][0] = null;
+                    if (isWhite) castlingRights.whiteRookLeftMoved = true;
+                    else castlingRights.blackRookLeftMoved = true;
+                }
             }
 
-            // Speichere alten Zustand fürs Rückgängigmachen bei ungültigem Zug
-            const oldBoard = board.map(row => row.slice());
-            const oldCastlingRights = { ...castlingRights };
-
-            // Funktion um Zug intern auszuführen
-            function doMove() {
-                // Spezialfall Rochade
-                if (p === 'k') {
-                    // König bewegt => Castling Rechte sperren
-                    if (isWhite) castlingRights.whiteKingMoved = true;
-                    else castlingRights.blackKingMoved = true;
-
-                    // Rochade lang
-                    if (dc === -2 && fr === tr) {
-                        if (!canCastleLong(isWhite)) return false;
-                        // Verschiebe Turm
-                        board[tr][tc + 1] = board[tr][0];
-                        board[tr][0] = null;
-                        if (isWhite) castlingRights.whiteRookLeftMoved = true;
-                        else castlingRights.blackRookLeftMoved = true;
-                        // König bewegen
-                        board[tr][tc] = piece;
-                        board[fr][fc] = null;
-                        return true;
-                    }
-                    // Rochade kurz
-                    if (dc === 2 && fr === tr) {
-                        if (!canCastleShort(isWhite)) return false;
-                        // Verschiebe Turm
-                        board[tr][tc - 1] = board[tr][7];
-                        board[tr][7] = null;
-                        if (isWhite) castlingRights.whiteRookRightMoved = true;
-                        else castlingRights.blackRookRightMoved = true;
-                        // König bewegen
-                        board[tr][tc] = piece;
-                        board[fr][fc] = null;
-                        return true;
-                    }
-                    // Normaler Königszug
-                    if (absDr <= 1 && absDc <= 1) {
-                        board[tr][tc] = piece;
-                        board[fr][fc] = null;
-                        return true;
-                    }
-                    return false;
+            if (p === 'r') {
+                // Turmzug => Rechte sperren
+                if (isWhite) {
+                    if (fr === 7 && fc === 0) castlingRights.whiteRookLeftMoved = true;
+                    if (fr === 7 && fc === 7) castlingRights.whiteRookRightMoved = true;
+                } else {
+                    if (fr === 0 && fc === 0) castlingRights.blackRookLeftMoved = true;
+                    if (fr === 0 && fc === 7) castlingRights.blackRookRightMoved = true;
                 }
-
-                if (p === 'r') {
-                    // Turmzug => Rechte sperren
-                    if (isWhite) {
-                        if (fr === 7 && fc === 0) castlingRights.whiteRookLeftMoved = true;
-                        if (fr === 7 && fc === 7) castlingRights.whiteRookRightMoved = true;
-                    } else {
-                        if (fr === 0 && fc === 0) castlingRights.blackRookLeftMoved = true;
-                        if (fr === 0 && fc === 7) castlingRights.blackRookRightMoved = true;
-                    }
-                }
-
-                switch (p) {
-                    case 'q':
-                        if ((dr === 0 || dc === 0 || absDr === absDc) && isClearPath()) {
-                            board[tr][tc] = piece;
-                            board[fr][fc] = null;
-                            return true;
-                        }
-                        break;
-                    case 'r':
-                        if ((dr === 0 || dc === 0) && isClearPath()) {
-                            board[tr][tc] = piece;
-                            board[fr][fc] = null;
-                            return true;
-                        }
-                        break;
-                    case 'b':
-                        if (absDr === absDc && isClearPath()) {
-                            board[tr][tc] = piece;
-                            board[fr][fc] = null;
-                            return true;
-                        }
-                        break;
-                    case 'n':
-                        if ((absDr === 2 && absDc === 1) || (absDr === 1 && absDc === 2)) {
-                            board[tr][tc] = piece;
-                            board[fr][fc] = null;
-                            return true;
-                        }
-                        break;
-                    case 'p':
-                        const dir = isWhite ? -1 : 1;
-                        // Einfacher Zug
-                        if (dc === 0 && dr === dir && !board[tr][tc]) {
-                            board[tr][tc] = piece;
-                            board[fr][fc] = null;
-                            return true;
-                        }
-                        // Erster Zug 2 Felder
-                        if (dc === 0 && dr === 2 * dir && !board[tr][tc] && !board[fr + dir][fc]) {
-                            board[tr][tc] = piece;
-                            board[fr][fc] = null;
-                            return true;
-                        }
-                        // Schlagzug
-                        if (Math.abs(dc) === 1 && dr === dir && board[tr][tc] && !isOwnPiece(board[tr][tc])) {
-                            board[tr][tc] = piece;
-                            board[fr][fc] = null;
-                            return true;
-                        }
-                        break;
-                }
-                return false;
             }
 
-            if (!doMove()) return false;
-
-            // Prüfe, ob eigener König jetzt im Schach ist
-            if (isInCheck(board, isWhite)) {
-                // Zug rückgängig machen
-                board = oldBoard;
-                castlingRights = oldCastlingRights;
-                return false;
-            }
+            // Normaler Zug
+            board[tr][tc] = piece;
+            board[fr][fc] = null;
 
             checkPromotion();
             return true;
@@ -475,48 +522,6 @@
         function isOwnPiece(piece) {
             if (!piece) return false;
             return (playerColor === 'white') ? (piece === piece.toUpperCase()) : (piece === piece.toLowerCase());
-        }
-
-        // Prüfe Rochade Rechte
-        function canCastleShort(isWhite) {
-            if (isWhite) {
-                if (castlingRights.whiteKingMoved || castlingRights.whiteRookRightMoved) return false;
-                if (board[7][5] || board[7][6]) return false;
-                // Nicht im Schach auf den Feldern
-                if (isInCheck(board, true)) return false;
-                // Simuliere König durch Felder
-                let tempBoard = board.map(r => r.slice());
-                tempBoard[7][4] = null; tempBoard[7][5] = 'K'; if (isInCheck(tempBoard, true)) return false;
-                tempBoard[7][5] = null; tempBoard[7][6] = 'K'; if (isInCheck(tempBoard, true)) return false;
-                return true;
-            } else {
-                if (castlingRights.blackKingMoved || castlingRights.blackRookRightMoved) return false;
-                if (board[0][5] || board[0][6]) return false;
-                if (isInCheck(board, false)) return false;
-                let tempBoard = board.map(r => r.slice());
-                tempBoard[0][4] = null; tempBoard[0][5] = 'k'; if (isInCheck(tempBoard, false)) return false;
-                tempBoard[0][5] = null; tempBoard[0][6] = 'k'; if (isInCheck(tempBoard, false)) return false;
-                return true;
-            }
-        }
-        function canCastleLong(isWhite) {
-            if (isWhite) {
-                if (castlingRights.whiteKingMoved || castlingRights.whiteRookLeftMoved) return false;
-                if (board[7][1] || board[7][2] || board[7][3]) return false;
-                if (isInCheck(board, true)) return false;
-                let tempBoard = board.map(r => r.slice());
-                tempBoard[7][4] = null; tempBoard[7][3] = 'K'; if (isInCheck(tempBoard, true)) return false;
-                tempBoard[7][3] = null; tempBoard[7][2] = 'K'; if (isInCheck(tempBoard, true)) return false;
-                return true;
-            } else {
-                if (castlingRights.blackKingMoved || castlingRights.blackRookLeftMoved) return false;
-                if (board[0][1] || board[0][2] || board[0][3]) return false;
-                if (isInCheck(board, false)) return false;
-                let tempBoard = board.map(r => r.slice());
-                tempBoard[0][4] = null; tempBoard[0][3] = 'k'; if (isInCheck(tempBoard, false)) return false;
-                tempBoard[0][3] = null; tempBoard[0][2] = 'k'; if (isInCheck(tempBoard, false)) return false;
-                return true;
-            }
         }
 
         function onSquareClick(event) {
@@ -539,7 +544,7 @@
                 drawBoard();
             } else {
                 // Zweiter Klick: Versuche zu ziehen
-                if (tryMove(selectedSquare, [r, c])) {
+                if (executeMove(selectedSquare, [r, c])) {
                     isWhiteTurn = !isWhiteTurn;
                     saveGame();
                     selectedSquare = null;
