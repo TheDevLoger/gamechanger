@@ -305,17 +305,36 @@
                 blackPlayer: null,
                 currentTurn: 'white',
                 status: 'waiting',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                createdAt: new Date().toISOString(),
+                lastUpdated: new Date().toISOString()
             };
 
+            console.log('Versuche Spiel zu erstellen:', gameId);
+            
             try {
+                // Erst prüfen ob Firebase verbunden ist
+                await db.collection('games').doc('test').get();
+                console.log('Firebase-Verbindung erfolgreich');
+                
+                // Spiel erstellen
                 await db.collection('games').doc(gameId).set(gameData);
+                console.log('Spiel erfolgreich erstellt');
+                
                 currentPlayer = playerName;
                 playerColor = 'white';
                 joinGameRoom(gameId);
             } catch (error) {
-                console.error('Fehler beim Erstellen des Spiels:', error);
-                alert('Fehler beim Erstellen des Spiels!');
+                console.error('Detaillierter Fehler:', error);
+                console.error('Error code:', error.code);
+                console.error('Error message:', error.message);
+                
+                if (error.code === 'permission-denied') {
+                    alert('Keine Berechtigung für Firestore. Bitte prüfe die Firestore-Regeln!');
+                } else if (error.code === 'unavailable') {
+                    alert('Firebase ist nicht verfügbar. Bitte versuche es später erneut.');
+                } else {
+                    alert(`Fehler beim Erstellen des Spiels: ${error.message}`);
+                }
             }
         }
 
@@ -329,14 +348,20 @@
                 return;
             }
 
+            console.log('Versuche Spiel beizutreten:', gameId);
+
             try {
                 const gameDoc = await db.collection('games').doc(gameId).get();
+                console.log('Spiel-Dokument abgerufen:', gameDoc.exists);
+                
                 if (!gameDoc.exists) {
                     alert('Spiel nicht gefunden!');
                     return;
                 }
 
                 const gameData = gameDoc.data();
+                console.log('Spiel-Daten:', gameData);
+                
                 if (gameData.blackPlayer) {
                     alert('Spiel ist bereits voll!');
                     return;
@@ -344,15 +369,24 @@
 
                 await db.collection('games').doc(gameId).update({
                     blackPlayer: playerName,
-                    status: 'active'
+                    status: 'active',
+                    lastUpdated: new Date().toISOString()
                 });
 
+                console.log('Erfolgreich beigetreten');
                 currentPlayer = playerName;
                 playerColor = 'black';
                 joinGameRoom(gameId);
             } catch (error) {
-                console.error('Fehler beim Beitreten:', error);
-                alert('Fehler beim Beitreten!');
+                console.error('Detaillierter Fehler beim Beitreten:', error);
+                console.error('Error code:', error.code);
+                console.error('Error message:', error.message);
+                
+                if (error.code === 'permission-denied') {
+                    alert('Keine Berechtigung für Firestore. Bitte prüfe die Firestore-Regeln!');
+                } else {
+                    alert(`Fehler beim Beitreten: ${error.message}`);
+                }
             }
         }
 
@@ -575,11 +609,14 @@
                     lastMove: {
                         from: { row: fromRow, col: fromCol },
                         to: { row: toRow, col: toCol },
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    }
+                        timestamp: new Date().toISOString()
+                    },
+                    lastUpdated: new Date().toISOString()
                 });
+                console.log('Zug erfolgreich ausgeführt');
             } catch (error) {
                 console.error('Fehler beim Ausführen des Zugs:', error);
+                alert(`Fehler beim Zug: ${error.message}`);
             }
         }
 
