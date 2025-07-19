@@ -3,40 +3,168 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Online Schach mit Spielerwahl</title>
+    <title>Modern Chess Online</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background: #eee;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 10px;
+            justify-content: center;
+            color: #f0f0f0;
+            overflow: hidden;
+            padding: 20px;
         }
 
-        h1 {
-            margin-bottom: 10px;
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 50%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 50% 100%, rgba(120, 219, 255, 0.1) 0%, transparent 50%);
+            animation: bgPulse 20s ease-in-out infinite;
+            z-index: -1;
         }
+
+        @keyframes bgPulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+
+        /* Remove unused h1 styles */
 
         #playerSelect {
-            margin: 20px 0;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: slideUp 0.6s ease-out;
+        }
+
+        #playerSelect p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            opacity: 0.9;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: 500;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .game-container {
+            display: none;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        #board-wrapper {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
         }
 
         #board {
             display: grid;
-            grid-template-columns: repeat(8, 90px);
-            grid-template-rows: repeat(8, 90px);
-            border: 4px solid #333;
-            display: none;
+            grid-template-columns: repeat(8, 85px);
+            grid-template-rows: repeat(8, 85px);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
         }
 
         .square {
-            width: 90px;
-            height: 90px;
-            line-height: 90px;
-            text-align: center;
-            font-size: 65px;
-            user-select: none;
+            width: 85px;
+            height: 85px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 68px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            color: #000;
+            text-shadow: 
+                0 1px 2px rgba(0, 0, 0, 0.2),
+                0 0 1px rgba(0, 0, 0, 0.3);
+        }
+
+        .square::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .square:hover::after {
+            opacity: 1;
         }
 
         .light {
@@ -47,48 +175,222 @@
             background: #b58863;
         }
 
-        .selected {
-            outline: 3px solid #f00;
-            animation: pulse 2s infinite;
+        /* Besserer Kontrast für weiße Figuren */
+        .light:has(.white-piece),
+        .dark:has(.white-piece) {
+            color: #fff;
+            text-shadow: 
+                0 1px 3px rgba(0, 0, 0, 0.8),
+                0 0 2px rgba(0, 0, 0, 0.9),
+                0 0 8px rgba(0, 0, 0, 0.3);
         }
 
-        #status {
-            margin-top: 15px;
-            font-weight: bold;
+        /* Besserer Kontrast für schwarze Figuren */
+        .light:has(.black-piece),
+        .dark:has(.black-piece) {
+            color: #000;
+            text-shadow: 
+                0 1px 2px rgba(255, 255, 255, 0.8),
+                0 0 1px rgba(255, 255, 255, 0.6);
         }
 
-        button {
-            margin: 5px;
-            padding: 10px 20px;
-            font-size: 16px;
+        .square.selected {
+            animation: pulse 1s ease-in-out infinite;
+            box-shadow: inset 0 0 0 3px #ff6b6b;
         }
 
         @keyframes pulse {
             0%, 100% {
                 transform: scale(1);
-                box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+                box-shadow: inset 0 0 0 3px #ff6b6b, 0 0 20px rgba(255, 107, 107, 0.6);
             }
-
             50% {
-                transform: scale(1.1);
-                box-shadow: 0 0 8px 4px rgba(255, 0, 0, 0.7);
+                transform: scale(1.05);
+                box-shadow: inset 0 0 0 3px #ff6b6b, 0 0 30px rgba(255, 107, 107, 0.8);
             }
+        }
+
+        .piece-move {
+            animation: piecePlace 0.3s ease-out;
+        }
+
+        @keyframes piecePlace {
+            from {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        #status {
+            margin-top: 2rem;
+            font-size: 1.3rem;
+            font-weight: 300;
+            text-align: center;
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-width: 300px;
+            transition: all 0.3s ease;
+        }
+
+        #status.check {
+            background: rgba(255, 107, 107, 0.2);
+            border-color: rgba(255, 107, 107, 0.3);
+            animation: statusPulse 1s ease-in-out infinite;
+        }
+
+        #status.checkmate {
+            background: rgba(76, 217, 100, 0.2);
+            border-color: rgba(76, 217, 100, 0.3);
+            animation: statusWin 0.6s ease-out;
+        }
+
+        @keyframes statusPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        @keyframes statusWin {
+            0% { transform: scale(0.8) rotate(-5deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+            100% { transform: scale(1) rotate(0); }
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            justify-content: center;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #f0f0f0;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .sound-icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .control-btn:hover .sound-icon {
+            transform: scale(1.2);
+        }
+
+        /* Koordinaten */
+        .coordinates {
+            position: absolute;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.3);
+            font-weight: 500;
+        }
+
+        .rank {
+            left: -1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .file {
+            bottom: -1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            
+            #board {
+                grid-template-columns: repeat(8, 55px);
+                grid-template-rows: repeat(8, 55px);
+            }
+            
+            .square {
+                width: 55px;
+                height: 55px;
+                font-size: 44px;
+            }
+            
+            button {
+                padding: 0.8rem 1.5rem;
+                font-size: 1rem;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.8s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
 
-    <h1>Online Schach</h1>
-
     <div id="playerSelect">
-        <p>Wähle deine Farbe:</p>
-        <button onclick="selectPlayer('white')">Spiele als Weiß</button>
-        <button onclick="selectPlayer('black')">Spiele als Schwarz</button>
+        <p>Wähle deine Spielfarbe</p>
+        <div class="button-group">
+            <button onclick="selectPlayer('white')">♔ Weiß spielen</button>
+            <button onclick="selectPlayer('black')">♚ Schwarz spielen</button>
+        </div>
     </div>
 
-    <div id="board"></div>
-    <div id="status">Bitte Spielerfarbe wählen.</div>
-    <button id="resetBtn" style="display:none;">Spiel zurücksetzen</button>
+    <div class="game-container">
+        <div id="board-wrapper">
+            <div id="board"></div>
+        </div>
+        <div id="status">Initialisiere Spiel...</div>
+        <div class="controls">
+            <button class="control-btn" id="resetBtn">
+                <span>↻</span>
+                <span>Neues Spiel</span>
+            </button>
+            <button class="control-btn" id="soundToggle">
+                <span class="sound-icon">🔊</span>
+                <span>Sound</span>
+            </button>
+        </div>
+    </div>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -109,6 +411,8 @@
         const boardEl = document.getElementById('board');
         const statusEl = document.getElementById('status');
         const resetBtn = document.getElementById('resetBtn');
+        const soundToggleBtn = document.getElementById('soundToggle');
+        const gameContainer = document.querySelector('.game-container');
         const pieceUnicode = {
             'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟',
             'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙'
@@ -119,6 +423,119 @@
         let isWhiteTurn = true;
         let playerColor = null;
         let gameDocRef = db.collection("games").doc("demoGame");
+        let soundEnabled = true;
+        let lastMoveFromFirestore = false;
+
+        // Sound-System mit Web Audio API
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        const sounds = {
+            move: () => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(300, audioContext.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.2);
+            },
+            capture: () => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(500, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.15);
+                gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.3);
+            },
+            check: () => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.4);
+            },
+            checkmate: () => {
+                for (let i = 0; i < 3; i++) {
+                    setTimeout(() => {
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        oscillator.frequency.setValueAtTime(600 - i * 100, audioContext.currentTime);
+                        gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                        
+                        oscillator.start();
+                        oscillator.stop(audioContext.currentTime + 0.3);
+                    }, i * 200);
+                }
+            },
+            castle: () => {
+                const oscillator1 = audioContext.createOscillator();
+                const oscillator2 = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator1.connect(gainNode);
+                oscillator2.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator1.frequency.setValueAtTime(300, audioContext.currentTime);
+                oscillator2.frequency.setValueAtTime(450, audioContext.currentTime);
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+                
+                oscillator1.start();
+                oscillator2.start();
+                oscillator1.stop(audioContext.currentTime + 0.4);
+                oscillator2.stop(audioContext.currentTime + 0.4);
+            },
+            invalid: () => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(150, audioContext.currentTime);
+                oscillator.type = 'square';
+                gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.1);
+            }
+        };
+
+        function playSound(soundName) {
+            if (soundEnabled && sounds[soundName]) {
+                sounds[soundName]();
+            }
+        }
+
+        soundToggleBtn.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            const icon = soundToggleBtn.querySelector('.sound-icon');
+            icon.textContent = soundEnabled ? '🔊' : '🔇';
+            soundToggleBtn.style.opacity = soundEnabled ? '1' : '0.6';
+        });
 
         // Für Rochade
         let castlingRights = {
@@ -133,8 +550,7 @@
         function selectPlayer(color) {
             playerColor = color;
             document.getElementById('playerSelect').style.display = 'none';
-            boardEl.style.display = 'grid';
-            resetBtn.style.display = 'inline-block';
+            gameContainer.style.display = 'block';
             initGame();
         }
 
@@ -167,8 +583,31 @@
             }).join('/');
         }
 
+        let lastMoveTo = null; // Track the last move destination
+
         function drawBoard() {
             boardEl.innerHTML = '';
+            
+            // Füge Koordinaten hinzu
+            const boardWrapper = document.getElementById('board-wrapper');
+            boardWrapper.querySelectorAll('.coordinates').forEach(el => el.remove());
+            
+            for (let i = 0; i < 8; i++) {
+                // Reihen (1-8)
+                const rank = document.createElement('div');
+                rank.className = 'coordinates rank';
+                rank.textContent = 8 - i;
+                rank.style.top = `${2 + i * 85 + 42.5}px`;
+                boardWrapper.appendChild(rank);
+                
+                // Spalten (a-h)
+                const file = document.createElement('div');
+                file.className = 'coordinates file';
+                file.textContent = String.fromCharCode(97 + i);
+                file.style.left = `${2 + i * 85 + 42.5}px`;
+                boardWrapper.appendChild(file);
+            }
+            
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
                     const square = document.createElement('div');
@@ -176,7 +615,18 @@
                     square.dataset.row = r;
                     square.dataset.col = c;
                     const piece = board[r][c];
-                    square.textContent = piece ? pieceUnicode[piece] : '';
+                    if (piece) {
+                        const pieceSpan = document.createElement('span');
+                        pieceSpan.textContent = pieceUnicode[piece];
+                        pieceSpan.classList.add(piece === piece.toUpperCase() ? 'white-piece' : 'black-piece');
+                        square.appendChild(pieceSpan);
+                        // Only animate the piece that just moved
+                        if (lastMoveTo && lastMoveTo[0] === r && lastMoveTo[1] === c) {
+                            square.classList.add('piece-move');
+                            // Reset lastMoveTo after animation
+                            setTimeout(() => { lastMoveTo = null; }, 300);
+                        }
+                    }
                     if (selectedSquare && selectedSquare[0] === r && selectedSquare[1] === c) {
                         square.classList.add('selected');
                     }
@@ -466,7 +916,7 @@
         }
 
         // Führe Zug aus (nur wenn gültig)
-        function executeMove(from, to) {
+        function executeMove(from, to, isFromFirestore = false) {
             const [fr, fc] = from;
             const [tr, tc] = to;
             const piece = board[fr][fc];
@@ -477,6 +927,8 @@
 
             const p = piece.toLowerCase();
             const isWhite = piece === piece.toUpperCase();
+            const capturedPiece = board[tr][tc];
+            let isCastling = false;
 
             // Spezialfall Rochade
             if (p === 'k') {
@@ -490,6 +942,7 @@
                     board[tr][7] = null;
                     if (isWhite) castlingRights.whiteRookRightMoved = true;
                     else castlingRights.blackRookRightMoved = true;
+                    isCastling = true;
                 }
                 // Rochade lang
                 else if (tc - fc === -2) {
@@ -497,6 +950,7 @@
                     board[tr][0] = null;
                     if (isWhite) castlingRights.whiteRookLeftMoved = true;
                     else castlingRights.blackRookLeftMoved = true;
+                    isCastling = true;
                 }
             }
 
@@ -514,8 +968,24 @@
             // Normaler Zug
             board[tr][tc] = piece;
             board[fr][fc] = null;
+            
+            // Track where the piece moved to
+            lastMoveTo = [tr, tc];
 
             checkPromotion();
+
+            // Spiele Sounds nur ab, wenn der Zug nicht von Firestore kommt
+            // oder wenn es der eigene Zug ist (für beide Spieler hörbar)
+            if (!isFromFirestore || lastMoveFromFirestore) {
+                if (isCastling) {
+                    playSound('castle');
+                } else if (capturedPiece) {
+                    playSound('capture');
+                } else {
+                    playSound('move');
+                }
+            }
+
             return true;
         }
 
@@ -546,13 +1016,14 @@
                 // Zweiter Klick: Versuche zu ziehen
                 if (executeMove(selectedSquare, [r, c])) {
                     isWhiteTurn = !isWhiteTurn;
+                    lastMoveFromFirestore = false;
                     saveGame();
                     selectedSquare = null;
                     updateStatus();
                     drawBoard();
                 } else {
                     // Ungültiger Zug
-                    alert("Ungültiger Zug!");
+                    playSound('invalid');
                     selectedSquare = null;
                     drawBoard();
                 }
@@ -560,20 +1031,26 @@
         }
 
         function updateStatus() {
+            statusEl.classList.remove('check', 'checkmate');
+            
             if (isInCheck(board, isWhiteTurn)) {
                 if (!hasAnyValidMove(isWhiteTurn)) {
-                    statusEl.textContent = `Schachmatt! ${isWhiteTurn ? "Schwarz" : "Weiß"} gewinnt!`;
+                    statusEl.textContent = `Schachmatt! ${isWhiteTurn ? "Schwarz" : "Weiß"} gewinnt! 🎉`;
+                    statusEl.classList.add('checkmate');
                     boardEl.style.pointerEvents = 'none';
+                    playSound('checkmate');
                     return;
                 }
-                statusEl.textContent = (isWhiteTurn ? "Weiß" : "Schwarz") + " ist im Schach.";
+                statusEl.textContent = (isWhiteTurn ? "♔ Weiß" : "♚ Schwarz") + " ist im Schach!";
+                statusEl.classList.add('check');
+                playSound('check');
             } else {
                 if (!hasAnyValidMove(isWhiteTurn)) {
                     statusEl.textContent = "Patt! Unentschieden.";
                     boardEl.style.pointerEvents = 'none';
                     return;
                 }
-                statusEl.textContent = (isWhiteTurn ? "Weiß" : "Schwarz") + " ist am Zug.";
+                statusEl.textContent = (isWhiteTurn ? "♔ Weiß" : "♚ Schwarz") + " ist am Zug";
             }
             boardEl.style.pointerEvents = (playerColor === (isWhiteTurn ? 'white' : 'black')) ? 'auto' : 'none';
         }
@@ -597,8 +1074,10 @@
         }
 
         resetBtn.addEventListener('click', () => {
-            initGame();
-            boardEl.style.pointerEvents = (playerColor === 'white') ? 'auto' : 'none';
+            if (confirm('Möchtest du wirklich ein neues Spiel starten?')) {
+                initGame();
+                boardEl.style.pointerEvents = (playerColor === 'white') ? 'auto' : 'none';
+            }
         });
 
         // Firestore Synchronisation (einfaches Demo, keine Kollisionserkennung)
@@ -607,20 +1086,85 @@
             gameDocRef.set({
                 fen,
                 isWhiteTurn,
-                castlingRights
+                castlingRights,
+                lastMove: Date.now()
             });
         }
 
         function loadGame() {
+            let lastUpdateTime = 0;
+            
             gameDocRef.onSnapshot(doc => {
                 if (!doc.exists) return;
                 const data = doc.data();
                 if (!data) return;
-                board = fenToBoard(data.fen);
-                isWhiteTurn = data.isWhiteTurn;
-                castlingRights = data.castlingRights || castlingRights;
-                updateStatus();
-                drawBoard();
+                
+                // Prüfe ob dies eine neue Änderung ist
+                const isNewUpdate = data.lastMove && data.lastMove > lastUpdateTime;
+                if (isNewUpdate) {
+                    lastUpdateTime = data.lastMove;
+                    
+                    // Prüfe ob sich das Board geändert hat
+                    const oldFen = boardToFen(board);
+                    const newFen = data.fen;
+                    
+                    if (oldFen !== newFen) {
+                        // Finde den Zug, der gemacht wurde
+                        const oldBoard = board.map(row => row.slice());
+                        board = fenToBoard(data.fen);
+                        
+                        // Markiere dass dies ein Firestore-Update ist
+                        lastMoveFromFirestore = true;
+                        
+                        // Finde Unterschiede für Sound
+                        let moveFound = false;
+                        let captureFound = false;
+                        let castlingFound = false;
+                        
+                        for (let r = 0; r < 8; r++) {
+                            for (let c = 0; c < 8; c++) {
+                                if (oldBoard[r][c] !== board[r][c]) {
+                                    if (oldBoard[r][c] && board[r][c] && oldBoard[r][c] !== board[r][c]) {
+                                        captureFound = true;
+                                    }
+                                    moveFound = true;
+                                }
+                            }
+                        }
+                        
+                        // Prüfe auf Rochade (König bewegt sich 2 Felder)
+                        for (let c = 0; c < 8; c++) {
+                            if ((oldBoard[0][c] === 'k' && board[0][c] === null && (board[0][c-2] === 'k' || board[0][c+2] === 'k')) ||
+                                (oldBoard[7][c] === 'K' && board[7][c] === null && (board[7][c-2] === 'K' || board[7][c+2] === 'K'))) {
+                                castlingFound = true;
+                            }
+                        }
+                        
+                        // Spiele Sound für den empfangenen Zug
+                        if (castlingFound) {
+                            playSound('castle');
+                        } else if (captureFound) {
+                            playSound('capture');
+                        } else if (moveFound) {
+                            playSound('move');
+                        }
+                        
+                        // Find the moved piece position for animation
+                        for (let r = 0; r < 8; r++) {
+                            for (let c = 0; c < 8; c++) {
+                                if (!oldBoard[r][c] && board[r][c]) {
+                                    lastMoveTo = [r, c];
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    isWhiteTurn = data.isWhiteTurn;
+                    castlingRights = data.castlingRights || castlingRights;
+                    updateStatus();
+                    drawBoard();
+                }
             });
         }
 
