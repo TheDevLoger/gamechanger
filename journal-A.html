@@ -1,14 +1,352 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Trading Journal</title>
     <link rel="stylesheet" href="journal.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+    
+    <style>
+        /* Professionelle moderne Optik */
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #1a202c;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        h1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* Formular Redesign */
+        form {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        form input, form select, form button {
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: white;
+            color: #1a202c;
+        }
+        
+        form input:focus, form select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        form button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        form button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        /* Tabelle Redesign */
+        table {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        th {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            font-weight: 600;
+            color: #1a202c;
+            padding: 16px 12px;
+            border: none;
+        }
+        
+        td {
+            padding: 14px 12px;
+            border: none;
+            border-bottom: 1px solid #f1f3f4;
+            color: #1a202c;
+        }
+        
+        tr:hover {
+            background-color: rgba(102, 126, 234, 0.05);
+        }
+        
+        /* Dashboard Redesign */
+        #dashboard {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        #dashboard h2 {
+            color: #1a202c;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+        }
+        
+        /* Charts Container */
+        .charts-container {
+            margin-top: 3rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+            gap: 2rem;
+            padding: 1rem 0;
+        }
+        
+        .chart-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .chart-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .chart-card h3 {
+            margin-bottom: 1.5rem;
+            color: #1a202c;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 320px;
+            margin: 1rem 0;
+        }
+        
+        /* Statistik Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #1a202c;
+            padding: 2rem;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .stat-card h4 {
+            margin: 0 0 1rem 0;
+            font-size: 0.9rem;
+            color: #4a5568;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .positive { 
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            background-clip: text !important;
+        }
+        
+        .negative { 
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            background-clip: text !important;
+        }
+        
+        /* Ergebnis- und Richtungsfarben Update */
+        .result-tp {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #065f46;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 4px 8px;
+        }
+        
+        .result-be {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #1e40af;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 4px 8px;
+        }
+        
+        .result-sl {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 4px 8px;
+        }
+        
+        .direction.buy {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #065f46;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 4px 8px;
+        }
+        
+        .direction.sell {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 4px 8px;
+        }
+        
+        /* PnL Farben Update */
+        .pnl-positive {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+        }
+        
+        .pnl-negative {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+        }
+        
+        /* Buttons Update */
+        .delete-btn, .edit-btn, .note-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 6px 8px;
+            margin: 0 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .delete-btn:hover {
+            background: #fee2e2;
+            border-color: #f87171;
+            transform: scale(1.1);
+        }
+        
+        .edit-btn:hover {
+            background: #dbeafe;
+            border-color: #60a5fa;
+            transform: scale(1.1);
+        }
+        
+        .note-btn:hover {
+            background: #fef3c7;
+            border-color: #fbbf24;
+            transform: scale(1.1);
+        }
+        
+        /* Modal Update */
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Edit Indicator Update */
+        #editIndicator {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 1px solid #f59e0b;
+            border-radius: 12px;
+            color: #92400e;
+        }
+        
+        @media (max-width: 768px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-container {
+                height: 280px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <h1>📓 Trading Journal</h1>
@@ -58,6 +396,79 @@
         <div class="stats">
             <p id="totalPnL"></p>
         </div>
+        
+        <!-- Erweiterte Statistiken -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h4>Gesamte Trades</h4>
+                <p class="value" id="totalTrades">0</p>
+            </div>
+            <div class="stat-card">
+                <h4>Erfolgsrate</h4>
+                <p class="value" id="winRate">0%</p>
+            </div>
+            <div class="stat-card">
+                <h4>Durchschnittlicher Gewinn</h4>
+                <p class="value" id="avgWin">0%</p>
+            </div>
+            <div class="stat-card">
+                <h4>Durchschnittlicher Verlust</h4>
+                <p class="value" id="avgLoss">0%</p>
+            </div>
+            <div class="stat-card">
+                <h4>Bester Trade</h4>
+                <p class="value" id="bestTrade">0%</p>
+            </div>
+            <div class="stat-card">
+                <h4>Schlechtester Trade</h4>
+                <p class="value" id="worstTrade">0%</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Grafische Auswertung -->
+    <section class="charts-container">
+        <div class="chart-card">
+            <h3>📈 PnL Entwicklung über Zeit</h3>
+            <div class="chart-container">
+                <canvas id="pnlChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-card">
+            <h3>🎯 Ergebnisse Verteilung</h3>
+            <div class="chart-container">
+                <canvas id="resultsChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-card">
+            <h3>📊 Strategien Performance</h3>
+            <div class="chart-container">
+                <canvas id="strategyChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-card">
+            <h3>⚖️ Buy vs Sell Performance</h3>
+            <div class="chart-container">
+                <canvas id="directionChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-card">
+            <h3>💰 PnL Verteilung</h3>
+            <div class="chart-container">
+                <canvas id="pnlDistributionChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-card">
+            <h3>🗓️ Monatliche Performance</h3>
+            <div class="chart-container">
+                <canvas id="monthlyChart"></canvas>
+            </div>
+        </div>
     </section>
 
     <div id="noteModal" class="modal hidden">
@@ -87,6 +498,10 @@
         const editIndicator = document.getElementById("editIndicator");
         let currentNoteId = null;
         let editingTradeId = null;
+        let allTrades = [];
+
+        // Chart Instanzen
+        let pnlChart, resultsChart, strategyChart, directionChart, pnlDistributionChart, monthlyChart;
 
         async function loadTrades() {
             const snapshot = await tradesRef.get();
@@ -107,6 +522,8 @@
                 const dateB = new Date(yearB, monthB - 1, dayB);
                 return dateB - dateA;
             });
+
+            allTrades = trades;
 
             trades.forEach(trade => {
                 const pnlClass = trade.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
@@ -134,10 +551,319 @@
                 row.querySelector(".edit-btn").addEventListener("click", () => startEdit(trade));
             });
 
-            const totalPnL = trades.reduce((sum, t) => sum + (t.pnl || 0), 0).toFixed(2);
-            document.getElementById("totalPnL").textContent = `Gesamter PnL: ${totalPnL}%`;
+            updateStatistics(trades);
+            updateCharts(trades);
         }
 
+        function updateStatistics(trades) {
+            const totalPnL = trades.reduce((sum, t) => sum + (t.pnl || 0), 0).toFixed(2);
+            document.getElementById("totalPnL").textContent = `Gesamter PnL: ${totalPnL}%`;
+            
+            const totalTrades = trades.length;
+            const winningTrades = trades.filter(t => (t.pnl || 0) > 0);
+            const losingTrades = trades.filter(t => (t.pnl || 0) < 0);
+            const winRate = totalTrades > 0 ? ((winningTrades.length / totalTrades) * 100).toFixed(1) : 0;
+            
+            const avgWin = winningTrades.length > 0 ? 
+                (winningTrades.reduce((sum, t) => sum + t.pnl, 0) / winningTrades.length).toFixed(2) : 0;
+            const avgLoss = losingTrades.length > 0 ? 
+                (losingTrades.reduce((sum, t) => sum + t.pnl, 0) / losingTrades.length).toFixed(2) : 0;
+            
+            const bestTrade = trades.length > 0 ? Math.max(...trades.map(t => t.pnl || 0)).toFixed(2) : 0;
+            const worstTrade = trades.length > 0 ? Math.min(...trades.map(t => t.pnl || 0)).toFixed(2) : 0;
+            
+            document.getElementById("totalTrades").textContent = totalTrades;
+            document.getElementById("winRate").textContent = `${winRate}%`;
+            document.getElementById("avgWin").textContent = `+${avgWin}%`;
+            document.getElementById("avgWin").className = avgWin > 0 ? 'value positive' : 'value';
+            document.getElementById("avgLoss").textContent = `${avgLoss}%`;
+            document.getElementById("avgLoss").className = avgLoss < 0 ? 'value negative' : 'value';
+            document.getElementById("bestTrade").textContent = `+${bestTrade}%`;
+            document.getElementById("bestTrade").className = bestTrade > 0 ? 'value positive' : 'value';
+            document.getElementById("worstTrade").textContent = `${worstTrade}%`;
+            document.getElementById("worstTrade").className = worstTrade < 0 ? 'value negative' : 'value';
+        }
+
+        function updateCharts(trades) {
+            if (trades.length === 0) return;
+            
+            // Zerstöre existierende Charts
+            [pnlChart, resultsChart, strategyChart, directionChart, pnlDistributionChart, monthlyChart].forEach(chart => {
+                if (chart) chart.destroy();
+            });
+            
+            updatePnLChart(trades);
+            updateResultsChart(trades);
+            updateStrategyChart(trades);
+            updateDirectionChart(trades);
+            updatePnLDistributionChart(trades);
+            updateMonthlyChart(trades);
+        }
+
+        function updatePnLChart(trades) {
+            const sortedTrades = [...trades].reverse(); // Chronologische Reihenfolge
+            let cumulativePnL = 0;
+            const data = sortedTrades.map(trade => {
+                cumulativePnL += trade.pnl || 0;
+                return {
+                    x: trade.date,
+                    y: cumulativePnL
+                };
+            });
+
+            const ctx = document.getElementById('pnlChart').getContext('2d');
+            pnlChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: 'Kumulativer PnL (%)',
+                        data: data,
+                        borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        tension: 0.1,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'PnL (%)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateResultsChart(trades) {
+            const results = trades.reduce((acc, trade) => {
+                const result = trade.result || 'Unbekannt';
+                acc[result] = (acc[result] || 0) + 1;
+                return acc;
+            }, {});
+
+            const ctx = document.getElementById('resultsChart').getContext('2d');
+            resultsChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(results),
+                    datasets: [{
+                        data: Object.values(results),
+                        backgroundColor: ['#28a745', '#17a2b8', '#dc3545', '#ffc107']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        function updateStrategyChart(trades) {
+            const strategies = trades.reduce((acc, trade) => {
+                const strategy = trade.strategy || 'Keine Strategie';
+                if (!acc[strategy]) {
+                    acc[strategy] = { total: 0, pnl: 0 };
+                }
+                acc[strategy].total += 1;
+                acc[strategy].pnl += trade.pnl || 0;
+                return acc;
+            }, {});
+
+            const ctx = document.getElementById('strategyChart').getContext('2d');
+            strategyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(strategies),
+                    datasets: [{
+                        label: 'Durchschnittlicher PnL (%)',
+                        data: Object.values(strategies).map(s => (s.pnl / s.total).toFixed(2)),
+                        backgroundColor: Object.values(strategies).map(s => 
+                            s.pnl / s.total >= 0 ? '#28a745' : '#dc3545'
+                        )
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Durchschnittlicher PnL (%)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateDirectionChart(trades) {
+            const directions = trades.reduce((acc, trade) => {
+                const direction = trade.direction || 'Unbekannt';
+                if (!acc[direction]) {
+                    acc[direction] = { total: 0, pnl: 0 };
+                }
+                acc[direction].total += 1;
+                acc[direction].pnl += trade.pnl || 0;
+                return acc;
+            }, {});
+
+            const ctx = document.getElementById('directionChart').getContext('2d');
+            directionChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(directions),
+                    datasets: [
+                        {
+                            label: 'Anzahl Trades',
+                            data: Object.values(directions).map(d => d.total),
+                            backgroundColor: '#007bff',
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Gesamter PnL (%)',
+                            data: Object.values(directions).map(d => d.pnl.toFixed(2)),
+                            backgroundColor: '#28a745',
+                            yAxisID: 'y1',
+                            type: 'line'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Anzahl Trades'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'PnL (%)'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        }
+                    }
+                }
+            });
+        }
+
+        function updatePnLDistributionChart(trades) {
+            const pnlRanges = {
+                '< -10%': 0,
+                '-10% bis -5%': 0,
+                '-5% bis 0%': 0,
+                '0% bis 5%': 0,
+                '5% bis 10%': 0,
+                '> 10%': 0
+            };
+
+            trades.forEach(trade => {
+                const pnl = trade.pnl || 0;
+                if (pnl < -10) pnlRanges['< -10%']++;
+                else if (pnl < -5) pnlRanges['-10% bis -5%']++;
+                else if (pnl < 0) pnlRanges['-5% bis 0%']++;
+                else if (pnl < 5) pnlRanges['0% bis 5%']++;
+                else if (pnl < 10) pnlRanges['5% bis 10%']++;
+                else pnlRanges['> 10%']++;
+            });
+
+            const ctx = document.getElementById('pnlDistributionChart').getContext('2d');
+            pnlDistributionChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(pnlRanges),
+                    datasets: [{
+                        label: 'Anzahl Trades',
+                        data: Object.values(pnlRanges),
+                        backgroundColor: [
+                            '#dc3545', '#fd7e14', '#ffc107', 
+                            '#28a745', '#20c997', '#17a2b8'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Anzahl Trades'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateMonthlyChart(trades) {
+            const monthlyData = trades.reduce((acc, trade) => {
+                if (!trade.date) return acc;
+                const [day, month, year] = trade.date.split('-');
+                const monthKey = `${month}/${year}`;
+                
+                if (!acc[monthKey]) {
+                    acc[monthKey] = 0;
+                }
+                acc[monthKey] += trade.pnl || 0;
+                return acc;
+            }, {});
+
+            // Sortiere nach Datum
+            const sortedEntries = Object.entries(monthlyData).sort((a, b) => {
+                const [monthA, yearA] = a[0].split('/');
+                const [monthB, yearB] = b[0].split('/');
+                return new Date(yearA, monthA - 1) - new Date(yearB, monthB - 1);
+            });
+
+            const ctx = document.getElementById('monthlyChart').getContext('2d');
+            monthlyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedEntries.map(([month]) => month),
+                    datasets: [{
+                        label: 'Monatlicher PnL (%)',
+                        data: sortedEntries.map(([, pnl]) => pnl.toFixed(2)),
+                        backgroundColor: sortedEntries.map(([, pnl]) => 
+                            pnl >= 0 ? '#28a745' : '#dc3545'
+                        )
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'PnL (%)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
 
         async function deleteTrade(id) {
             await tradesRef.doc(id).delete();
