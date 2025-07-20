@@ -98,39 +98,46 @@
                 <canvas id="pnlChart"></canvas>
             </div>
         </div>
-        
+
         <div class="chart-card">
             <h3>🎯 Ergebnisse Verteilung</h3>
             <div class="chart-container">
                 <canvas id="resultsChart"></canvas>
             </div>
         </div>
-        
+
         <div class="chart-card">
             <h3>📊 Strategien Performance</h3>
             <div class="chart-container">
                 <canvas id="strategyChart"></canvas>
             </div>
         </div>
-        
+
         <div class="chart-card">
             <h3>⚖️ Buy vs Sell Performance</h3>
             <div class="chart-container">
                 <canvas id="directionChart"></canvas>
             </div>
         </div>
-        
+
         <div class="chart-card">
             <h3>💰 PnL Verteilung</h3>
             <div class="chart-container">
                 <canvas id="pnlDistributionChart"></canvas>
             </div>
         </div>
-        
+
         <div class="chart-card">
             <h3>🗓️ Monatliche Performance</h3>
             <div class="chart-container">
                 <canvas id="monthlyChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card" style="grid-column: span 2;">
+            <h3>💹 Symbol Performance</h3>
+            <div class="chart-container">
+                <canvas id="symbolWinrateChart"></canvas>
             </div>
         </div>
     </section>
@@ -165,7 +172,7 @@
         let allTrades = [];
 
         // Chart Instanzen
-        let pnlChart, resultsChart, strategyChart, directionChart, pnlDistributionChart, monthlyChart;
+        let pnlChart, resultsChart, strategyChart, directionChart, pnlDistributionChart, monthlyChart, symbolWinrateChart;
 
         async function loadTrades() {
             const snapshot = await tradesRef.get();
@@ -252,7 +259,7 @@
             if (trades.length === 0) return;
             
             // Zerstöre existierende Charts
-            [pnlChart, resultsChart, strategyChart, directionChart, pnlDistributionChart, monthlyChart].forEach(chart => {
+            [pnlChart, resultsChart, strategyChart, directionChart, pnlDistributionChart, monthlyChart, symbolWinrateChart].forEach(chart => {
                 if (chart) chart.destroy();
             });
             
@@ -262,6 +269,7 @@
             updateDirectionChart(trades);
             updatePnLDistributionChart(trades);
             updateMonthlyChart(trades);
+            updateSymbolWinrateChart(trades);
         }
 
         function updatePnLChart(trades) {
@@ -606,6 +614,110 @@
             }
             closeNoteModal();
             loadTrades();
+        }
+
+        function updateSymbolWinrateChart(trades) {
+            const symbolStats = trades.reduce((acc, trade) => {
+                const symbol = trade.symbol || 'Unbekannt';
+                if (!acc[symbol]) {
+                    acc[symbol] = { wins: 0, total: 0, totalPnl: 0 };
+                }
+                acc[symbol].total += 1;
+                acc[symbol].totalPnl += trade.pnl || 0;
+                if ((trade.pnl || 0) > 0) {
+                    acc[symbol].wins += 1;
+                }
+                return acc;
+            }, {});
+
+            // Sortiere nach Winrate
+            const symbolData = Object.entries(symbolStats)
+                .map(([symbol, stats]) => ({
+                    symbol,
+                    winrate: stats.total > 0 ? (stats.wins / stats.total * 100) : 0,
+                    total: stats.total,
+                    totalPnl: stats.totalPnl
+                }))
+                .filter(s => s.total >= 2) // Mindestens 2 Trades
+                .sort((a, b) => b.winrate - a.winrate)
+                .slice(0, 30); // Top 30 Symbole für breiteren Graph
+
+            const ctx = document.getElementById('symbolWinrateChart').getContext('2d');
+            symbolWinrateChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: symbolData.map(s => s.symbol),
+                    datasets: [
+                        {
+                            label: 'Winrate (%)',
+                            data: symbolData.map(s => s.winrate.toFixed(1)),
+                            backgroundColor: symbolData.map(s => {
+                                if (s.winrate >= 70) return 'rgba(40, 167, 69, 0.8)';
+                                else if (s.winrate >= 50) return 'rgba(255, 193, 7, 0.8)';
+                                else return 'rgba(220, 53, 69, 0.8)';
+                            }),
+                            borderColor: symbolData.map(s => {
+                                if (s.winrate >= 70) return '#28a745';
+                                else if (s.winrate >= 50) return '#ffc107';
+                                else return '#dc3545';
+                            }),
+                            borderWidth: 2,
+                            order: 1
+                        },
+                        {
+                            label: 'Anzahl Trades',
+                            data: symbolData.map(s => s.total),
+                            backgroundColor: 'rgba(0, 123, 255, 0.2)',
+                            borderColor: '#007bff',
+                            borderWidth: 2,
+                            order: 2
+                        },
+                        {
+                            label: 'Gesamt PnL (%)',
+                            data: symbolData.map(s => s.totalPnl.toFixed(2)),
+                            backgroundColor: symbolData.map(s =>
+                                s.totalPnl >= 0 ? 'rgba(32, 201, 151, 0.2)' : 'rgba(253, 126, 20, 0.2)'
+                            ),
+                            borderColor: symbolData.map(s =>
+                                s.totalPnl >= 0 ? '#20c997' : '#fd7e14'
+                            ),
+                            borderWidth: 2,
+                            order: 3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Werte'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                afterLabel: function (context) {
+                                    if (context.datasetIndex === 2) { // PnL Dataset
+                                        const avgPnl = (context.parsed.y / symbolData[context.dataIndex].total).toFixed(2);
+                                        return `Durchschnitt pro Trade: ${avgPnl}%`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         loadTrades();
