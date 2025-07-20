@@ -1,160 +1,349 @@
-/* === Allgemeines Layout === */
+/* === Professionelle moderne Optik === */
 body {
-    font-family: 'Segoe UI', sans-serif;
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    color: #1a202c;
+    line-height: 1.6;
+    min-height: 100vh;
     padding: 20px;
-    background-color: #f4f4f4;
-    color: #333;
     transition: background-color 0.3s ease;
 }
 
-/* === Überschrift === */
+/* === Ãœberschrift === */
 h1 {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
     text-align: center;
-    margin-bottom: 20px;
-    font-size: 2rem;
     animation: fadeInDown 0.6s ease-in-out;
 }
 
-/* === Formular-Layout === */
+/* === Formular Redesign === */
 form {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    margin-bottom: 20px;
     justify-content: center;
     animation: fadeIn 0.8s ease-in-out;
 }
 
-    form input,
-    form select,
-    form button {
-        padding: 10px;
-        font-size: 1rem;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-        transition: all 0.3s ease;
-        flex: 1 1 200px;
-    }
-
-        form input:focus,
-        form select:focus {
-            border-color: #007bff;
-            box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
-            outline: none;
-        }
-
-    form button {
-        background-color: #007bff;
-        color: white;
-        border: none;
-        cursor: pointer;
-        flex: 1 1 100px;
-        transition: background-color 0.3s ease, transform 0.2s ease;
-    }
-
-        form button:hover {
-            background-color: #0056b3;
-            transform: scale(1.05);
-        }
-
-/* === Tabelle === */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    background-color: white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    animation: fadeIn 0.8s ease-in-out;
-    border-radius: 8px;
-    overflow: hidden;
+form input,
+form select,
+form button {
+    border: 2px solid #e1e8ed;
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 0.95rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: white;
+    color: #1a202c;
+    flex: 1 1 200px;
 }
 
-th, td {
-    padding: 12px 8px;
-    border: 1px solid #ddd;
+form input:focus,
+form select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    transform: translateY(-1px);
+    outline: none;
+}
+
+form button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    flex: 1 1 100px;
+    transition: all 0.3s ease;
+}
+
+form button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+/* === Tabelle Redesign === */
+table {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border-collapse: collapse;
+    animation: fadeIn 0.8s ease-in-out;
+}
+
+th {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    font-weight: 600;
+    color: #1a202c;
+    padding: 16px 12px;
+    border: none;
+    text-align: center;
+}
+
+td {
+    padding: 14px 12px;
+    border: none;
+    border-bottom: 1px solid #f1f3f4;
+    color: #1a202c;
     text-align: center;
     transition: background-color 0.3s ease;
 }
 
 tr:hover {
-    background-color: #f1f1f1;
+    background-color: rgba(102, 126, 234, 0.05);
 }
 
-/* === Ergebnisfarben === */
+/* === Ergebnis- und Richtungsfarben Update === */
 .result-tp {
-    background-color: #d4edda;
-    color: #155724;
-    font-weight: bold;
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 4px 8px;
 }
 
 .result-be {
-    background-color: #cce5ff;
-    color: #004085;
-    font-weight: bold;
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e40af;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 4px 8px;
 }
 
 .result-sl {
-    background-color: #f8d7da;
-    color: #721c24;
-    font-weight: bold;
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #991b1b;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 4px 8px;
 }
 
-/* === Richtungsfarben === */
 .direction.buy {
-    background-color: #d4edda;
-    color: #155724;
-    font-weight: bold;
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 4px 8px;
 }
 
 .direction.sell {
-    background-color: #f8d7da;
-    color: #721c24;
-    font-weight: bold;
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #991b1b;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 4px 8px;
 }
 
-/* === Löschbutton === */
-.delete-btn {
-    background: none;
-    border: none;
-    font-size: 1.2rem;
-    cursor: pointer;
-    color: #888;
-    transition: color 0.3s ease, transform 0.3s ease;
-}
-
-    .delete-btn:hover {
-        color: #e60000;
-        transform: scale(1.2);
-    }
-
-/* === PnL Farben === */
+/* === PnL Farben Update === */
 .pnl-positive {
-    color: #0066cc;
-    font-weight: bold;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
 }
 
 .pnl-negative {
-    color: #cc0000;
-    font-weight: bold;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
 }
 
-/* === Dashboard === */
-#dashboard {
-    margin-top: 2rem;
-    background: #ffffff;
-    padding: 1rem;
+/* === Buttons Update === */
+.delete-btn,
+.edit-btn,
+.note-btn {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #e5e7eb;
     border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    padding: 6px 8px;
+    margin: 0 2px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.delete-btn {
+    color: #888;
+}
+
+.delete-btn:hover {
+    background: #fee2e2;
+    border-color: #f87171;
+    transform: scale(1.1);
+    color: #e60000;
+}
+
+.edit-btn {
+    color: #007bff;
+}
+
+.edit-btn:hover {
+    background: #dbeafe;
+    border-color: #60a5fa;
+    transform: scale(1.1);
+    color: #0056b3;
+}
+
+.note-btn:hover {
+    background: #fef3c7;
+    border-color: #fbbf24;
+    transform: scale(1.1);
+}
+
+/* === Dashboard Redesign === */
+#dashboard {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    margin-top: 2rem;
     animation: fadeInUp 0.7s ease-in-out;
 }
 
-/* === Statistiken === */
+#dashboard h2 {
+    color: #1a202c;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    font-size: 1.8rem;
+}
+
+/* === Statistik Cards === */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #1a202c;
+    padding: 2rem;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card h4 {
+    margin: 0 0 1rem 0;
+    font-size: 0.9rem;
+    color: #4a5568;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-card .value {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.positive {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+
+.negative {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+
+/* === Charts Container === */
+.charts-container {
+    margin-top: 3rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    gap: 2rem;
+    padding: 1rem 0;
+}
+
+.chart-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chart-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.chart-card h3 {
+    margin-bottom: 1.5rem;
+    color: #1a202c;
+    text-align: center;
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.chart-container {
+    position: relative;
+    height: 320px;
+    margin: 1rem 0;
+}
+
+/* === Statistiken (Legacy) === */
 .stats p {
     font-weight: bold;
     font-size: 1.2rem;
     margin-bottom: 1rem;
 }
 
-/* === Modal === */
+/* === Modal Update === */
 .modal {
     position: fixed;
     top: 0;
@@ -169,48 +358,80 @@ tr:hover {
     transition: opacity 0.3s ease;
 }
 
-    .modal.hidden {
-        display: none;
-    }
+.modal.hidden {
+    display: none;
+}
 
 .modal-content {
-    background: white;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
     padding: 20px;
-    border-radius: 10px;
     width: 90%;
     max-width: 400px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     animation: zoomIn 0.4s ease;
 }
 
-    .modal-content textarea {
-        width: 94%;
-        padding: 10px;
-        margin: 10px 0;
-        resize: vertical;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-    }
+.modal-content textarea {
+    width: 94%;
+    padding: 10px;
+    margin: 10px 0;
+    resize: vertical;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
 
-    .modal-content button {
-        background-color: #28a745;
-        color: white;
-        border: none;
-        padding: 10px 16px;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.3s ease, transform 0.2s ease;
-    }
+.modal-content button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
 
-        .modal-content button:hover {
-            background-color: #218838;
-            transform: scale(1.05);
-        }
+.modal-content button:hover {
+    background-color: #218838;
+    transform: scale(1.05);
+}
 
 .close-btn {
     float: right;
     font-size: 1.5rem;
     cursor: pointer;
+}
+
+/* === Edit Indicator Update === */
+#editIndicator {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border: 1px solid #f59e0b;
+    border-radius: 12px;
+    color: #92400e;
+    padding: 10px;
+    margin-bottom: 10px;
+    text-align: center;
+    font-weight: bold;
+    display: none;
+}
+
+/* === Bearbeitungsmodus === */
+form.editing input,
+form.editing select {
+    border-color: #ffc107;
+    background-color: #fffbe6;
+}
+
+form.editing button[type="submit"] {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+form.editing button[type="submit"]:hover {
+    background-color: #e0a800;
+    transform: scale(1.05);
 }
 
 /* === Animationen & Effekte === */
@@ -221,20 +442,20 @@ tr:hover {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-    }
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
 
 /* Dropdown */
 select {
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-    select:focus {
-        border-color: #2a7be4;
-        box-shadow: 0 0 5px rgba(42, 123, 228, 0.4);
-    }
+select:focus {
+    border-color: #2a7be4;
+    box-shadow: 0 0 5px rgba(42, 123, 228, 0.4);
+}
 
 /* Eingabefelder */
 input:focus,
@@ -249,9 +470,9 @@ textarea:focus {
     transition: background-color 0.3s ease;
 }
 
-    #notesList li:hover {
-        background-color: #e8f0fe;
-    }
+#notesList li:hover {
+    background-color: #e8f0fe;
+}
 
 /* Timeline Bar */
 .timeline-bar {
@@ -264,7 +485,6 @@ textarea:focus {
         opacity: 0;
         transform: translateY(10px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
@@ -276,7 +496,6 @@ textarea:focus {
         opacity: 0;
         transform: translateY(-10px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
@@ -288,7 +507,6 @@ textarea:focus {
         opacity: 0;
         transform: translateY(20px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
@@ -299,7 +517,6 @@ textarea:focus {
     from {
         width: 0;
     }
-
     to {
         width: 100%;
     }
@@ -310,7 +527,6 @@ textarea:focus {
         transform: scale(0.8);
         opacity: 0;
     }
-
     to {
         transform: scale(1);
         opacity: 1;
@@ -343,58 +559,28 @@ textarea:focus {
         position: relative;
     }
 
-        td::before {
-            content: attr(data-label);
-            position: absolute;
-            left: 10px;
-            width: 45%;
-            font-weight: bold;
-            white-space: nowrap;
-        }
-}
-
-/* === Bearbeitungsmodus Indikator === */
-#editIndicator {
-    background-color: #fff3cd;
-    color: #856404;
-    border: 1px solid #ffeeba;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    text-align: center;
-    font-weight: bold;
-    display: none; /* wird per JS sichtbar */
-}
-
-/* === Eingabefelder im Bearbeitungsmodus === */
-form.editing input,
-form.editing select {
-    border-color: #ffc107;
-    background-color: #fffbe6;
-}
-
-/* === Bearbeiten-Button === */
-.edit-btn {
-    background: none;
-    border: none;
-    font-size: 1.2rem;
-    cursor: pointer;
-    color: #007bff;
-    transition: color 0.3s ease, transform 0.3s ease;
-}
-
-    .edit-btn:hover {
-        color: #0056b3;
-        transform: scale(1.2);
+    td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 10px;
+        width: 45%;
+        font-weight: bold;
+        white-space: nowrap;
     }
 
-/* === Speichern-Bearbeitung Button (optional für UX-Upgrade) === */
-form.editing button[type="submit"] {
-    background-color: #ffc107;
-    color: #212529;
-}
-
-    form.editing button[type="submit"]:hover {
-        background-color: #e0a800;
-        transform: scale(1.05);
+    .charts-container {
+        grid-template-columns: 1fr;
     }
+    
+    .chart-container {
+        height: 280px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+    
+    h1 {
+        font-size: 2rem;
+    }
+}
