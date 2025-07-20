@@ -1,660 +1,84 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link id="theme-link" rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary: #5B47E0;
-            --primary-dark: #4936C9;
-            --secondary: #FF6B6B;
-            --accent: #4ECDC4;
-            --success: #10B981;
-            --warning: #F59E0B;
-            --background: #F8FAFC;
-            --surface: #FFFFFF;
-            --text-primary: #1A202C;
-            --text-secondary: #718096;
-            --border: #E2E8F0;
-            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--background);
-            color: var(--text-primary);
-            min-height: 100vh;
-        }
-
-        /* Header */
-        .header {
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-            padding: 1.5rem 2rem;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.9);
-        }
-
-        .header-content {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header h1 {
-            font-size: 1.875rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .logout-btn {
-            padding: 0.625rem 1.25rem;
-            background: var(--surface);
-            color: var(--text-primary);
-            border: 2px solid var(--border);
-            border-radius: 10px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .logout-btn:hover {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-
-        /* Main Container */
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        /* Summary Cards Grid */
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .summary-card {
-            background: var(--surface);
-            border-radius: 16px;
-            padding: 1.25rem;
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border);
-            animation: fadeIn 0.6s ease-out;
-            transition: var(--transition);
-        }
-
-        .summary-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .summary-header {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .summary-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            flex-shrink: 0;
-        }
-        
-        .summary-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .summary-title {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-            margin-bottom: 0.25rem;
-        }
-
-        .summary-value {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            line-height: 1;
-        }
-
-        .summary-subtitle {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            margin-top: 0.25rem;
-        }
-
-        /* Charts Section */
-        .charts-section {
-            background: var(--surface);
-            border-radius: 20px;
-            padding: 1.5rem;
-            box-shadow: var(--shadow-md);
-            margin-bottom: 1.5rem;
-            animation: fadeInUp 0.8s ease-out;
-        }
-
-        .charts-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .charts-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .chart-tabs {
-            display: flex;
-            gap: 0.5rem;
-            background: var(--background);
-            padding: 0.25rem;
-            border-radius: 10px;
-        }
-
-        .chart-tab {
-            padding: 0.5rem 1rem;
-            border: none;
-            background: transparent;
-            color: var(--text-secondary);
-            font-weight: 500;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: var(--transition);
-        }
-
-        .chart-tab.active {
-            background: var(--surface);
-            color: var(--primary);
-            box-shadow: var(--shadow-sm);
-        }
-
-        .charts-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            margin-top: 2rem;
-        }
-
-        .chart-container {
-            background: var(--background);
-            padding: 1.5rem;
-            border-radius: 12px;
-            position: relative;
-            height: 300px;
-        }
-        
-        .chart-container canvas {
-            max-height: 250px !important;
-        }
-
-        .chart-label {
-            position: absolute;
-            top: 1rem;
-            left: 1.5rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            z-index: 10;
-        }
-
-        /* User Sections */
-        .user-sections {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-        }
-
-        .user-column {
-            animation: fadeIn 1s ease-out;
-        }
-
-        .user-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .user-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            color: white;
-        }
-
-        .user-info h2 {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .user-info p {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-        }
-
-        /* Detail Cards */
-        .detail-card {
-            background: var(--surface);
-            border-radius: 12px;
-            margin-bottom: 1rem;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            transition: var(--transition);
-        }
-
-        .detail-header {
-            padding: 1rem 1.5rem;
-            background: var(--background);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .detail-header:hover {
-            background: #F1F5F9;
-        }
-
-        .detail-title {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            font-weight: 500;
-        }
-
-        .detail-arrow {
-            transition: transform 0.3s ease;
-            color: var(--text-secondary);
-        }
-
-        .detail-arrow.open {
-            transform: rotate(90deg);
-        }
-
-        .detail-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
-        }
-
-        .detail-content.open {
-            max-height: 500px;
-            overflow-y: auto;
-        }
-
-        .detail-content-inner {
-            padding: 1.5rem;
-        }
-
-        .time-entry {
-            padding: 0.75rem 0;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.875rem;
-        }
-
-        .time-entry:last-child {
-            border-bottom: none;
-        }
-
-        .time-entry-date {
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 0.5rem;
-        }
-
-        .time-entry-details {
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        /* Loading State */
-        .loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-            color: var(--text-secondary);
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .charts-grid,
-            .user-sections {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .summary-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .header-content {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-            
-            .container {
-                padding: 1rem;
-            }
-        }
-
-        /* Color themes for users */
-        .color-erik {
-            background: linear-gradient(135deg, var(--primary), #8B5CF6);
-        }
-
-        .color-eric {
-            background: linear-gradient(135deg, var(--accent), #10B981);
-        }
-
-        /* Mini chart styles */
-        .mini-chart {
-            height: 60px;
-            margin-top: 1rem;
-            max-width: 100%;
-        }
-        
-        .summary-card {
-            background: var(--surface);
-            border-radius: 16px;
-            padding: 1.25rem;
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border);
-            animation: fadeIn 0.6s ease-out;
-            transition: var(--transition);
-            overflow: hidden;
-        }
-    </style>
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
-        <div class="header-content">
-            <h1>🛠️ Admin Dashboard</h1>
-            <button class="logout-btn" onclick="logout()">
-                <span>🔒</span>
-                <span>Logout</span>
-            </button>
-        </div>
-    </header>
-
-    <!-- Main Container -->
     <div class="container">
-        <!-- Summary Cards -->
-        <div class="summary-grid">
-            <div class="summary-card">
-                <div class="summary-header">
-                    <div class="summary-icon color-erik">👤</div>
-                    <div class="summary-info">
-                        <div class="summary-title">Erik Lähner</div>
-                        <div class="summary-value" id="erik-total">0h</div>
-                        <div class="summary-subtitle">Gesamtzeit diese Woche</div>
-                    </div>
-                </div>
-                <canvas id="erik-mini-chart" class="mini-chart"></canvas>
-            </div>
+        <div class="dashboard-wrapper">
+            <h1>🛠️ Admin Dashboard</h1>
 
-            <div class="summary-card">
-                <div class="summary-header">
-                    <div class="summary-icon color-eric">👤</div>
-                    <div class="summary-info">
-                        <div class="summary-title">Eric Tamme</div>
-                        <div class="summary-value" id="eric-total">0h</div>
-                        <div class="summary-subtitle">Gesamtzeit diese Woche</div>
-                    </div>
-                </div>
-                <canvas id="eric-mini-chart" class="mini-chart"></canvas>
-            </div>
+            <div class="main-content">
 
-            <div class="summary-card">
-                <div class="summary-header">
-                    <div class="summary-icon" style="background: linear-gradient(135deg, #F59E0B, #EF4444);">📊</div>
-                    <div class="summary-info">
-                        <div class="summary-title">Trading Aktivität</div>
-                        <div class="summary-value" id="trading-total">0h</div>
-                        <div class="summary-subtitle">Kombiniert diese Woche</div>
+                <div class="card collapsible">
+                    <div class="card-header">
+                        <span class="arrow">▶</span> 📅 Tagesübersicht Erik Lähner
                     </div>
-                </div>
-            </div>
-
-            <div class="summary-card">
-                <div class="summary-header">
-                    <div class="summary-icon" style="background: linear-gradient(135deg, #10B981, #3B82F6);">🎯</div>
-                    <div class="summary-info">
-                        <div class="summary-title">Produktivität</div>
-                        <div class="summary-value" id="productivity-score">0%</div>
-                        <div class="summary-subtitle">Durchschnittliche Aktivität</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Main Charts Section -->
-        <div class="charts-section">
-            <div class="charts-header">
-                <h2 class="charts-title">📈 Zeitanalyse Übersicht</h2>
-                <div class="chart-tabs">
-                    <button class="chart-tab active" onclick="switchChartView('week')">Woche</button>
-                    <button class="chart-tab" onclick="switchChartView('month')">Monat</button>
-                    <button class="chart-tab" onclick="switchChartView('compare')">Vergleich</button>
-                </div>
-            </div>
-            
-            <div class="charts-grid">
-                <div class="chart-container">
-                    <div class="chart-label">Erik Lähner</div>
-                    <canvas id="chart-erik-main"></canvas>
-                </div>
-                <div class="chart-container">
-                    <div class="chart-label">Eric Tamme</div>
-                    <canvas id="chart-eric-main"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- User Details Sections -->
-        <div class="user-sections">
-            <!-- Erik Lähner Column -->
-            <div class="user-column">
-                <div class="user-header">
-                    <div class="user-avatar color-erik">👤</div>
-                    <div class="user-info">
-                        <h2>Erik Lähner</h2>
-                        <p>Detaillierte Zeiterfassung</p>
-                    </div>
+                    <div class="card-body" id="tage-a"></div>
                 </div>
 
-                <div class="detail-card">
-                    <div class="detail-header" onclick="toggleDetail(this)">
-                        <div class="detail-title">
-                            <span>📅</span>
-                            <span>Tagesübersicht</span>
-                        </div>
-                        <span class="detail-arrow">▶</span>
+                <div class="card collapsible">
+                    <div class="card-header">
+                        <span class="arrow">▶</span> 📊 Tradingzeiten Erik Lähner
                     </div>
-                    <div class="detail-content">
-                        <div class="detail-content-inner" id="tage-a">
-                            <div class="loading"><div class="spinner"></div></div>
-                        </div>
-                    </div>
+                    <div class="card-body" id="arbeitszeiten-a"></div>
                 </div>
 
-                <div class="detail-card">
-                    <div class="detail-header" onclick="toggleDetail(this)">
-                        <div class="detail-title">
-                            <span>📊</span>
-                            <span>Tradingzeiten</span>
-                        </div>
-                        <span class="detail-arrow">▶</span>
+                <div class="card collapsible">
+                    <div class="card-header">
+                        <span class="arrow">▶</span> 👾 Gamedevzeiten Erik Lähner
                     </div>
-                    <div class="detail-content">
-                        <div class="detail-content-inner" id="arbeitszeiten-a">
-                            <div class="loading"><div class="spinner"></div></div>
-                        </div>
-                    </div>
+                    <div class="card-body" id="sportzeiten-a"></div>
                 </div>
 
-                <div class="detail-card">
-                    <div class="detail-header" onclick="toggleDetail(this)">
-                        <div class="detail-title">
-                            <span>👾</span>
-                            <span>Gamedev-Zeiten</span>
-                        </div>
-                        <span class="detail-arrow">▶</span>
+                <div class="card summary-card">
+                    <div class="card-header">
+                        <span class="arrow">▶</span> 📊 Zeit-Diagramm Erik Lähner
                     </div>
-                    <div class="detail-content">
-                        <div class="detail-content-inner" id="sportzeiten-a">
-                            <div class="loading"><div class="spinner"></div></div>
-                        </div>
+                    <div class="card-body">
+                        <canvas id="chart-a" width="400" height="200"></canvas>
                     </div>
                 </div>
             </div>
 
-            <!-- Eric Tamme Column -->
-            <div class="user-column">
-                <div class="user-header">
-                    <div class="user-avatar color-eric">👤</div>
-                    <div class="user-info">
-                        <h2>Eric Tamme</h2>
-                        <p>Detaillierte Zeiterfassung</p>
+            <div class="main-content">
+                <div class="card collapsible">
+                    <div class="card-header">
+                        <span class="arrow">▶</span> 📅 Tagesübersicht Eric Tamme
                     </div>
+                    <div class="card-body" id="tage-b"></div>
                 </div>
 
-                <div class="detail-card">
-                    <div class="detail-header" onclick="toggleDetail(this)">
-                        <div class="detail-title">
-                            <span>📅</span>
-                            <span>Tagesübersicht</span>
-                        </div>
-                        <span class="detail-arrow">▶</span>
+                <div class="card collapsible">
+                    <div class="card-header">
+                        <span class="arrow">▶</span> 📊 Tradingzeiten Eric Tamme
                     </div>
-                    <div class="detail-content">
-                        <div class="detail-content-inner" id="tage-b">
-                            <div class="loading"><div class="spinner"></div></div>
-                        </div>
-                    </div>
+                    <div class="card-body" id="arbeitszeiten-b"></div>
                 </div>
 
-                <div class="detail-card">
-                    <div class="detail-header" onclick="toggleDetail(this)">
-                        <div class="detail-title">
-                            <span>📊</span>
-                            <span>Tradingzeiten</span>
-                        </div>
-                        <span class="detail-arrow">▶</span>
+                <div class="card collapsible">
+                    <div class="card-header">
+                        <span class="arrow">▶</span> 💪 Workoutzeiten Eric Tamme
                     </div>
-                    <div class="detail-content">
-                        <div class="detail-content-inner" id="arbeitszeiten-b">
-                            <div class="loading"><div class="spinner"></div></div>
-                        </div>
-                    </div>
+                    <div class="card-body" id="sportzeiten-b"></div>
                 </div>
 
-                <div class="detail-card">
-                    <div class="detail-header" onclick="toggleDetail(this)">
-                        <div class="detail-title">
-                            <span>💪</span>
-                            <span>Workout-Zeiten</span>
-                        </div>
-                        <span class="detail-arrow">▶</span>
+                <div class="card summary-card">
+                    <div class="card-header">
+                        <span class="arrow">▶</span> 📊 Zeit-Diagramm Eric Tamme
                     </div>
-                    <div class="detail-content">
-                        <div class="detail-content-inner" id="sportzeiten-b">
-                            <div class="loading"><div class="spinner"></div></div>
-                        </div>
+                    <div class="card-body">
+                        <canvas id="chart-b" width="400" height="200"></canvas>
                     </div>
                 </div>
             </div>
+
+            <button onclick="logout()">🔒 Logout</button>
         </div>
     </div>
 
@@ -667,7 +91,6 @@
             getDocs,
             collection
         } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAujeUok4jKYwnr5GEXze_EadszqMdY1y4",
@@ -680,19 +103,6 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const auth = getAuth();
-
-        // Check authentication
-        onAuthStateChanged(auth, user => {
-            if (!user) {
-                alert("Bitte zuerst einloggen.");
-                window.location.href = "index.html";
-            }
-        });
-
-        // Global variables for charts
-        let chartErikMain, chartEricMain, miniChartErik, miniChartEric;
-        let currentView = 'week';
 
         function formatTime(ms) {
             const totalSeconds = Math.floor(ms / 1000);
@@ -700,91 +110,6 @@
             const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
             const seconds = String(totalSeconds % 60).padStart(2, "0");
             return `${hours}:${minutes}:${seconds}`;
-        }
-
-        function formatHours(ms) {
-            return (ms / 3600000).toFixed(1) + 'h';
-        }
-
-        // Toggle detail cards
-        window.toggleDetail = function(header) {
-            const content = header.nextElementSibling;
-            const arrow = header.querySelector('.detail-arrow');
-            
-            content.classList.toggle('open');
-            arrow.classList.toggle('open');
-        }
-
-        // Switch chart view
-        window.switchChartView = function(view) {
-            currentView = view;
-            document.querySelectorAll('.chart-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            updateMainCharts();
-        }
-
-        // Update main charts based on current view
-        async function updateMainCharts() {
-            // This would be expanded with different data based on the view
-            // For now, we'll just update the existing charts
-            showGesamtzeiten();
-        }
-
-        // Create mini sparkline charts
-        function createMiniChart(canvasId, data, color) {
-            const canvas = document.getElementById(canvasId);
-            const ctx = canvas.getContext('2d');
-            
-            // Set canvas size explicitly
-            canvas.width = canvas.offsetWidth;
-            canvas.height = 60;
-            
-            return new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
-                    datasets: [{
-                        data: data,
-                        borderColor: color,
-                        backgroundColor: color + '20',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 0,
-                        pointHoverRadius: 0
-                    }]
-                },
-                options: {
-                    responsive: false,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
-                    },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { enabled: false }
-                    },
-                    scales: {
-                        x: { 
-                            display: false,
-                            grid: { display: false }
-                        },
-                        y: { 
-                            display: false,
-                            grid: { display: false }
-                        }
-                    },
-                    elements: {
-                        line: {
-                            borderJoinStyle: 'round'
-                        }
-                    }
-                }
-            });
         }
 
         async function showProtokolle() {
@@ -801,19 +126,10 @@
                 if (snapshot.exists()) {
                     const daten = snapshot.data();
                     Object.keys(daten).sort().forEach(tag => {
-                        const entry = document.createElement("div");
-                        entry.className = "time-entry";
-                        entry.innerHTML = `
-                            <div class="time-entry-date">${tag}</div>
-                            <div class="time-entry-details">
-                                <span>⏱️</span>
-                                <span>${formatTime(daten[tag])}</span>
-                            </div>
-                        `;
-                        ziel.appendChild(entry);
+                        const p = document.createElement("p");
+                        p.textContent = `${tag}: ${formatTime(daten[tag])}`;
+                        ziel.appendChild(p);
                     });
-                } else {
-                    ziel.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">Keine Daten vorhanden</p>';
                 }
             }
         }
@@ -836,30 +152,23 @@
                     gruppiert[tag].push(e);
                 });
 
-                if (Object.keys(gruppiert).length === 0) {
-                    ziel.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">Keine Daten vorhanden</p>';
-                    return;
-                }
-
                 Object.keys(gruppiert).sort().forEach(tag => {
-                    const entry = document.createElement("div");
-                    entry.className = "time-entry";
-                    
-                    let details = `<div class="time-entry-date">${tag}</div>`;
+                    const block = document.createElement("div");
+                    block.className = "arbeits-tag";
+                    const header = document.createElement("h4");
+                    header.textContent = tag;
+                    block.appendChild(header);
+
                     gruppiert[tag].forEach(e => {
                         const start = new Date(e.start).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
                         const ende = new Date(e.ende).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
                         const dauer = formatTime(e.dauer);
-                        details += `
-                            <div class="time-entry-details">
-                                <span>🕓</span>
-                                <span>${start} – ${ende} (${dauer})</span>
-                            </div>
-                        `;
+                        const p = document.createElement("p");
+                        p.textContent = `🕓 ${start} – ${ende} (Dauer: ${dauer})`;
+                        block.appendChild(p);
                     });
-                    
-                    entry.innerHTML = details;
-                    ziel.appendChild(entry);
+
+                    ziel.appendChild(block);
                 });
             }
         }
@@ -870,7 +179,7 @@
             for (let benutzerKey of benutzerListe) {
                 const [name, dashboard] = benutzerKey.split("_");
                 const ziel = document.getElementById("sportzeiten-" + name.slice(-1).toLowerCase());
-                if (!ziel) continue;
+                if (!ziel) continue; // Falls das Ziel-Element nicht existiert
 
                 ziel.innerHTML = "";
 
@@ -884,43 +193,62 @@
                     gruppiert[tag].push(e);
                 });
 
-                if (Object.keys(gruppiert).length === 0) {
-                    ziel.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">Keine Daten vorhanden</p>';
-                    return;
-                }
-
                 Object.keys(gruppiert).sort().forEach(tag => {
-                    const entry = document.createElement("div");
-                    entry.className = "time-entry";
-                    
-                    let details = `<div class="time-entry-date">${tag}</div>`;
+                    const block = document.createElement("div");
+                    block.className = "sport-tag";
+                    const header = document.createElement("h4");
+                    header.textContent = tag;
+                    block.appendChild(header);
+
                     gruppiert[tag].forEach(e => {
                         const start = new Date(e.start).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
                         const ende = new Date(e.ende).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
                         const dauer = formatTime(e.dauer);
-                        const icon = name.slice(-1).toLowerCase() === 'a' ? '👾' : '💪';
-                        details += `
-                            <div class="time-entry-details">
-                                <span>${icon}</span>
-                                <span>${start} – ${ende} (${dauer})</span>
-                            </div>
-                        `;
+                        const p = document.createElement("p");
+                        p.textContent = `💪 ${start} – ${ende} (Dauer: ${dauer})`;
+                        block.appendChild(p);
                     });
-                    
-                    entry.innerHTML = details;
-                    ziel.appendChild(entry);
+
+                    ziel.appendChild(block);
                 });
             }
         }
+
+        function logout() {
+            window.location.href = "index.html";
+        }
+
+        // Kacheln ein-/ausklappen
+        function setupCollapseHandlers() {
+            const cards = document.querySelectorAll('.card.collapsible');
+
+            cards.forEach(card => {
+                const header = card.querySelector('.card-header');
+                const body = card.querySelector('.card-body');
+                const arrow = header.querySelector('.arrow');
+
+                // Start eingeklappt
+                body.classList.add("collapsed");
+                arrow.textContent = "▶";
+
+                header.style.cursor = "pointer";
+                header.addEventListener("click", () => {
+                    const isCollapsed = body.classList.toggle("collapsed");
+                    arrow.textContent = isCollapsed ? "▶" : "▼";
+                });
+            });
+        }
+
+        // Nach dem Laden starten
+        window.addEventListener("DOMContentLoaded", () => {
+            setupCollapseHandlers();
+        });
 
         async function showGesamtzeiten() {
             const benutzerListe = [
                 { key: "BenutzerA_A", idSuffix: "a", name: "Erik Lähner" },
                 { key: "BenutzerB_B", idSuffix: "b", name: "Eric Tamme" }
             ];
-
-            let totalTrading = 0;
-            let totalProductivity = 0;
 
             for (let benutzer of benutzerListe) {
                 let zeiten = {
@@ -946,29 +274,14 @@
                     zeiten.arbeit += e.dauer || 0;
                 });
 
-                // 3. Sportzeiten
+                // 3. Sportzeiten (für Benutzer A ist das Gamedev)
                 const sportSnap = await getDocs(collection(db, "sportzeiten", benutzer.key, "eintraege"));
                 sportSnap.forEach(docSnap => {
                     const e = docSnap.data();
                     zeiten.sport += e.dauer || 0;
                 });
 
-                // Update summary cards
-                const totalTime = zeiten.protokoll + zeiten.arbeit + zeiten.sport;
-                document.getElementById(benutzer.idSuffix === 'a' ? 'erik-total' : 'eric-total').textContent = formatHours(totalTime);
-                
-                totalTrading += zeiten.arbeit;
-                totalProductivity += totalTime;
-
-                // Create mini charts with sample data (would be real data in production)
-                const miniData = [3, 5, 4, 7, 6, 8, 5];
-                if (benutzer.idSuffix === 'a') {
-                    miniChartErik = createMiniChart('erik-mini-chart', miniData, '#5B47E0');
-                } else {
-                    miniChartEric = createMiniChart('eric-mini-chart', miniData, '#4ECDC4');
-                }
-
-                // Prepare chart data
+                // Diagramm-Etiketten und Farben je nach Benutzer
                 const labels = [
                     "📅 Tagesübersicht",
                     "📊 Tradingzeit",
@@ -979,122 +292,64 @@
                     zeiten.arbeit / 3600000,
                     zeiten.sport / 3600000
                 ];
+                const farben = [
+                    "#4e79a7",
+                    "#f28e2b",
+                    benutzer.idSuffix === "a" ? "#af7aa1" : "#59a14f"
+                ];
 
-                // Create main charts
-                const ctx = document.getElementById("chart-" + benutzer.name.split(' ')[0].toLowerCase() + "-main").getContext("2d");
-                const chart = new Chart(ctx, {
+                // Diagramm erstellen
+                const ctx = document.getElementById("chart-" + benutzer.idSuffix).getContext("2d");
+                new Chart(ctx, {
                     type: "bar",
                     data: {
                         labels: labels,
                         datasets: [{
-                            label: "Stunden",
+                            label: "Zeit in Stunden",
                             data: daten,
-                            backgroundColor: [
-                                'rgba(91, 71, 224, 0.8)',
-                                'rgba(245, 158, 11, 0.8)',
-                                benutzer.idSuffix === "a" ? 'rgba(139, 92, 246, 0.8)' : 'rgba(16, 185, 129, 0.8)'
-                            ],
-                            borderColor: [
-                                'rgba(91, 71, 224, 1)',
-                                'rgba(245, 158, 11, 1)',
-                                benutzer.idSuffix === "a" ? 'rgba(139, 92, 246, 1)' : 'rgba(16, 185, 129, 1)'
-                            ],
-                            borderWidth: 2,
-                            borderRadius: 8
+                            backgroundColor: farben
                         }]
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: false,
-                        layout: {
-                            padding: {
-                                top: 20,
-                                bottom: 10
-                            }
-                        },
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                                padding: 12,
-                                cornerRadius: 8,
-                                titleFont: { size: 14, weight: '600' },
-                                bodyFont: { size: 13 },
-                                callbacks: {
-                                    label: function(context) {
-                                        return context.parsed.y.toFixed(1) + ' Stunden';
-                                    }
-                                }
-                            }
-                        },
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                grid: {
-                                    color: 'rgba(0, 0, 0, 0.05)'
-                                },
-                                ticks: {
-                                    callback: function(value) {
-                                        return value + 'h';
-                                    },
-                                    font: {
-                                        size: 11
-                                    },
-                                    maxTicksLimit: 6
-                                }
-                            },
-                            x: {
-                                grid: {
-                                    display: false
-                                },
-                                ticks: {
-                                    font: {
-                                        size: 11
-                                    },
-                                    maxRotation: 45,
-                                    minRotation: 0
+                                title: {
+                                    display: true,
+                                    text: "Stunden"
                                 }
                             }
+                        },
+                        plugins: {
+                            legend: { display: false }
                         }
                     }
                 });
-
-                if (benutzer.idSuffix === 'a') {
-                    chartErikMain = chart;
-                } else {
-                    chartEricMain = chart;
-                }
             }
-
-            // Update total cards
-            document.getElementById('trading-total').textContent = formatHours(totalTrading);
-            
-            // Calculate productivity score (example calculation)
-            const maxPossibleHours = 80; // Example: 80 hours per week max
-            const productivityScore = Math.min(100, Math.round((totalProductivity / 3600000) / maxPossibleHours * 100));
-            document.getElementById('productivity-score').textContent = productivityScore + '%';
         }
 
-        function logout() {
-            window.location.href = "index.html";
-        }
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+        const auth = getAuth();
+
+        onAuthStateChanged(auth, user => {
+            if (!user) {
+                alert("Bitte zuerst einloggen.");
+                window.location.href = "index.html"; // oder Login-Seite
+            }
+        });
+
+
+        // Initialisierung
+        showProtokolle();
+        showArbeitszeiten();
+        showWorkoutZeiten();
+        showGesamtzeiten();
 
         window.logout = logout;
 
-        // Initialize all data
-        async function init() {
-            try {
-                await Promise.all([
-                    showProtokolle(),
-                    showArbeitszeiten(),
-                    showWorkoutZeiten(),
-                    showGesamtzeiten()
-                ]);
-            } catch (error) {
-                console.error("Error loading data:", error);
-            }
-        }
-
     </script>
+
 </body>
 </html>
