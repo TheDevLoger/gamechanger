@@ -717,6 +717,12 @@
             }
         }
 
+        // Helper function to get consistent weekday names
+        function getWeekday(date) {
+            const weekdays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+            return weekdays[date.getDay()];
+        }
+
         async function loadUserData(benutzerKey) {
             const zeiten = {
                 protokoll: 0,
@@ -727,6 +733,11 @@
             const activities = [];
             const allDates = new Set();
 
+            // Initialisiere weekData mit allen Wochentagen
+            ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].forEach(day => {
+                weekData[day] = { protokoll: 0, arbeit: 0, sport: 0 };
+            });
+
             // Lade Zeitprotokolle
             const protokollRef = doc(db, "zeitprotokolle", benutzerKey);
             const protokollSnap = await getDoc(protokollRef);
@@ -736,8 +747,7 @@
                     zeiten.protokoll += daten[tag];
                     allDates.add(tag);
                     const date = new Date(tag);
-                    const weekDay = date.toLocaleDateString('de-DE', { weekday: 'short' });
-                    if (!weekData[weekDay]) weekData[weekDay] = { protokoll: 0, arbeit: 0, sport: 0 };
+                    const weekDay = getWeekday(date);
                     weekData[weekDay].protokoll += daten[tag];
                 }
             }
@@ -750,8 +760,7 @@
                 const date = new Date(e.start);
                 const dateStr = date.toISOString().slice(0, 10);
                 allDates.add(dateStr);
-                const weekDay = date.toLocaleDateString('de-DE', { weekday: 'short' });
-                if (!weekData[weekDay]) weekData[weekDay] = { protokoll: 0, arbeit: 0, sport: 0 };
+                const weekDay = getWeekday(date);
                 weekData[weekDay].arbeit += e.dauer || 0;
 
                 activities.push({
@@ -771,8 +780,7 @@
                 const date = new Date(e.start);
                 const dateStr = date.toISOString().slice(0, 10);
                 allDates.add(dateStr);
-                const weekDay = date.toLocaleDateString('de-DE', { weekday: 'short' });
-                if (!weekData[weekDay]) weekData[weekDay] = { protokoll: 0, arbeit: 0, sport: 0 };
+                const weekDay = getWeekday(date);
                 weekData[weekDay].sport += e.dauer || 0;
 
                 activities.push({
@@ -838,6 +846,18 @@
             // Line Chart (Wochenverlauf)
             const weekDays = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
             const lineCtx = document.getElementById(`lineChart${suffix}`).getContext('2d');
+            
+            // Prepare data arrays
+            const tradingData = weekDays.map(day => {
+                const hours = data.weekData[day] ? formatHours(data.weekData[day].arbeit) : 0;
+                return parseFloat(hours);
+            });
+            
+            const sportData = weekDays.map(day => {
+                const hours = data.weekData[day] ? formatHours(data.weekData[day].sport) : 0;
+                return parseFloat(hours);
+            });
+
             new Chart(lineCtx, {
                 type: 'line',
                 data: {
@@ -845,17 +865,25 @@
                     datasets: [
                         {
                             label: 'Trading',
-                            data: weekDays.map(day => data.weekData[day] ? formatHours(data.weekData[day].arbeit) : 0),
+                            data: tradingData,
                             borderColor: colors.warning,
                             backgroundColor: colors.warning + '20',
-                            tension: 0.4
+                            tension: 0.4,
+                            pointBackgroundColor: colors.warning,
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 5
                         },
                         {
                             label: suffix === 'A' ? 'Gamedev' : 'Workout',
-                            data: weekDays.map(day => data.weekData[day] ? formatHours(data.weekData[day].sport) : 0),
+                            data: sportData,
                             borderColor: suffix === 'A' ? colors.secondary : colors.success,
                             backgroundColor: (suffix === 'A' ? colors.secondary : colors.success) + '20',
-                            tension: 0.4
+                            tension: 0.4,
+                            pointBackgroundColor: suffix === 'A' ? colors.secondary : colors.success,
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 5
                         }
                     ]
                 },
@@ -868,12 +896,24 @@
                             title: {
                                 display: true,
                                 text: 'Stunden'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + 'h';
+                                }
                             }
                         }
                     },
                     plugins: {
                         legend: {
                             position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y + ' Stunden';
+                                }
+                            }
                         }
                     }
                 }
