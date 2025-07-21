@@ -4,30 +4,542 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard Erik Lähner</title>
-    <link id="theme-link" rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+            --dark-color: #1f2937;
+            --light-color: #f9fafb;
+            --border-color: #e5e7eb;
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--dark-color);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Animated background elements */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 50%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 50% 100%, rgba(120, 219, 255, 0.1) 0%, transparent 50%);
+            animation: bgPulse 20s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes bgPulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        .dashboard-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-lg);
+            animation: slideDown 0.8s ease-out;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .dashboard-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-header p {
+            color: #6b7280;
+            font-size: 1.125rem;
+        }
+
+        /* Dashboard Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Cards */
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-lg);
+            transition: var(--transition);
+            animation: fadeInUp 0.6s ease-out;
+            animation-fill-mode: both;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .card h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Time displays */
+        .time-display {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 1rem 0;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+            text-align: center;
+            background: rgba(99, 102, 241, 0.1);
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        /* Buttons */
+        .btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            margin: 0.5rem 0;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn.danger {
+            background: linear-gradient(135deg, var(--danger-color), #dc2626);
+        }
+
+        .btn.danger:hover {
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn.success {
+            background: linear-gradient(135deg, var(--success-color), #059669);
+        }
+
+        .btn.success:hover {
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn.warning {
+            background: linear-gradient(135deg, var(--warning-color), #d97706);
+        }
+
+        .btn.warning:hover {
+            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.4);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-lg);
+            height: fit-content;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Economic Calendar */
+        .calendar-container {
+            max-height: 60vh;
+            overflow-y: auto;
+            margin-top: 1rem;
+        }
+
+        .calendar-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        .calendar-table th {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 0.75rem 0.5rem;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .calendar-table td {
+            padding: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .calendar-table tr:hover {
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .impact-High { color: var(--danger-color); font-weight: 600; }
+        .impact-Medium { color: var(--warning-color); font-weight: 600; }
+        .impact-Low { color: var(--dark-color); }
+        .impact-Holiday { color: #6b7280; font-style: italic; }
+
+        /* Filter */
+        .filter-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            background: white;
+            font-size: 0.875rem;
+            transition: var(--transition);
+            margin-bottom: 1rem;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        /* Calculator */
+        .calculator-form {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+
+        .form-input {
+            padding: 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .result-display {
+            background: linear-gradient(135deg, var(--success-color), #059669);
+            color: white;
+            padding: 1rem;
+            border-radius: 12px;
+            font-weight: 600;
+            margin-top: 1rem;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: var(--transition);
+        }
+
+        .result-display.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .warning-display {
+            background: linear-gradient(135deg, var(--danger-color), #dc2626);
+            color: white;
+            padding: 1rem;
+            border-radius: 12px;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        /* Todo List */
+        .todo-input {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .todo-input input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            transition: var(--transition);
+        }
+
+        .todo-input input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .todo-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .todo-item {
+            background: rgba(99, 102, 241, 0.05);
+            border: 1px solid rgba(99, 102, 241, 0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: var(--transition);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .todo-item:hover {
+            transform: translateX(4px);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .todo-text {
+            flex: 1;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .todo-text.done {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        .delete-btn {
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .delete-btn:hover {
+            transform: scale(1.1);
+            background: #dc2626;
+        }
+
+        /* Quick Action Buttons */
+        .quick-actions {
+            display: grid;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Animations */
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .dashboard-header h1 {
+                font-size: 2rem;
+            }
+            
+            .time-display {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.5);
+        }
+
+        /* Delay animations */
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.2s; }
+        .card:nth-child(3) { animation-delay: 0.3s; }
+        .card:nth-child(4) { animation-delay: 0.4s; }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>👤 Dashboard Erik Lähner</h1>
+        <!-- Header -->
+        <div class="dashboard-header">
+            <h1>👤 Erik Lähner Dashboard</h1>
+            <p>Trading & Gamedev Workspace</p>
+        </div>
 
-        <!-- 🧱 Wrapper für 3-Spalten-Layout -->
-        <div class="dashboard-wrapper">
-
-            <!-- Linke Spalte -->
-            <div class="left-sidebar">
+        <!-- Main Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Left Sidebar - Economic Calendar -->
+            <div class="sidebar">
                 <h2>📆 Wirtschaftskalender</h2>
-                <label for="impactFilter"><strong>Impact filtern:</strong></label>
-                <select id="impactFilter" style="width: 100%; margin-bottom: 10px;">
-                    <option value="All">Alle</option>
-                    <option value="Low">Low</option>
-                    <option value="Medium">Medium</option>
-                    <option value="High">High</option>
-                    <option value="Holiday">Holiday</option>
+                <select id="impactFilter" class="filter-select">
+                    <option value="All">Alle Events</option>
+                    <option value="Low">Low Impact</option>
+                    <option value="Medium">Medium Impact</option>
+                    <option value="High">High Impact</option>
+                    <option value="Holiday">Holidays</option>
                 </select>
-                <div style="overflow-x:auto;">
-                    <table id="calendarTable" style="width: 100%; font-size: 0.8em;">
+                <div class="calendar-container">
+                    <table class="calendar-table" id="calendarTable">
                         <thead>
                             <tr>
                                 <th>Datum</th>
@@ -41,83 +553,96 @@
                 </div>
             </div>
 
-            <!-- Mittlere Spalte -->
+            <!-- Main Content Area -->
             <div class="main-content">
+                <!-- Time Tracking Cards -->
                 <div class="card">
-                    <h2>⏱️ Eingeloggt seit</h2>
-                    <p><span id="zeitOnline">00:00:00</span></p>
+                    <h2>⏱️ Session Zeit</h2>
+                    <div class="time-display" id="zeitOnline">00:00:00</div>
                 </div>
 
                 <div class="card">
-                    <h2>📊 Trading + 👾 GameDev</h2>
-                    <p><span id="arbeitszeit">00:00:00</span></p>
-                    <button id="arbeitszeitBtn" onclick="toggleArbeitszeit()">📊 Trading Starten</button>
-                    <p><span id="sportzeit">00:00:00</span></p>
-                    <button id="sportzeitBtn" onclick="toggleSportzeit()">👾 GameDev Starten</button>
+                    <h2>📊 Trading & 👾 Gamedev</h2>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <h3 style="margin-bottom: 0.5rem;">📊 Trading</h3>
+                            <div class="time-display" id="arbeitszeit" style="font-size: 1.5rem; margin: 0.5rem 0;">00:00:00</div>
+                            <button class="btn" id="arbeitszeitBtn" onclick="toggleArbeitszeit()">📊 Trading Starten</button>
+                        </div>
+                        <div>
+                            <h3 style="margin-bottom: 0.5rem;">👾 Gamedev</h3>
+                            <div class="time-display" id="sportzeit" style="font-size: 1.5rem; margin: 0.5rem 0;">00:00:00</div>
+                            <button class="btn success" id="sportzeitBtn" onclick="toggleSportzeit()">👾 Gamedev Starten</button>
+                        </div>
+                    </div>
                 </div>
 
-                <!--
-            <div class="card">
-                <h2>📅 Tagesübersicht</h2>
-                <div id="tage-a"></div>
+                <!-- Position Size Calculator -->
+                <div class="card">
+                    <h2>🧮 Lot Size Calculator</h2>
+                    <div class="calculator-form">
+                        <div class="form-group">
+                            <label for="balance">Kontogröße (EUR):</label>
+                            <input class="form-input" id="balance" type="number" placeholder="z.B. 10000" step="any" />
+                        </div>
+                        <div class="form-group">
+                            <label for="risk">Risiko (%):</label>
+                            <input class="form-input" id="risk" type="number" placeholder="z.B. 2" step="any" />
+                        </div>
+                        <div class="form-group">
+                            <label for="stoploss">Stop-Loss (Pips):</label>
+                            <input class="form-input" id="stoploss" type="number" placeholder="z.B. 50" step="any" />
+                        </div>
+                        <div class="form-group">
+                            <label for="pair">Währungspaar:</label>
+                            <select class="form-input" id="pair">
+                                <option value="EUR/USD">EUR/USD</option>
+                                <option value="GBP/USD">GBP/USD</option>
+                                <option value="USD/JPY">USD/JPY</option>
+                                <option value="USD/CHF">USD/CHF</option>
+                                <option value="AUD/USD">AUD/USD</option>
+                                <option value="USD/CAD">USD/CAD</option>
+                                <option value="NZD/USD">NZD/USD</option>
+                                <option value="GBP/JPY">GBP/JPY</option>
+                                <option value="EUR/JPY">EUR/JPY</option>
+                                <option value="AUD/JPY">AUD/JPY</option>
+                                <option value="EURNZD">EURNZD</option>
+                                <option value="EUR/GBP">EUR/GBP</option>
+                            </select>
+                        </div>
+                        <button class="btn" id="calcBtn">🔢 Berechnen</button>
+                        <div id="result" class="result-display"></div>
+                        <div id="warning" class="warning-display" style="display: none;"></div>
+                    </div>
+                </div>
             </div>
-            -->
-                <!-- // DER POSITION SIZE CALCULATOR----------------------------------------------------------------------- -->
-                <div class="card">
-                    <h2>Lot Size Calculator</h2>
 
-                    <label for="balance">Kontogröße (EUR):</label>
-                    <input id="balance" type="number" placeholder="z.B. 10000" step="any" />
-
-                    <label for="risk">Risiko (%):</label>
-                    <input id="risk" type="number" placeholder="z.B. 2" step="any" />
-
-                    <label for="stoploss">Stop-Loss (Pips):</label>
-                    <input id="stoploss" type="number" placeholder="z.B. 50" step="any" />
-
-                    <label for="pair">Währungspaar:</label>
-                    <select id="pair">
-                        <option value="EUR/USD">EUR/USD</option>
-                        <option value="GBP/USD">GBP/USD</option>
-                        <option value="USD/JPY">USD/JPY</option>
-                        <option value="USD/CHF">USD/CHF</option>
-                        <option value="AUD/USD">AUD/USD</option>
-                        <option value="USD/CAD">USD/CAD</option>
-                        <option value="NZD/USD">NZD/USD</option>
-                        <option value="GBP/JPY">GBP/JPY</option>
-                        <option value="EUR/JPY">EUR/JPY</option>
-                        <option value="AUD/JPY">AUD/JPY</option>
-                        <option value="EURNZD">EURNZD</option>
-                        <option value="EUR/GBP">EUR/GBP</option>
-                    </select>
-
-                    <button id="calcBtn">Berechne Lotgröße</button>
-
-                    <div id="result" class="result"></div>
-                    <div id="warning" class="warning"></div>
+            <!-- Right Sidebar - Quick Actions & Todo -->
+            <div class="sidebar">
+                <h2>🚀 Quick Actions</h2>
+                <div class="quick-actions">
+                    <button class="btn" onclick="window.open('notes-A.html', '_blank')">📝 Dateiverwaltung</button>
+                    <button class="btn" onclick="window.open('journal-A.html', '_blank')">📊 Trading Journal</button>
+                    <button class="btn" onclick="window.open('sk_hub.html', '_blank')">🎯 SK-Hub</button>
+                    <button class="btn" onclick="window.open('bot.html', '_blank')">🤖 S-Bot</button>
+                    <button class="btn" onclick="window.open('chess.html', '_blank')">♔ Schach</button>
                 </div>
-            </div>
-            <!-- // DER POSITION SIZE CALCULATOR----------------------------------------------------------------------- -->
-            <!-- Rechte Spalte -->
-            <div class="todo-container">
-                <button onclick="window.open('notes-A.html', '_blank')">Dateiverwaltung</button>
-                <button onclick="window.open('journal-A.html', '_blank')">Journal</button>
-                <button onclick="window.open('sk_hub.html', '_blank')">SK-Hub</button>
-				<button onclick="window.open('bot.html', '_blank')">S-Bot</button>
-                <h2>📝 Aufgabenliste</h2>
+
+                <h2>✅ Aufgabenliste</h2>
                 <div class="todo-input">
-                    <input type="text" id="taskInput" placeholder="Neue Aufgabe eingeben...">
-                    <button id="addTaskBtn">Hinzufügen</button>
+                    <input type="text" id="taskInput" placeholder="Neue Aufgabe...">
+                    <button class="btn" id="addTaskBtn" style="width: auto; padding: 0.75rem;">➕</button>
                 </div>
-                <ul id="taskList"></ul>
+                <ul class="todo-list" id="taskList"></ul>
             </div>
-
         </div>
 
-        <button onclick="toggleTheme()">🎨 Theme wechseln</button>
-        <button onclick="logout()">🔒 Logout</button>
+        <!-- Action Buttons -->
+        <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
+            <button class="btn warning" onclick="toggleTheme()">🎨 Theme wechseln</button>
+            <button class="btn danger" onclick="logout()">🔒 Logout</button>
+        </div>
     </div>
-</body>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -132,8 +657,8 @@
             serverTimestamp,
             getDocs
         } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-        // 🔧 Deine Konfiguration hier einsetzen:
         const firebaseConfig = {
             apiKey: "AIzaSyAujeUok4jKYwnr5GEXze_EadszqMdY1y4",
             authDomain: "gamechanger-78fb4.firebaseapp.com",
@@ -145,6 +670,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth();
 
         const userKey = "BenutzerA";
         const dashboard = "A";
@@ -193,7 +719,6 @@
             }, { merge: true });
 
             letzteAktualisierung = jetzt;
-            updateProtokollUI({ [heute]: alteDauer + vergangeneMs });
         }
 
         async function toggleArbeitszeit() {
@@ -201,6 +726,7 @@
             if (arbeitsStart === null) {
                 arbeitsStart = Date.now();
                 btn.textContent = "🔴 Stoppen";
+                btn.classList.add('danger');
                 arbeitsTimer = setInterval(updateArbeitszeit, 1000);
             } else {
                 const ende = Date.now();
@@ -214,7 +740,7 @@
                 clearInterval(arbeitsTimer);
                 document.getElementById("arbeitszeit").textContent = "00:00:00";
                 btn.textContent = "📊 Trading Starten";
-                renderZeitleiste();
+                btn.classList.remove('danger');
             }
         }
 
@@ -230,6 +756,8 @@
             if (sportStart === null) {
                 sportStart = Date.now();
                 btn.textContent = "🔴 Stoppen";
+                btn.classList.remove('success');
+                btn.classList.add('danger');
                 sportTimer = setInterval(updateSportzeit, 1000);
             } else {
                 const ende = Date.now();
@@ -242,7 +770,9 @@
                 sportStart = null;
                 clearInterval(sportTimer);
                 document.getElementById("sportzeit").textContent = "00:00:00";
-                btn.textContent = "👾 GameDev Starten";
+                btn.textContent = "👾 Gamedev Starten";
+                btn.classList.remove('danger');
+                btn.classList.add('success');
             }
         }
 
@@ -253,48 +783,20 @@
             }
         }
 
-        function updateProtokollUI(data) {
-            const el = document.getElementById("tage-a");
-            el.innerHTML = "";
-            for (const tag in data) {
-                const p = document.createElement("p");
-                p.textContent = `${tag}: ${formatTime(data[tag])}`;
-                el.appendChild(p);
+        async function logout() {
+            if (confirm('Möchten Sie sich wirklich abmelden?')) {
+                await auth.signOut();
+                window.location.href = "index.html";
             }
         }
 
-        async function renderZeitleiste() {
-            const zeitleiste = document.getElementById("zeitleiste-a");
-            zeitleiste.innerHTML = "";
-            const heute = new Date().toISOString().slice(0, 10);
-
-            const eintraegeSnap = await getDocs(collection(db, "arbeitszeiten", `${userKey}_${dashboard}`, "eintraege"));
-            eintraegeSnap.forEach(docSnap => {
-                const eintrag = docSnap.data();
-                const start = new Date(eintrag.start);
-                const ende = new Date(eintrag.ende);
-                const tag = start.toISOString().slice(0, 10);
-                const stundenGesamt = 24;
-
-                if (tag === heute) {
-                    const startProzent = ((start.getHours() * 60 + start.getMinutes()) / (stundenGesamt * 60)) * 100;
-                    const dauerMin = (ende - start) / 60000;
-                    const breiteProzent = (dauerMin / (stundenGesamt * 60)) * 100;
-
-                    const bar = document.createElement("div");
-                    bar.className = "timeline-bar";
-                    bar.style.left = startProzent + "%";
-                    bar.style.width = breiteProzent + "%";
-                    zeitleiste.appendChild(bar);
-                }
-            });
+        function toggleTheme() {
+            document.body.style.background = document.body.style.background.includes('764ba2') ? 
+                'linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%)' : 
+                'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
         }
 
-        async function logout() {
-            window.location.href = "index.html";
-        }
-
-        // Aufgabenliste
+        // Task Management
         const taskInput = document.getElementById("taskInput");
         const addTaskBtn = document.getElementById("addTaskBtn");
         const taskList = document.getElementById("taskList");
@@ -306,10 +808,10 @@
             taskList.innerHTML = "";
             tasks.forEach((task, index) => {
                 const li = document.createElement("li");
-                li.className = "task-item";
+                li.className = "todo-item";
 
                 const span = document.createElement("span");
-                span.className = "task-text" + (task.done ? " done" : "");
+                span.className = "todo-text" + (task.done ? " done" : "");
                 span.textContent = task.text;
                 span.onclick = () => toggleTaskDone(index);
 
@@ -362,14 +864,18 @@
             if (e.key === "Enter") addTask();
         });
 
+        // Economic Calendar
         let calendarData = [];
 
         async function loadCalendar() {
-            const res = await fetch('events.json');
-            const data = await res.json();
-
-            calendarData = data.sort((a, b) => new Date(a.date) - new Date(b.date));
-            renderCalendar(calendarData);
+            try {
+                const res = await fetch('events.json');
+                const data = await res.json();
+                calendarData = data.sort((a, b) => new Date(a.date) - new Date(b.date));
+                renderCalendar(calendarData);
+            } catch (error) {
+                console.error('Error loading calendar:', error);
+            }
         }
 
         function renderCalendar(data) {
@@ -384,16 +890,16 @@
 
                 const tr = document.createElement('tr');
                 if (datum !== lastDate) {
-                    tr.classList.add('new-day');
+                    tr.style.borderTop = '2px solid var(--primary-color)';
                     lastDate = datum;
                 }
 
                 tr.innerHTML = `
-            <td>${datum}</td>
-            <td>${zeit}</td>
-            <td>${ev.country}</td>
-            <td title="${ev.title}">${ev.title}</td>
-            `;
+                    <td>${datum}</td>
+                    <td>${zeit}</td>
+                    <td>${ev.country}</td>
+                    <td title="${ev.title}">${ev.title}</td>
+                `;
                 tr.classList.add(`impact-${ev.impact || 'Low'}`);
                 tbody.appendChild(tr);
             });
@@ -409,20 +915,11 @@
             }
         });
 
-        // RECHNER SKRIPT --------------------------------------------------------------------------------------------------------------------------
+        // Position Size Calculator
         const pipValues = {
-            "EUR/USD": 10,
-            "GBP/USD": 10,
-            "USD/JPY": 9.1,
-            "USD/CHF": 10.5,
-            "AUD/USD": 10,
-            "USD/CAD": 7.9,
-            "NZD/USD": 10,
-            "GBP/JPY": 7.3,
-            "EUR/JPY": 7.8,
-            "AUD/JPY": 7.4,
-            "EURNZD": 6.9,
-            "EUR/GBP": 11
+            "EUR/USD": 10, "GBP/USD": 10, "USD/JPY": 9.1, "USD/CHF": 10.5,
+            "AUD/USD": 10, "USD/CAD": 7.9, "NZD/USD": 10, "GBP/JPY": 7.3,
+            "EUR/JPY": 7.8, "AUD/JPY": 7.4, "EURNZD": 6.9, "EUR/GBP": 11
         };
 
         document.getElementById("calcBtn").addEventListener("click", function () {
@@ -435,14 +932,14 @@
             const warningDiv = document.getElementById("warning");
 
             if (isNaN(balance) || isNaN(riskPercent) || isNaN(stopLoss) || balance <= 0 || stopLoss <= 0) {
-                resultDiv.innerText = "";
-                warningDiv.innerText = "Bitte gültige Werte eingeben.";
+                resultDiv.classList.remove('show');
+                warningDiv.style.display = 'block';
+                warningDiv.textContent = "Bitte gültige Werte eingeben.";
                 return;
             }
 
             const pipValue = pipValues[pair] || 10;
 
-            // API-Anfrage für EUR/USD-Wechselkurs
             fetch('https://api.frankfurter.app/latest?from=EUR&to=USD')
                 .then(response => response.json())
                 .then(data => {
@@ -451,50 +948,39 @@
                     const riskAmount = balanceUSD * riskPercent;
                     const lotSize = riskAmount / (stopLoss * pipValue);
 
-                    resultDiv.innerText = `Lotgröße: ${lotSize.toFixed(2)} Lots (Kurs EUR/USD: ${eurToUsd.toFixed(4)})`;
-                    warningDiv.innerText = "";
+                    resultDiv.innerHTML = `
+                        <div>💰 Lotgröße: <strong>${lotSize.toFixed(2)} Lots</strong></div>
+                        <div>💱 EUR/USD Kurs: ${eurToUsd.toFixed(4)}</div>
+                    `;
+                    resultDiv.classList.add('show');
+                    warningDiv.style.display = 'none';
                 })
                 .catch(() => {
-                    warningDiv.innerText = "Fehler beim Abrufen der Wechselkurse.";
-                    resultDiv.innerText = "";
+                    warningDiv.style.display = 'block';
+                    warningDiv.textContent = "Fehler beim Abrufen der Wechselkurse.";
+                    resultDiv.classList.remove('show');
                 });
         });
-        // RECHNER SKRIPT --------------------------------------------------------------------------------------------------------------------------
 
-        function toggleTheme() {
-            const link = document.getElementById("theme-link");
-            const currentHref = link.getAttribute("href");
-
-            if (currentHref === "style.css") {
-                link.setAttribute("href", "styleTwo.css");
-            } else {
-                link.setAttribute("href", "style.css");
-            }
-        }
-
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-        const auth = getAuth();
-
+        // Auth Check
         onAuthStateChanged(auth, user => {
             if (!user) {
                 alert("Bitte zuerst einloggen.");
-                window.location.href = "index.html"; // oder Login-Seite
+                window.location.href = "index.html";
             }
         });
 
-
-        loadCalendar();
-
+        // Initialize
         await saveLoginTime();
         setInterval(updateLoginTime, 1000);
-        renderZeitleiste();
         loadTasks();
+        loadCalendar();
 
-        window.toggleTheme = toggleTheme;
+        // Export functions to global scope
         window.toggleArbeitszeit = toggleArbeitszeit;
         window.toggleSportzeit = toggleSportzeit;
         window.logout = logout;
-
+        window.toggleTheme = toggleTheme;
     </script>
+</body>
 </html>
