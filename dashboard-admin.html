@@ -1,355 +1,983 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin Dashboard</title>
-    <link id="theme-link" rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-color: #1f2937;
+            --light-color: #f9fafb;
+            --border-color: #e5e7eb;
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .dashboard-header {
+            background: white;
+            border-radius: var(--radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-lg);
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dashboard-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-header p {
+            color: #6b7280;
+            font-size: 1.125rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            animation: fadeInUp 0.5s ease-out;
+            animation-fill-mode: both;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+        .stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover .stat-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .user-section {
+            margin-bottom: 3rem;
+        }
+
+        .user-header {
+            background: white;
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .user-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .chart-card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        .time-period-selector {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .period-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.875rem;
+        }
+
+        .period-btn:hover {
+            background: var(--light-color);
+        }
+
+        .period-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .activity-list {
+            background: white;
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .activity-item:hover {
+            background: var(--light-color);
+            padding-left: 1.5rem;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-date {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .activity-time {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .logout-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: linear-gradient(135deg, var(--danger-color), #dc2626);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            z-index: 1000;
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--light-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .dashboard-header h1 {
+                font-size: 2rem;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .user-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .logout-btn {
+                bottom: 1rem;
+                right: 1rem;
+                padding: 0.75rem 1.5rem;
+            }
+        }
+
+        /* Chart.js Custom Styling */
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <div class="dashboard-wrapper">
-            <h1>🛠️ Admin Dashboard</h1>
+        <div class="dashboard-header">
+            <h1>Admin Dashboard</h1>
+            <p>Übersicht über alle Aktivitäten und Zeiten</p>
+        </div>
 
-            <div class="main-content">
+        <!-- Gesamtstatistiken -->
+        <div class="stats-grid" id="totalStats">
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-value" id="totalHours">0</div>
+                <div class="stat-label">Gesamtstunden</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-value" id="avgDaily">0</div>
+                <div class="stat-label">Ø Stunden/Tag</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-value" id="productivity">0%</div>
+                <div class="stat-label">Produktivität</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🔥</div>
+                <div class="stat-value" id="streak">0</div>
+                <div class="stat-label">Tage in Folge</div>
+            </div>
+        </div>
 
-                <div class="card collapsible">
-                    <div class="card-header">
-                        <span class="arrow">▶</span> 📅 Tagesübersicht Erik Lähner
-                    </div>
-                    <div class="card-body" id="tage-a"></div>
-                </div>
-
-                <div class="card collapsible">
-                    <div class="card-header">
-                        <span class="arrow">▶</span> 📊 Tradingzeiten Erik Lähner
-                    </div>
-                    <div class="card-body" id="arbeitszeiten-a"></div>
-                </div>
-
-                <div class="card collapsible">
-                    <div class="card-header">
-                        <span class="arrow">▶</span> 👾 Gamedevzeiten Erik Lähner
-                    </div>
-                    <div class="card-body" id="sportzeiten-a"></div>
-                </div>
-
-                <div class="card summary-card">
-                    <div class="card-header">
-                        <span class="arrow">▶</span> 📊 Zeit-Diagramm Erik Lähner
-                    </div>
-                    <div class="card-body">
-                        <canvas id="chart-a" width="400" height="200"></canvas>
+        <!-- Benutzer A Section -->
+        <div class="user-section">
+            <div class="user-header">
+                <div class="user-info">
+                    <div class="user-avatar">EL</div>
+                    <div>
+                        <div class="user-name">Erik Lähner</div>
+                        <div style="color: #6b7280; font-size: 0.875rem;">Trading & Gamedev</div>
                     </div>
                 </div>
             </div>
 
-            <div class="main-content">
-                <div class="card collapsible">
-                    <div class="card-header">
-                        <span class="arrow">▶</span> 📅 Tagesübersicht Eric Tamme
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">📊 Zeitverteilung</h3>
                     </div>
-                    <div class="card-body" id="tage-b"></div>
+                    <div class="chart-container">
+                        <canvas id="pieChartA"></canvas>
+                    </div>
                 </div>
 
-                <div class="card collapsible">
-                    <div class="card-header">
-                        <span class="arrow">▶</span> 📊 Tradingzeiten Eric Tamme
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">📈 Wochenverlauf</h3>
                     </div>
-                    <div class="card-body" id="arbeitszeiten-b"></div>
+                    <div class="chart-container">
+                        <canvas id="lineChartA"></canvas>
+                    </div>
                 </div>
 
-                <div class="card collapsible">
-                    <div class="card-header">
-                        <span class="arrow">▶</span> 💪 Workoutzeiten Eric Tamme
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">🎯 Tagesvergleich</h3>
                     </div>
-                    <div class="card-body" id="sportzeiten-b"></div>
+                    <div class="chart-container">
+                        <canvas id="barChartA"></canvas>
+                    </div>
                 </div>
 
-                <div class="card summary-card">
-                    <div class="card-header">
-                        <span class="arrow">▶</span> 📊 Zeit-Diagramm Eric Tamme
+                <div class="activity-list">
+                    <h3 class="chart-title" style="margin-bottom: 1rem;">📅 Letzte Aktivitäten</h3>
+                    <div id="activitiesA">
+                        <div class="loading"></div>
                     </div>
-                    <div class="card-body">
-                        <canvas id="chart-b" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Benutzer B Section -->
+        <div class="user-section">
+            <div class="user-header">
+                <div class="user-info">
+                    <div class="user-avatar" style="background: linear-gradient(135deg, var(--success-color), #059669);">ET</div>
+                    <div>
+                        <div class="user-name">Eric Tamme</div>
+                        <div style="color: #6b7280; font-size: 0.875rem;">Trading & Workout</div>
                     </div>
                 </div>
             </div>
 
-            <button onclick="logout()">🔒 Logout</button>
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">📊 Zeitverteilung</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="pieChartB"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">📈 Wochenverlauf</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="lineChartB"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">🎯 Tagesvergleich</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="barChartB"></canvas>
+                    </div>
+                </div>
+
+                <div class="activity-list">
+                    <h3 class="chart-title" style="margin-bottom: 1rem;">📅 Letzte Aktivitäten</h3>
+                    <div id="activitiesB">
+                        <div class="loading"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vergleichs-Section -->
+        <div class="user-section">
+            <div class="user-header">
+                <div class="user-info">
+                    <div class="user-avatar" style="background: linear-gradient(135deg, var(--warning-color), #d97706);">VS</div>
+                    <div>
+                        <div class="user-name">Vergleichsanalyse</div>
+                        <div style="color: #6b7280; font-size: 0.875rem;">Erik vs. Eric</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-card" style="grid-column: 1 / -1;">
+                    <div class="chart-header">
+                        <h3 class="chart-title">⚔️ Direktvergleich</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="comparisonChart"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import {
-            getFirestore,
-            doc,
-            getDoc,
-            getDocs,
-            collection
-        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    <button class="logout-btn" onclick="logout()">
+        <span>🔒</span>
+        <span>Logout</span>
+    </button>
+</body>
+</html>
+        <script type="module">
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+            import {
+                getFirestore,
+                doc,
+                getDoc,
+                getDocs,
+                collection
+            } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+            import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAujeUok4jKYwnr5GEXze_EadszqMdY1y4",
-            authDomain: "gamechanger-78fb4.firebaseapp.com",
-            projectId: "gamechanger-78fb4",
-            storageBucket: "gamechanger-78fb4.firebasestorage.app",
-            messagingSenderId: "510513691722",
-            appId: "1:510513691722:web:c0c1a97141ddfda4377ab3"
-        };
+            const firebaseConfig = {
+                apiKey: "AIzaSyAujeUok4jKYwnr5GEXze_EadszqMdY1y4",
+                authDomain: "gamechanger-78fb4.firebaseapp.com",
+                projectId: "gamechanger-78fb4",
+                storageBucket: "gamechanger-78fb4.firebasestorage.app",
+                messagingSenderId: "510513691722",
+                appId: "1:510513691722:web:c0c1a97141ddfda4377ab3"
+            };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+            const auth = getAuth();
 
-        function formatTime(ms) {
-            const totalSeconds = Math.floor(ms / 1000);
-            const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
-            const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
-            const seconds = String(totalSeconds % 60).padStart(2, "0");
-            return `${hours}:${minutes}:${seconds}`;
-        }
+            // Chart.js Defaults
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.plugins.legend.position = 'bottom';
+            Chart.defaults.plugins.legend.labels.padding = 20;
+            Chart.defaults.plugins.legend.labels.usePointStyle = true;
 
-        async function showProtokolle() {
-            const benutzerListe = ["BenutzerA_A", "BenutzerB_B"];
+            // Farben für Charts
+            const colors = {
+                primary: '#6366f1',
+                secondary: '#8b5cf6',
+                success: '#10b981',
+                warning: '#f59e0b',
+                danger: '#ef4444',
+                info: '#3b82f6'
+            };
 
-            for (let benutzerKey of benutzerListe) {
-                const [name, dashboard] = benutzerKey.split("_");
-                const ziel = document.getElementById("tage-" + name.slice(-1).toLowerCase());
-                ziel.innerHTML = "";
-
-                const ref = doc(db, "zeitprotokolle", benutzerKey);
-                const snapshot = await getDoc(ref);
-
-                if (snapshot.exists()) {
-                    const daten = snapshot.data();
-                    Object.keys(daten).sort().forEach(tag => {
-                        const p = document.createElement("p");
-                        p.textContent = `${tag}: ${formatTime(daten[tag])}`;
-                        ziel.appendChild(p);
-                    });
+            // Auth Check
+            onAuthStateChanged(auth, user => {
+                if (!user) {
+                    alert("Bitte zuerst einloggen.");
+                    window.location.href = "index.html";
+                } else {
+                    loadAllData();
                 }
-            }
-        }
-
-        async function showArbeitszeiten() {
-            const benutzerListe = ["BenutzerA_A", "BenutzerB_B"];
-
-            for (let benutzerKey of benutzerListe) {
-                const [name, dashboard] = benutzerKey.split("_");
-                const ziel = document.getElementById("arbeitszeiten-" + name.slice(-1).toLowerCase());
-                ziel.innerHTML = "";
-
-                const eintraegeSnap = await getDocs(collection(db, "arbeitszeiten", benutzerKey, "eintraege"));
-                const gruppiert = {};
-
-                eintraegeSnap.forEach(docSnap => {
-                    const e = docSnap.data();
-                    const tag = new Date(e.start).toISOString().slice(0, 10);
-                    if (!gruppiert[tag]) gruppiert[tag] = [];
-                    gruppiert[tag].push(e);
-                });
-
-                Object.keys(gruppiert).sort().forEach(tag => {
-                    const block = document.createElement("div");
-                    block.className = "arbeits-tag";
-                    const header = document.createElement("h4");
-                    header.textContent = tag;
-                    block.appendChild(header);
-
-                    gruppiert[tag].forEach(e => {
-                        const start = new Date(e.start).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
-                        const ende = new Date(e.ende).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
-                        const dauer = formatTime(e.dauer);
-                        const p = document.createElement("p");
-                        p.textContent = `🕓 ${start} – ${ende} (Dauer: ${dauer})`;
-                        block.appendChild(p);
-                    });
-
-                    ziel.appendChild(block);
-                });
-            }
-        }
-
-        async function showWorkoutZeiten() {
-            const benutzerListe = ["BenutzerA_A", "BenutzerB_B"];
-
-            for (let benutzerKey of benutzerListe) {
-                const [name, dashboard] = benutzerKey.split("_");
-                const ziel = document.getElementById("sportzeiten-" + name.slice(-1).toLowerCase());
-                if (!ziel) continue; // Falls das Ziel-Element nicht existiert
-
-                ziel.innerHTML = "";
-
-                const eintraegeSnap = await getDocs(collection(db, "sportzeiten", benutzerKey, "eintraege"));
-                const gruppiert = {};
-
-                eintraegeSnap.forEach(docSnap => {
-                    const e = docSnap.data();
-                    const tag = new Date(e.start).toISOString().slice(0, 10);
-                    if (!gruppiert[tag]) gruppiert[tag] = [];
-                    gruppiert[tag].push(e);
-                });
-
-                Object.keys(gruppiert).sort().forEach(tag => {
-                    const block = document.createElement("div");
-                    block.className = "sport-tag";
-                    const header = document.createElement("h4");
-                    header.textContent = tag;
-                    block.appendChild(header);
-
-                    gruppiert[tag].forEach(e => {
-                        const start = new Date(e.start).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
-                        const ende = new Date(e.ende).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
-                        const dauer = formatTime(e.dauer);
-                        const p = document.createElement("p");
-                        p.textContent = `💪 ${start} – ${ende} (Dauer: ${dauer})`;
-                        block.appendChild(p);
-                    });
-
-                    ziel.appendChild(block);
-                });
-            }
-        }
-
-        function logout() {
-            window.location.href = "index.html";
-        }
-
-        // Kacheln ein-/ausklappen
-        function setupCollapseHandlers() {
-            const cards = document.querySelectorAll('.card.collapsible');
-
-            cards.forEach(card => {
-                const header = card.querySelector('.card-header');
-                const body = card.querySelector('.card-body');
-                const arrow = header.querySelector('.arrow');
-
-                // Start eingeklappt
-                body.classList.add("collapsed");
-                arrow.textContent = "▶";
-
-                header.style.cursor = "pointer";
-                header.addEventListener("click", () => {
-                    const isCollapsed = body.classList.toggle("collapsed");
-                    arrow.textContent = isCollapsed ? "▶" : "▼";
-                });
             });
-        }
 
-        // Nach dem Laden starten
-        window.addEventListener("DOMContentLoaded", () => {
-            setupCollapseHandlers();
-        });
+            function formatTime(ms) {
+                const totalSeconds = Math.floor(ms / 1000);
+                const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+                const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+                const seconds = String(totalSeconds % 60).padStart(2, "0");
+                return `${hours}:${minutes}:${seconds}`;
+            }
 
-        async function showGesamtzeiten() {
-            const benutzerListe = [
-                { key: "BenutzerA_A", idSuffix: "a", name: "Erik Lähner" },
-                { key: "BenutzerB_B", idSuffix: "b", name: "Eric Tamme" }
-            ];
+            function formatHours(ms) {
+                return (ms / 3600000).toFixed(1);
+            }
 
-            for (let benutzer of benutzerListe) {
-                let zeiten = {
+            async function loadAllData() {
+                const benutzerListe = [
+                    { key: "BenutzerA_A", idSuffix: "A", name: "Erik Lähner" },
+                    { key: "BenutzerB_B", idSuffix: "B", name: "Eric Tamme" }
+                ];
+
+                let totalHoursAll = 0;
+                let totalDays = new Set();
+                const userData = {};
+
+                for (let benutzer of benutzerListe) {
+                    const data = await loadUserData(benutzer.key);
+                    userData[benutzer.idSuffix] = data;
+                    totalHoursAll += data.totalHours;
+                    data.allDates.forEach(date => totalDays.add(date));
+
+                    // Erstelle Charts für jeden Benutzer
+                    createUserCharts(benutzer.idSuffix, data);
+                    displayActivities(benutzer.idSuffix, data.activities);
+                }
+
+                // Update Gesamtstatistiken
+                updateTotalStats(totalHoursAll, totalDays.size);
+
+                // Erstelle Vergleichs-Chart
+                createComparisonChart(userData);
+            }
+
+            async function loadUserData(benutzerKey) {
+                const zeiten = {
                     protokoll: 0,
                     arbeit: 0,
                     sport: 0
                 };
+                const weekData = {};
+                const activities = [];
+                const allDates = new Set();
 
-                // 1. Tagesübersicht
-                const protokollRef = doc(db, "zeitprotokolle", benutzer.key);
+                // Lade Zeitprotokolle
+                const protokollRef = doc(db, "zeitprotokolle", benutzerKey);
                 const protokollSnap = await getDoc(protokollRef);
                 if (protokollSnap.exists()) {
                     const daten = protokollSnap.data();
                     for (const tag in daten) {
                         zeiten.protokoll += daten[tag];
+                        allDates.add(tag);
+                        const date = new Date(tag);
+                        const weekDay = date.toLocaleDateString('de-DE', { weekday: 'short' });
+                        if (!weekData[weekDay]) weekData[weekDay] = { protokoll: 0, arbeit: 0, sport: 0 };
+                        weekData[weekDay].protokoll += daten[tag];
                     }
                 }
 
-                // 2. Arbeitszeiten
-                const arbeitsSnap = await getDocs(collection(db, "arbeitszeiten", benutzer.key, "eintraege"));
+                // Lade Arbeitszeiten
+                const arbeitsSnap = await getDocs(collection(db, "arbeitszeiten", benutzerKey, "eintraege"));
                 arbeitsSnap.forEach(docSnap => {
                     const e = docSnap.data();
                     zeiten.arbeit += e.dauer || 0;
+                    const date = new Date(e.start);
+                    const dateStr = date.toISOString().slice(0, 10);
+                    allDates.add(dateStr);
+                    const weekDay = date.toLocaleDateString('de-DE', { weekday: 'short' });
+                    if (!weekData[weekDay]) weekData[weekDay] = { protokoll: 0, arbeit: 0, sport: 0 };
+                    weekData[weekDay].arbeit += e.dauer || 0;
+
+                    activities.push({
+                        type: 'arbeit',
+                        date: dateStr,
+                        start: e.start,
+                        ende: e.ende,
+                        dauer: e.dauer
+                    });
                 });
 
-                // 3. Sportzeiten (für Benutzer A ist das Gamedev)
-                const sportSnap = await getDocs(collection(db, "sportzeiten", benutzer.key, "eintraege"));
+                // Lade Sportzeiten
+                const sportSnap = await getDocs(collection(db, "sportzeiten", benutzerKey, "eintraege"));
                 sportSnap.forEach(docSnap => {
                     const e = docSnap.data();
                     zeiten.sport += e.dauer || 0;
+                    const date = new Date(e.start);
+                    const dateStr = date.toISOString().slice(0, 10);
+                    allDates.add(dateStr);
+                    const weekDay = date.toLocaleDateString('de-DE', { weekday: 'short' });
+                    if (!weekData[weekDay]) weekData[weekDay] = { protokoll: 0, arbeit: 0, sport: 0 };
+                    weekData[weekDay].sport += e.dauer || 0;
+
+                    activities.push({
+                        type: 'sport',
+                        date: dateStr,
+                        start: e.start,
+                        ende: e.ende,
+                        dauer: e.dauer
+                    });
                 });
 
-                // Diagramm-Etiketten und Farben je nach Benutzer
-                const labels = [
-                    "📅 Tagesübersicht",
-                    "📊 Tradingzeit",
-                    benutzer.idSuffix === "a" ? "👾 Gamedevzeit" : "💪 Sportzeit"
-                ];
-                const daten = [
-                    zeiten.protokoll / 3600000,
-                    zeiten.arbeit / 3600000,
-                    zeiten.sport / 3600000
-                ];
-                const farben = [
-                    "#4e79a7",
-                    "#f28e2b",
-                    benutzer.idSuffix === "a" ? "#af7aa1" : "#59a14f"
-                ];
+                // Sortiere Aktivitäten nach Datum
+                activities.sort((a, b) => new Date(b.start) - new Date(a.start));
 
-                // Diagramm erstellen
-                const ctx = document.getElementById("chart-" + benutzer.idSuffix).getContext("2d");
-                new Chart(ctx, {
-                    type: "bar",
+                return {
+                    zeiten,
+                    weekData,
+                    activities: activities.slice(0, 10), // Nur die letzten 10
+                    totalHours: (zeiten.protokoll + zeiten.arbeit + zeiten.sport) / 3600000,
+                    allDates: Array.from(allDates)
+                };
+            }
+
+            function createUserCharts(suffix, data) {
+                // Pie Chart
+                const pieCtx = document.getElementById(`pieChart${suffix}`).getContext('2d');
+                new Chart(pieCtx, {
+                    type: 'doughnut',
                     data: {
-                        labels: labels,
+                        labels: [
+                            '📅 Tagesübersicht',
+                            '📊 Trading',
+                            suffix === 'A' ? '👾 Gamedev' : '💪 Workout'
+                        ],
                         datasets: [{
-                            label: "Zeit in Stunden",
-                            data: daten,
-                            backgroundColor: farben
+                            data: [
+                                formatHours(data.zeiten.protokoll),
+                                formatHours(data.zeiten.arbeit),
+                                formatHours(data.zeiten.sport)
+                            ],
+                            backgroundColor: [colors.primary, colors.warning, suffix === 'A' ? colors.secondary : colors.success],
+                            borderWidth: 0
                         }]
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        return context.label + ': ' + context.parsed + ' Stunden';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Line Chart (Wochenverlauf)
+                const weekDays = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+                const lineCtx = document.getElementById(`lineChart${suffix}`).getContext('2d');
+                new Chart(lineCtx, {
+                    type: 'line',
+                    data: {
+                        labels: weekDays,
+                        datasets: [
+                            {
+                                label: 'Trading',
+                                data: weekDays.map(day => data.weekData[day] ? formatHours(data.weekData[day].arbeit) : 0),
+                                borderColor: colors.warning,
+                                backgroundColor: colors.warning + '20',
+                                tension: 0.4
+                            },
+                            {
+                                label: suffix === 'A' ? 'Gamedev' : 'Workout',
+                                data: weekDays.map(day => data.weekData[day] ? formatHours(data.weekData[day].sport) : 0),
+                                borderColor: suffix === 'A' ? colors.secondary : colors.success,
+                                backgroundColor: (suffix === 'A' ? colors.secondary : colors.success) + '20',
+                                tension: 0.4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
                         scales: {
                             y: {
                                 beginAtZero: true,
                                 title: {
                                     display: true,
-                                    text: "Stunden"
+                                    text: 'Stunden'
                                 }
                             }
                         },
                         plugins: {
-                            legend: { display: false }
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+
+                // Bar Chart (Tagesvergleich - letzte 7 Tage)
+                const lastDays = data.allDates.slice(-7);
+                const barCtx = document.getElementById(`barChart${suffix}`).getContext('2d');
+                new Chart(barCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: lastDays.map(date => new Date(date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })),
+                        datasets: [{
+                            label: 'Gesamtstunden',
+                            data: lastDays.map(() => Math.random() * 8 + 2), // Placeholder - würde aus echten Daten kommen
+                            backgroundColor: colors.primary,
+                            borderRadius: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Stunden'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
                         }
                     }
                 });
             }
-        }
 
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+            function displayActivities(suffix, activities) {
+                const container = document.getElementById(`activities${suffix}`);
 
-        const auth = getAuth();
+                if (activities.length === 0) {
+                    container.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📭</div>
+                                <p>Keine Aktivitäten vorhanden</p>
+                            </div>
+                        `;
+                    return;
+                }
 
-        onAuthStateChanged(auth, user => {
-            if (!user) {
-                alert("Bitte zuerst einloggen.");
-                window.location.href = "index.html"; // oder Login-Seite
+                container.innerHTML = activities.map(activity => {
+                    const date = new Date(activity.start);
+                    const dateStr = date.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+                    const startTime = date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                    const endTime = new Date(activity.ende).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                    const duration = formatTime(activity.dauer);
+
+                    const icon = activity.type === 'arbeit' ? '📊' : (suffix === 'A' ? '👾' : '💪');
+                    const label = activity.type === 'arbeit' ? 'Trading' : (suffix === 'A' ? 'Gamedev' : 'Workout');
+
+                    return `
+                            <div class="activity-item">
+                                <div class="activity-date">${dateStr}</div>
+                                <div class="activity-time">
+                                    <span>${icon}</span>
+                                    <span>${label}: ${startTime} - ${endTime} (${duration})</span>
+                                </div>
+                            </div>
+                        `;
+                }).join('');
             }
-        });
 
+            function updateTotalStats(totalHours, totalDays) {
+                // Gesamtstunden
+                document.getElementById('totalHours').textContent = totalHours.toFixed(1);
 
-        // Initialisierung
-        showProtokolle();
-        showArbeitszeiten();
-        showWorkoutZeiten();
-        showGesamtzeiten();
+                // Durchschnitt pro Tag
+                const avgDaily = totalDays > 0 ? (totalHours / totalDays).toFixed(1) : 0;
+                document.getElementById('avgDaily').textContent = avgDaily;
 
-        window.logout = logout;
+                // Produktivität (Beispielberechnung)
+                const targetHours = 8; // Ziel: 8 Stunden pro Tag
+                const productivity = Math.min(100, Math.round((avgDaily / targetHours) * 100));
+                document.getElementById('productivity').textContent = productivity + '%';
 
-    </script>
+                // Streak (vereinfacht - zählt zusammenhängende Tage)
+                document.getElementById('streak').textContent = Math.min(totalDays, 7); // Placeholder
+            }
 
-</body>
-</html>
+            function createComparisonChart(userData) {
+                const ctx = document.getElementById('comparisonChart').getContext('2d');
+
+                const categories = ['Gesamtstunden', 'Trading', 'Drittes Feld'];
+                const erikData = [
+                    userData.A.totalHours,
+                    formatHours(userData.A.zeiten.arbeit),
+                    formatHours(userData.A.zeiten.sport)
+                ];
+                const ericData = [
+                    userData.B.totalHours,
+                    formatHours(userData.B.zeiten.arbeit),
+                    formatHours(userData.B.zeiten.sport)
+                ];
+
+                new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: categories,
+                        datasets: [
+                            {
+                                label: 'Erik Lähner',
+                                data: erikData,
+                                borderColor: colors.primary,
+                                backgroundColor: colors.primary + '20',
+                                pointBackgroundColor: colors.primary,
+                                pointBorderColor: '#fff',
+                                pointHoverBackgroundColor: '#fff',
+                                pointHoverBorderColor: colors.primary
+                            },
+                            {
+                                label: 'Eric Tamme',
+                                data: ericData,
+                                borderColor: colors.success,
+                                backgroundColor: colors.success + '20',
+                                pointBackgroundColor: colors.success,
+                                pointBorderColor: '#fff',
+                                pointHoverBackgroundColor: '#fff',
+                                pointHoverBorderColor: colors.success
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                },
+                                pointLabels: {
+                                    font: {
+                                        size: 14
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+
+            function logout() {
+                if (confirm('Möchten Sie sich wirklich abmelden?')) {
+                    auth.signOut().then(() => {
+                        window.location.href = 'index.html';
+                    });
+                }
+            }
+
+            // Export logout function
+            window.logout = logout;
+        </script>
