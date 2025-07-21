@@ -350,7 +350,21 @@
             opacity: 0.5;
         }
 
-        /* Scrollbar Styling */
+        .positive {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            background-clip: text !important;
+        }
+
+        .negative {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            background-clip: text !important;
+        }
+
+        /* Custom scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -447,6 +461,30 @@
                 </div>
             </div>
 
+            <!-- Individual Stats for User A -->
+            <div class="stats-grid" style="margin-bottom: 1.5rem;">
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value" id="totalHoursA">0</div>
+                    <div class="stat-label">Gesamtstunden</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-value" id="avgDailyA">0</div>
+                    <div class="stat-label">Ø Stunden/Tag</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎯</div>
+                    <div class="stat-value" id="productivityA">0%</div>
+                    <div class="stat-label">Produktivität</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🔥</div>
+                    <div class="stat-value" id="streakA">0</div>
+                    <div class="stat-label">Tage in Folge</div>
+                </div>
+            </div>
+
             <div class="charts-grid">
                 <div class="chart-card">
                     <div class="chart-header">
@@ -493,6 +531,30 @@
                         <div class="user-name">Eric Tamme</div>
                         <div style="color: #6b7280; font-size: 0.875rem;">Trading & Workout</div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Individual Stats for User B -->
+            <div class="stats-grid" style="margin-bottom: 1.5rem;">
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value" id="totalHoursB">0</div>
+                    <div class="stat-label">Gesamtstunden</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-value" id="avgDailyB">0</div>
+                    <div class="stat-label">Ø Stunden/Tag</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎯</div>
+                    <div class="stat-value" id="productivityB">0%</div>
+                    <div class="stat-label">Produktivität</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🔥</div>
+                    <div class="stat-value" id="streakB">0</div>
+                    <div class="stat-label">Tage in Folge</div>
                 </div>
             </div>
 
@@ -562,422 +624,487 @@
         <span>🔒</span>
         <span>Logout</span>
     </button>
-</body>
-</html>
-        <script type="module">
-            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-            import {
-                getFirestore,
-                doc,
-                getDoc,
-                getDocs,
-                collection
-            } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-            import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-            const firebaseConfig = {
-                apiKey: "AIzaSyAujeUok4jKYwnr5GEXze_EadszqMdY1y4",
-                authDomain: "gamechanger-78fb4.firebaseapp.com",
-                projectId: "gamechanger-78fb4",
-                storageBucket: "gamechanger-78fb4.firebasestorage.app",
-                messagingSenderId: "510513691722",
-                appId: "1:510513691722:web:c0c1a97141ddfda4377ab3"
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import {
+            getFirestore,
+            doc,
+            getDoc,
+            getDocs,
+            collection
+        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAujeUok4jKYwnr5GEXze_EadszqMdY1y4",
+            authDomain: "gamechanger-78fb4.firebaseapp.com",
+            projectId: "gamechanger-78fb4",
+            storageBucket: "gamechanger-78fb4.firebasestorage.app",
+            messagingSenderId: "510513691722",
+            appId: "1:510513691722:web:c0c1a97141ddfda4377ab3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth();
+
+        // Chart.js Defaults
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.plugins.legend.position = 'bottom';
+        Chart.defaults.plugins.legend.labels.padding = 20;
+        Chart.defaults.plugins.legend.labels.usePointStyle = true;
+
+        // Farben für Charts
+        const colors = {
+            primary: '#6366f1',
+            secondary: '#8b5cf6',
+            success: '#10b981',
+            warning: '#f59e0b',
+            danger: '#ef4444',
+            info: '#3b82f6'
+        };
+
+        // Auth Check
+        onAuthStateChanged(auth, user => {
+            if (!user) {
+                alert("Bitte zuerst einloggen.");
+                window.location.href = "index.html";
+            } else {
+                loadAllData();
+            }
+        });
+
+        function formatTime(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+            const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+            const seconds = String(totalSeconds % 60).padStart(2, "0");
+            return `${hours}:${minutes}:${seconds}`;
+        }
+
+        function formatHours(ms) {
+            return (ms / 3600000).toFixed(1);
+        }
+
+        function calculateConsecutiveDays(allDates) {
+            if (allDates.length === 0) return 0;
+            
+            // Sortiere Daten und konvertiere zu Date-Objekten
+            const sortedDates = allDates
+                .map(dateStr => new Date(dateStr))
+                .sort((a, b) => a - b);
+            
+            let maxStreak = 1;
+            let currentStreak = 1;
+            
+            for (let i = 1; i < sortedDates.length; i++) {
+                const currentDate = sortedDates[i];
+                const previousDate = sortedDates[i - 1];
+                
+                // Berechne Unterschied in Tagen
+                const diffInDays = Math.floor((currentDate - previousDate) / (1000 * 60 * 60 * 24));
+                
+                if (diffInDays === 1) {
+                    // Aufeinanderfolgende Tage
+                    currentStreak++;
+                    maxStreak = Math.max(maxStreak, currentStreak);
+                } else if (diffInDays > 1) {
+                    // Lücke in den Tagen - Streak zurücksetzen
+                    currentStreak = 1;
+                }
+                // diffInDays === 0 bedeutet gleicher Tag - Streak bleibt gleich
+            }
+            
+            return maxStreak;
+        }
+
+        function updateUserStats(suffix, data) {
+            const totalHours = data.totalHours;
+            const activeDays = data.allDates.length;
+            const avgDaily = activeDays > 0 ? (totalHours / activeDays) : 0;
+            
+            // Produktivität basiert auf einem Ziel von 6 Stunden pro aktiven Tag
+            const targetHoursPerDay = 6;
+            const productivity = Math.min(100, Math.round((avgDaily / targetHoursPerDay) * 100));
+            
+            // Berechne aufeinanderfolgende Tage
+            const streak = calculateConsecutiveDays(data.allDates);
+            
+            // Update UI
+            document.getElementById(`totalHours${suffix}`).textContent = totalHours.toFixed(1);
+            document.getElementById(`avgDaily${suffix}`).textContent = avgDaily.toFixed(1);
+            document.getElementById(`productivity${suffix}`).textContent = productivity + '%';
+            document.getElementById(`streak${suffix}`).textContent = streak;
+            
+            // Farbcodierung für Produktivität
+            const productivityEl = document.getElementById(`productivity${suffix}`);
+            if (productivity >= 80) {
+                productivityEl.className = 'value positive';
+            } else if (productivity >= 60) {
+                productivityEl.className = 'value';
+            } else {
+                productivityEl.className = 'value negative';
+            }
+        }
+
+        async function loadAllData() {
+            const benutzerListe = [
+                { key: "BenutzerA_A", idSuffix: "A", name: "Erik Lähner" },
+                { key: "BenutzerB_B", idSuffix: "B", name: "Eric Tamme" }
+            ];
+
+            let totalHoursAll = 0;
+            let totalDays = new Set();
+            const userData = {};
+
+            for (let benutzer of benutzerListe) {
+                const data = await loadUserData(benutzer.key);
+                userData[benutzer.idSuffix] = data;
+                totalHoursAll += data.totalHours;
+                data.allDates.forEach(date => totalDays.add(date));
+
+                // Erstelle Charts für jeden Benutzer
+                createUserCharts(benutzer.idSuffix, data);
+                displayActivities(benutzer.idSuffix, data.activities);
+                
+                // Update individual user stats
+                updateUserStats(benutzer.idSuffix, data);
+            }
+
+            // Update Gesamtstatistiken
+            updateTotalStats(totalHoursAll, totalDays.size);
+
+            // Erstelle Vergleichs-Chart
+            createComparisonChart(userData);
+        }
+
+        async function loadUserData(benutzerKey) {
+            const zeiten = {
+                protokoll: 0,
+                arbeit: 0,
+                sport: 0
             };
+            const weekData = {};
+            const activities = [];
+            const allDates = new Set();
 
-            const app = initializeApp(firebaseConfig);
-            const db = getFirestore(app);
-            const auth = getAuth();
+            // Lade Zeitprotokolle
+            const protokollRef = doc(db, "zeitprotokolle", benutzerKey);
+            const protokollSnap = await getDoc(protokollRef);
+            if (protokollSnap.exists()) {
+                const daten = protokollSnap.data();
+                for (const tag in daten) {
+                    zeiten.protokoll += daten[tag];
+                    allDates.add(tag);
+                    const date = new Date(tag);
+                    const weekDay = date.toLocaleDateString('de-DE', { weekday: 'short' });
+                    if (!weekData[weekDay]) weekData[weekDay] = { protokoll: 0, arbeit: 0, sport: 0 };
+                    weekData[weekDay].protokoll += daten[tag];
+                }
+            }
 
-            // Chart.js Defaults
-            Chart.defaults.font.family = "'Inter', sans-serif";
-            Chart.defaults.plugins.legend.position = 'bottom';
-            Chart.defaults.plugins.legend.labels.padding = 20;
-            Chart.defaults.plugins.legend.labels.usePointStyle = true;
+            // Lade Arbeitszeiten
+            const arbeitsSnap = await getDocs(collection(db, "arbeitszeiten", benutzerKey, "eintraege"));
+            arbeitsSnap.forEach(docSnap => {
+                const e = docSnap.data();
+                zeiten.arbeit += e.dauer || 0;
+                const date = new Date(e.start);
+                const dateStr = date.toISOString().slice(0, 10);
+                allDates.add(dateStr);
+                const weekDay = date.toLocaleDateString('de-DE', { weekday: 'short' });
+                if (!weekData[weekDay]) weekData[weekDay] = { protokoll: 0, arbeit: 0, sport: 0 };
+                weekData[weekDay].arbeit += e.dauer || 0;
 
-            // Farben für Charts
-            const colors = {
-                primary: '#6366f1',
-                secondary: '#8b5cf6',
-                success: '#10b981',
-                warning: '#f59e0b',
-                danger: '#ef4444',
-                info: '#3b82f6'
+                activities.push({
+                    type: 'arbeit',
+                    date: dateStr,
+                    start: e.start,
+                    ende: e.ende,
+                    dauer: e.dauer
+                });
+            });
+
+            // Lade Sportzeiten
+            const sportSnap = await getDocs(collection(db, "sportzeiten", benutzerKey, "eintraege"));
+            sportSnap.forEach(docSnap => {
+                const e = docSnap.data();
+                zeiten.sport += e.dauer || 0;
+                const date = new Date(e.start);
+                const dateStr = date.toISOString().slice(0, 10);
+                allDates.add(dateStr);
+                const weekDay = date.toLocaleDateString('de-DE', { weekday: 'short' });
+                if (!weekData[weekDay]) weekData[weekDay] = { protokoll: 0, arbeit: 0, sport: 0 };
+                weekData[weekDay].sport += e.dauer || 0;
+
+                activities.push({
+                    type: 'sport',
+                    date: dateStr,
+                    start: e.start,
+                    ende: e.ende,
+                    dauer: e.dauer
+                });
+            });
+
+            // Sortiere Aktivitäten nach Datum
+            activities.sort((a, b) => new Date(b.start) - new Date(a.start));
+
+            return {
+                zeiten,
+                weekData,
+                activities: activities.slice(0, 10), // Nur die letzten 10
+                totalHours: (zeiten.protokoll + zeiten.arbeit + zeiten.sport) / 3600000,
+                allDates: Array.from(allDates)
             };
+        }
 
-            // Auth Check
-            onAuthStateChanged(auth, user => {
-                if (!user) {
-                    alert("Bitte zuerst einloggen.");
-                    window.location.href = "index.html";
-                } else {
-                    loadAllData();
+        function createUserCharts(suffix, data) {
+            // Pie Chart
+            const pieCtx = document.getElementById(`pieChart${suffix}`).getContext('2d');
+            new Chart(pieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: [
+                        '📅 Tagesübersicht',
+                        '📊 Trading',
+                        suffix === 'A' ? '👾 Gamedev' : '💪 Workout'
+                    ],
+                    datasets: [{
+                        data: [
+                            formatHours(data.zeiten.protokoll),
+                            formatHours(data.zeiten.arbeit),
+                            formatHours(data.zeiten.sport)
+                        ],
+                        backgroundColor: [colors.primary, colors.warning, suffix === 'A' ? colors.secondary : colors.success],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return context.label + ': ' + context.parsed + ' Stunden';
+                                }
+                            }
+                        }
+                    }
                 }
             });
 
-            function formatTime(ms) {
-                const totalSeconds = Math.floor(ms / 1000);
-                const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
-                const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
-                const seconds = String(totalSeconds % 60).padStart(2, "0");
-                return `${hours}:${minutes}:${seconds}`;
-            }
-
-            function formatHours(ms) {
-                return (ms / 3600000).toFixed(1);
-            }
-
-            async function loadAllData() {
-                const benutzerListe = [
-                    { key: "BenutzerA_A", idSuffix: "A", name: "Erik Lähner" },
-                    { key: "BenutzerB_B", idSuffix: "B", name: "Eric Tamme" }
-                ];
-
-                let totalHoursAll = 0;
-                let totalDays = new Set();
-                const userData = {};
-
-                for (let benutzer of benutzerListe) {
-                    const data = await loadUserData(benutzer.key);
-                    userData[benutzer.idSuffix] = data;
-                    totalHoursAll += data.totalHours;
-                    data.allDates.forEach(date => totalDays.add(date));
-
-                    // Erstelle Charts für jeden Benutzer
-                    createUserCharts(benutzer.idSuffix, data);
-                    displayActivities(benutzer.idSuffix, data.activities);
-                }
-
-                // Update Gesamtstatistiken
-                updateTotalStats(totalHoursAll, totalDays.size);
-
-                // Erstelle Vergleichs-Chart
-                createComparisonChart(userData);
-            }
-
-            async function loadUserData(benutzerKey) {
-                const zeiten = {
-                    protokoll: 0,
-                    arbeit: 0,
-                    sport: 0
-                };
-                const weekData = {};
-                const activities = [];
-                const allDates = new Set();
-
-                // Lade Zeitprotokolle
-                const protokollRef = doc(db, "zeitprotokolle", benutzerKey);
-                const protokollSnap = await getDoc(protokollRef);
-                if (protokollSnap.exists()) {
-                    const daten = protokollSnap.data();
-                    for (const tag in daten) {
-                        zeiten.protokoll += daten[tag];
-                        allDates.add(tag);
-                        const date = new Date(tag);
-                        const weekDay = date.toLocaleDateString('de-DE', { weekday: 'short' });
-                        if (!weekData[weekDay]) weekData[weekDay] = { protokoll: 0, arbeit: 0, sport: 0 };
-                        weekData[weekDay].protokoll += daten[tag];
+            // Line Chart (Wochenverlauf)
+            const weekDays = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+            const lineCtx = document.getElementById(`lineChart${suffix}`).getContext('2d');
+            new Chart(lineCtx, {
+                type: 'line',
+                data: {
+                    labels: weekDays,
+                    datasets: [
+                        {
+                            label: 'Trading',
+                            data: weekDays.map(day => data.weekData[day] ? formatHours(data.weekData[day].arbeit) : 0),
+                            borderColor: colors.warning,
+                            backgroundColor: colors.warning + '20',
+                            tension: 0.4
+                        },
+                        {
+                            label: suffix === 'A' ? 'Gamedev' : 'Workout',
+                            data: weekDays.map(day => data.weekData[day] ? formatHours(data.weekData[day].sport) : 0),
+                            borderColor: suffix === 'A' ? colors.secondary : colors.success,
+                            backgroundColor: (suffix === 'A' ? colors.secondary : colors.success) + '20',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Stunden'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
                     }
                 }
+            });
 
-                // Lade Arbeitszeiten
-                const arbeitsSnap = await getDocs(collection(db, "arbeitszeiten", benutzerKey, "eintraege"));
-                arbeitsSnap.forEach(docSnap => {
-                    const e = docSnap.data();
-                    zeiten.arbeit += e.dauer || 0;
-                    const date = new Date(e.start);
-                    const dateStr = date.toISOString().slice(0, 10);
-                    allDates.add(dateStr);
-                    const weekDay = date.toLocaleDateString('de-DE', { weekday: 'short' });
-                    if (!weekData[weekDay]) weekData[weekDay] = { protokoll: 0, arbeit: 0, sport: 0 };
-                    weekData[weekDay].arbeit += e.dauer || 0;
+            // Bar Chart (Tagesvergleich - letzte 7 Tage)
+            const lastDays = data.allDates.slice(-7);
+            const barCtx = document.getElementById(`barChart${suffix}`).getContext('2d');
+            new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: lastDays.map(date => new Date(date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })),
+                    datasets: [{
+                        label: 'Gesamtstunden',
+                        data: lastDays.map(() => Math.random() * 8 + 2), // Placeholder - würde aus echten Daten kommen
+                        backgroundColor: colors.primary,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Stunden'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
 
-                    activities.push({
-                        type: 'arbeit',
-                        date: dateStr,
-                        start: e.start,
-                        ende: e.ende,
-                        dauer: e.dauer
-                    });
-                });
+        function displayActivities(suffix, activities) {
+            const container = document.getElementById(`activities${suffix}`);
 
-                // Lade Sportzeiten
-                const sportSnap = await getDocs(collection(db, "sportzeiten", benutzerKey, "eintraege"));
-                sportSnap.forEach(docSnap => {
-                    const e = docSnap.data();
-                    zeiten.sport += e.dauer || 0;
-                    const date = new Date(e.start);
-                    const dateStr = date.toISOString().slice(0, 10);
-                    allDates.add(dateStr);
-                    const weekDay = date.toLocaleDateString('de-DE', { weekday: 'short' });
-                    if (!weekData[weekDay]) weekData[weekDay] = { protokoll: 0, arbeit: 0, sport: 0 };
-                    weekData[weekDay].sport += e.dauer || 0;
-
-                    activities.push({
-                        type: 'sport',
-                        date: dateStr,
-                        start: e.start,
-                        ende: e.ende,
-                        dauer: e.dauer
-                    });
-                });
-
-                // Sortiere Aktivitäten nach Datum
-                activities.sort((a, b) => new Date(b.start) - new Date(a.start));
-
-                return {
-                    zeiten,
-                    weekData,
-                    activities: activities.slice(0, 10), // Nur die letzten 10
-                    totalHours: (zeiten.protokoll + zeiten.arbeit + zeiten.sport) / 3600000,
-                    allDates: Array.from(allDates)
-                };
+            if (activities.length === 0) {
+                container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <p>Keine Aktivitäten vorhanden</p>
+                        </div>
+                    `;
+                return;
             }
 
-            function createUserCharts(suffix, data) {
-                // Pie Chart
-                const pieCtx = document.getElementById(`pieChart${suffix}`).getContext('2d');
-                new Chart(pieCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: [
-                            '📅 Tagesübersicht',
-                            '📊 Trading',
-                            suffix === 'A' ? '👾 Gamedev' : '💪 Workout'
-                        ],
-                        datasets: [{
-                            data: [
-                                formatHours(data.zeiten.protokoll),
-                                formatHours(data.zeiten.arbeit),
-                                formatHours(data.zeiten.sport)
-                            ],
-                            backgroundColor: [colors.primary, colors.warning, suffix === 'A' ? colors.secondary : colors.success],
-                            borderWidth: 0
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom'
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function (context) {
-                                        return context.label + ': ' + context.parsed + ' Stunden';
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
+            container.innerHTML = activities.map(activity => {
+                const date = new Date(activity.start);
+                const dateStr = date.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+                const startTime = date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                const endTime = new Date(activity.ende).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                const duration = formatTime(activity.dauer);
 
-                // Line Chart (Wochenverlauf)
-                const weekDays = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
-                const lineCtx = document.getElementById(`lineChart${suffix}`).getContext('2d');
-                new Chart(lineCtx, {
-                    type: 'line',
-                    data: {
-                        labels: weekDays,
-                        datasets: [
-                            {
-                                label: 'Trading',
-                                data: weekDays.map(day => data.weekData[day] ? formatHours(data.weekData[day].arbeit) : 0),
-                                borderColor: colors.warning,
-                                backgroundColor: colors.warning + '20',
-                                tension: 0.4
-                            },
-                            {
-                                label: suffix === 'A' ? 'Gamedev' : 'Workout',
-                                data: weekDays.map(day => data.weekData[day] ? formatHours(data.weekData[day].sport) : 0),
-                                borderColor: suffix === 'A' ? colors.secondary : colors.success,
-                                backgroundColor: (suffix === 'A' ? colors.secondary : colors.success) + '20',
-                                tension: 0.4
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: 'Stunden'
-                                }
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                position: 'bottom'
-                            }
-                        }
-                    }
-                });
+                const icon = activity.type === 'arbeit' ? '📊' : (suffix === 'A' ? '👾' : '💪');
+                const label = activity.type === 'arbeit' ? 'Trading' : (suffix === 'A' ? 'Gamedev' : 'Workout');
 
-                // Bar Chart (Tagesvergleich - letzte 7 Tage)
-                const lastDays = data.allDates.slice(-7);
-                const barCtx = document.getElementById(`barChart${suffix}`).getContext('2d');
-                new Chart(barCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: lastDays.map(date => new Date(date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })),
-                        datasets: [{
-                            label: 'Gesamtstunden',
-                            data: lastDays.map(() => Math.random() * 8 + 2), // Placeholder - würde aus echten Daten kommen
-                            backgroundColor: colors.primary,
-                            borderRadius: 8
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: 'Stunden'
-                                }
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        }
-                    }
-                });
-            }
-
-            function displayActivities(suffix, activities) {
-                const container = document.getElementById(`activities${suffix}`);
-
-                if (activities.length === 0) {
-                    container.innerHTML = `
-                            <div class="empty-state">
-                                <div class="empty-state-icon">📭</div>
-                                <p>Keine Aktivitäten vorhanden</p>
+                return `
+                        <div class="activity-item">
+                            <div class="activity-date">${dateStr}</div>
+                            <div class="activity-time">
+                                <span>${icon}</span>
+                                <span>${label}: ${startTime} - ${endTime} (${duration})</span>
                             </div>
-                        `;
-                    return;
-                }
+                        </div>
+                    `;
+            }).join('');
+        }
 
-                container.innerHTML = activities.map(activity => {
-                    const date = new Date(activity.start);
-                    const dateStr = date.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
-                    const startTime = date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-                    const endTime = new Date(activity.ende).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-                    const duration = formatTime(activity.dauer);
+        function updateTotalStats(totalHours, totalDays) {
+            // Gesamtstunden
+            document.getElementById('totalHours').textContent = totalHours.toFixed(1);
 
-                    const icon = activity.type === 'arbeit' ? '📊' : (suffix === 'A' ? '👾' : '💪');
-                    const label = activity.type === 'arbeit' ? 'Trading' : (suffix === 'A' ? 'Gamedev' : 'Workout');
+            // Durchschnitt pro Tag
+            const avgDaily = totalDays > 0 ? (totalHours / totalDays).toFixed(1) : 0;
+            document.getElementById('avgDaily').textContent = avgDaily;
 
-                    return `
-                            <div class="activity-item">
-                                <div class="activity-date">${dateStr}</div>
-                                <div class="activity-time">
-                                    <span>${icon}</span>
-                                    <span>${label}: ${startTime} - ${endTime} (${duration})</span>
-                                </div>
-                            </div>
-                        `;
-                }).join('');
-            }
+            // Produktivität (Beispielberechnung)
+            const targetHours = 8; // Ziel: 8 Stunden pro Tag
+            const productivity = Math.min(100, Math.round((avgDaily / targetHours) * 100));
+            document.getElementById('productivity').textContent = productivity + '%';
 
-            function updateTotalStats(totalHours, totalDays) {
-                // Gesamtstunden
-                document.getElementById('totalHours').textContent = totalHours.toFixed(1);
+            // Streak (vereinfacht - zählt zusammenhängende Tage)
+            document.getElementById('streak').textContent = Math.min(totalDays, 7); // Placeholder
+        }
 
-                // Durchschnitt pro Tag
-                const avgDaily = totalDays > 0 ? (totalHours / totalDays).toFixed(1) : 0;
-                document.getElementById('avgDaily').textContent = avgDaily;
+        function createComparisonChart(userData) {
+            const ctx = document.getElementById('comparisonChart').getContext('2d');
 
-                // Produktivität (Beispielberechnung)
-                const targetHours = 8; // Ziel: 8 Stunden pro Tag
-                const productivity = Math.min(100, Math.round((avgDaily / targetHours) * 100));
-                document.getElementById('productivity').textContent = productivity + '%';
+            const categories = ['Gesamtstunden', 'Trading', 'Drittes Feld'];
+            const erikData = [
+                userData.A.totalHours,
+                formatHours(userData.A.zeiten.arbeit),
+                formatHours(userData.A.zeiten.sport)
+            ];
+            const ericData = [
+                userData.B.totalHours,
+                formatHours(userData.B.zeiten.arbeit),
+                formatHours(userData.B.zeiten.sport)
+            ];
 
-                // Streak (vereinfacht - zählt zusammenhängende Tage)
-                document.getElementById('streak').textContent = Math.min(totalDays, 7); // Placeholder
-            }
-
-            function createComparisonChart(userData) {
-                const ctx = document.getElementById('comparisonChart').getContext('2d');
-
-                const categories = ['Gesamtstunden', 'Trading', 'Drittes Feld'];
-                const erikData = [
-                    userData.A.totalHours,
-                    formatHours(userData.A.zeiten.arbeit),
-                    formatHours(userData.A.zeiten.sport)
-                ];
-                const ericData = [
-                    userData.B.totalHours,
-                    formatHours(userData.B.zeiten.arbeit),
-                    formatHours(userData.B.zeiten.sport)
-                ];
-
-                new Chart(ctx, {
-                    type: 'radar',
-                    data: {
-                        labels: categories,
-                        datasets: [
-                            {
-                                label: 'Erik Lähner',
-                                data: erikData,
-                                borderColor: colors.primary,
-                                backgroundColor: colors.primary + '20',
-                                pointBackgroundColor: colors.primary,
-                                pointBorderColor: '#fff',
-                                pointHoverBackgroundColor: '#fff',
-                                pointHoverBorderColor: colors.primary
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: categories,
+                    datasets: [
+                        {
+                            label: 'Erik Lähner',
+                            data: erikData,
+                            borderColor: colors.primary,
+                            backgroundColor: colors.primary + '20',
+                            pointBackgroundColor: colors.primary,
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: colors.primary
+                        },
+                        {
+                            label: 'Eric Tamme',
+                            data: ericData,
+                            borderColor: colors.success,
+                            backgroundColor: colors.success + '20',
+                            pointBackgroundColor: colors.success,
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: colors.success
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
                             },
-                            {
-                                label: 'Eric Tamme',
-                                data: ericData,
-                                borderColor: colors.success,
-                                backgroundColor: colors.success + '20',
-                                pointBackgroundColor: colors.success,
-                                pointBorderColor: '#fff',
-                                pointHoverBackgroundColor: '#fff',
-                                pointHoverBorderColor: colors.success
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            r: {
-                                beginAtZero: true,
-                                grid: {
-                                    color: 'rgba(0, 0, 0, 0.05)'
-                                },
-                                pointLabels: {
-                                    font: {
-                                        size: 14
-                                    }
+                            pointLabels: {
+                                font: {
+                                    size: 14
                                 }
                             }
-                        },
-                        plugins: {
-                            legend: {
-                                position: 'bottom'
-                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
                         }
                     }
+                }
+            });
+        }
+
+        function logout() {
+            if (confirm('Möchten Sie sich wirklich abmelden?')) {
+                auth.signOut().then(() => {
+                    window.location.href = 'index.html';
                 });
             }
+        }
 
-            function logout() {
-                if (confirm('Möchten Sie sich wirklich abmelden?')) {
-                    auth.signOut().then(() => {
-                        window.location.href = 'index.html';
-                    });
-                }
-            }
-
-            // Export logout function
-            window.logout = logout;
-        </script>
+        // Export logout function
+        window.logout = logout;
+    </script>
+</body>
+</html>
