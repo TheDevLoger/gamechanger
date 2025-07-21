@@ -618,10 +618,16 @@
         }
 
         function getSquarePosition(row, col) {
-            const squareSize = window.innerWidth <= 768 ? 55 : 85;
+            const isMobile = window.innerWidth <= 768;
+            const squareSize = isMobile ? 55 : 85;
+            const pieceSize = isMobile ? 45 : 70;
+            
+            // Calculate the center position of the square, then offset by half piece size
+            const centerOffset = (squareSize - pieceSize) / 2;
+            
             return {
-                x: col * squareSize + squareSize / 2 - (window.innerWidth <= 768 ? 22.5 : 35),
-                y: row * squareSize + squareSize / 2 - (window.innerWidth <= 768 ? 22.5 : 35)
+                x: col * squareSize + centerOffset,
+                y: row * squareSize + centerOffset
             };
         }
 
@@ -633,7 +639,8 @@
                 const c1 = 1.70158;
                 const c3 = c1 + 1;
                 return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
-            }
+            },
+            easeInOutQuart: (t) => t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2
         };
 
         // Interpolate between two values
@@ -656,8 +663,8 @@
                 const currentY = lerp(startPos.y, endPos.y, easedProgress);
 
                 // Apply position
-                element.style.left = currentX + 'px';
-                element.style.top = currentY + 'px';
+                element.style.left = Math.round(currentX) + 'px';
+                element.style.top = Math.round(currentY) + 'px';
 
                 // Apply extra transforms (for captures, etc.)
                 let transform = '';
@@ -695,49 +702,62 @@
                 const animatedPiece = document.createElement('img');
                 animatedPiece.src = `img/${pieceSVG[piece]}`;
                 animatedPiece.className = 'animated-piece';
+                animatedPiece.draggable = false;
                 
-                // Set initial position
+                // Set size based on screen
+                const isMobile = window.innerWidth <= 768;
+                const pieceSize = isMobile ? 45 : 70;
+                animatedPiece.style.width = pieceSize + 'px';
+                animatedPiece.style.height = pieceSize + 'px';
+                
+                // Calculate positions
                 const startPos = getSquarePosition(fromRow, fromCol);
                 const endPos = getSquarePosition(toRow, toCol);
                 
+                // Set initial position BEFORE adding to DOM
+                animatedPiece.style.position = 'absolute';
                 animatedPiece.style.left = startPos.x + 'px';
                 animatedPiece.style.top = startPos.y + 'px';
+                animatedPiece.style.zIndex = '1001';
                 
                 overlay.appendChild(animatedPiece);
                 
                 // Hide the original piece temporarily
                 const fromSquare = document.querySelector(`[data-row="${fromRow}"][data-col="${fromCol}"]`);
-                const originalPiece = fromSquare.querySelector('.piece-svg');
+                const originalPiece = fromSquare?.querySelector('.piece-svg');
                 if (originalPiece) {
                     originalPiece.style.opacity = '0';
                 }
                 
-                // Configure animation based on move type
-                let duration = 400; // Default duration
-                let easeFn = easing.easeOutCubic;
+                // Configure animation based on move type - longer durations
+                let duration = 650; // Increased from 400
+                let easeFn = easing.easeInOutQuart;
                 let extraTransforms = {};
                 
                 if (isCapture) {
-                    duration = 350;
+                    duration = 600; // Increased from 350
                     easeFn = easing.easeOutBack;
                     extraTransforms = { rotation: 15, scale: 1.1 };
                 } else if (isCastlingMove) {
-                    duration = 500;
+                    duration = 750; // Increased from 500
                     easeFn = easing.easeInOutCubic;
                 }
                 
-                // Start smooth animation
-                smoothAnimate(animatedPiece, startPos, endPos, duration, easeFn, () => {
-                    // Clean up after animation
-                    if (overlay.contains(animatedPiece)) {
-                        overlay.removeChild(animatedPiece);
-                    }
-                    if (originalPiece) {
-                        originalPiece.style.opacity = '1';
-                    }
-                    isAnimating = false;
-                    resolve();
-                }, extraTransforms);
+                // Small delay to ensure DOM is ready
+                setTimeout(() => {
+                    // Start smooth animation
+                    smoothAnimate(animatedPiece, startPos, endPos, duration, easeFn, () => {
+                        // Clean up after animation
+                        if (overlay.contains(animatedPiece)) {
+                            overlay.removeChild(animatedPiece);
+                        }
+                        if (originalPiece) {
+                            originalPiece.style.opacity = '1';
+                        }
+                        isAnimating = false;
+                        resolve();
+                    }, extraTransforms);
+                }, 16); // One frame delay
             });
         }
 
@@ -748,21 +768,35 @@
                 isAnimating = true;
                 const overlay = createAnimationOverlay();
                 
+                const isMobile = window.innerWidth <= 768;
+                const pieceSize = isMobile ? 45 : 70;
+                
                 // Create animated pieces
                 const animatedKing = document.createElement('img');
                 animatedKing.src = `img/${pieceSVG[kingPiece]}`;
                 animatedKing.className = 'animated-piece';
+                animatedKing.draggable = false;
+                animatedKing.style.width = pieceSize + 'px';
+                animatedKing.style.height = pieceSize + 'px';
+                animatedKing.style.position = 'absolute';
+                animatedKing.style.zIndex = '1001';
                 
                 const animatedRook = document.createElement('img');
                 animatedRook.src = `img/${pieceSVG[rookPiece]}`;
                 animatedRook.className = 'animated-piece';
+                animatedRook.draggable = false;
+                animatedRook.style.width = pieceSize + 'px';
+                animatedRook.style.height = pieceSize + 'px';
+                animatedRook.style.position = 'absolute';
+                animatedRook.style.zIndex = '1001';
                 
-                // Set initial positions
+                // Calculate positions
                 const kingStartPos = getSquarePosition(kingFromRow, kingFromCol);
                 const kingEndPos = getSquarePosition(kingToRow, kingToCol);
                 const rookStartPos = getSquarePosition(rookFromRow, rookFromCol);
                 const rookEndPos = getSquarePosition(rookToRow, rookToCol);
                 
+                // Set initial positions BEFORE adding to DOM
                 animatedKing.style.left = kingStartPos.x + 'px';
                 animatedKing.style.top = kingStartPos.y + 'px';
                 animatedRook.style.left = rookStartPos.x + 'px';
@@ -774,8 +808,8 @@
                 // Hide original pieces
                 const kingSquare = document.querySelector(`[data-row="${kingFromRow}"][data-col="${kingFromCol}"]`);
                 const rookSquare = document.querySelector(`[data-row="${rookFromRow}"][data-col="${rookFromCol}"]`);
-                const originalKing = kingSquare.querySelector('.piece-svg');
-                const originalRook = rookSquare.querySelector('.piece-svg');
+                const originalKing = kingSquare?.querySelector('.piece-svg');
+                const originalRook = rookSquare?.querySelector('.piece-svg');
                 
                 if (originalKing) originalKing.style.opacity = '0';
                 if (originalRook) originalRook.style.opacity = '0';
@@ -796,16 +830,19 @@
                     }
                 }
                 
-                // Start animations
-                smoothAnimate(animatedKing, kingStartPos, kingEndPos, 500, easing.easeInOutCubic, () => {
-                    kingAnimationDone = true;
-                    checkComplete();
-                });
-                
-                smoothAnimate(animatedRook, rookStartPos, rookEndPos, 500, easing.easeInOutCubic, () => {
-                    rookAnimationDone = true;
-                    checkComplete();
-                });
+                // Small delay to ensure DOM is ready
+                setTimeout(() => {
+                    // Start animations - longer duration for castling
+                    smoothAnimate(animatedKing, kingStartPos, kingEndPos, 750, easing.easeInOutCubic, () => {
+                        kingAnimationDone = true;
+                        checkComplete();
+                    });
+                    
+                    smoothAnimate(animatedRook, rookStartPos, rookEndPos, 750, easing.easeInOutCubic, () => {
+                        rookAnimationDone = true;
+                        checkComplete();
+                    });
+                }, 16); // One frame delay
             });
         }
 
