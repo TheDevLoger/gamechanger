@@ -425,30 +425,6 @@
             <p>Übersicht über alle Aktivitäten und Zeiten</p>
         </div>
 
-        <!-- Gesamtstatistiken -->
-        <div class="stats-grid" id="totalStats">
-            <div class="stat-card">
-                <div class="stat-icon">📊</div>
-                <div class="stat-value" id="totalHours">0</div>
-                <div class="stat-label">Gesamtstunden</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">📈</div>
-                <div class="stat-value" id="avgDaily">0</div>
-                <div class="stat-label">Ø Stunden/Tag</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">🎯</div>
-                <div class="stat-value" id="productivity">0%</div>
-                <div class="stat-label">Produktivität</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">🔥</div>
-                <div class="stat-value" id="streak">0</div>
-                <div class="stat-label">Tage in Folge</div>
-            </div>
-        </div>
-
         <!-- Benutzer A Section -->
         <div class="user-section">
             <div class="user-header">
@@ -754,15 +730,11 @@
                 { key: "BenutzerB_B", idSuffix: "B", name: "Eric Tamme" }
             ];
 
-            let totalHoursAll = 0;
-            let totalDays = new Set();
             const userData = {};
 
             for (let benutzer of benutzerListe) {
                 const data = await loadUserData(benutzer.key);
                 userData[benutzer.idSuffix] = data;
-                totalHoursAll += data.totalHours;
-                data.allDates.forEach(date => totalDays.add(date));
 
                 // Erstelle Charts für jeden Benutzer
                 createUserCharts(benutzer.idSuffix, data);
@@ -771,9 +743,6 @@
                 // Update individual user stats
                 updateUserStats(benutzer.idSuffix, data);
             }
-
-            // Update Gesamtstatistiken
-            updateTotalStats(totalHoursAll, totalDays.size);
 
             // Erstelle Vergleichs-Chart
             createComparisonChart(userData);
