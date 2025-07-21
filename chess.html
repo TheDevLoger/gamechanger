@@ -127,6 +127,9 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
+            display: flex;
+            gap: 2rem;
+            align-items: center;
         }
 
         #board {
@@ -318,6 +321,26 @@
                 padding: 6px;
             }
             
+            .evaluation-bar {
+                width: 30px;
+                height: 440px;
+            }
+            
+            .evaluation-white {
+                border-radius: 0 0 14px 14px;
+            }
+            
+            .evaluation-black {
+                border-radius: 14px 14px 0 0;
+            }
+            
+            .evaluation-value {
+                right: -2.5rem;
+                font-size: 0.75rem;
+                min-width: 2.5rem;
+                padding: 0.3rem;
+            }
+            
             button {
                 padding: 0.8rem 1.5rem;
                 font-size: 1rem;
@@ -335,7 +358,67 @@
             }
         }
 
-        /* Loading animation */
+        /* Evaluation Bar */
+        .evaluation-bar {
+            width: 40px;
+            height: 680px;
+            background: #000000;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .evaluation-white {
+            position: absolute;
+            width: 100%;
+            background: linear-gradient(to bottom, #e9ecef, #f8f9fa);
+            bottom: 0;
+            transition: height 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 0 0 18px 18px;
+        }
+
+        .evaluation-black {
+            position: absolute;
+            width: 100%;
+            background: linear-gradient(to bottom, #212529, #495057);
+            top: 0;
+            transition: height 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 18px 18px 0 0;
+        }
+
+        .evaluation-labels {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+            margin-left: 0.5rem;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 500;
+            position: absolute;
+            top: 0;
+            z-index: 11;
+            padding: 0.5rem 0;
+        }
+
+        .evaluation-value {
+            position: absolute;
+            right: -3rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            min-width: 3rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            z-index: 12;
+        }
         .loading {
             display: inline-block;
             width: 20px;
@@ -364,6 +447,15 @@
     <div class="game-container">
         <div id="board-wrapper">
             <div id="board"></div>
+            <div class="evaluation-bar">
+                <div class="evaluation-white" id="evalWhite"></div>
+                <div class="evaluation-black" id="evalBlack"></div>
+                <div class="evaluation-value" id="evalValue">0.0</div>
+                <div class="evaluation-labels">
+                    <span>♚</span>
+                    <span>♔</span>
+                </div>
+            </div>
         </div>
         <div id="status">Initialisiere Spiel...</div>
         <div class="controls">
@@ -411,6 +503,150 @@
         let gameDocRef = db.collection("games").doc("demoGame");
         let soundEnabled = true;
         let lastMoveFromFirestore = false;
+
+        // Piece values for evaluation
+        const pieceValues = {
+            'p': 1, 'n': 3, 'b': 3, 'r': 5, 'q': 9, 'k': 0,
+            'P': 1, 'N': 3, 'B': 3, 'R': 5, 'Q': 9, 'K': 0
+        };
+
+        // Position bonus tables (simplified)
+        const pawnTable = [
+            [0,  0,  0,  0,  0,  0,  0,  0],
+            [50, 50, 50, 50, 50, 50, 50, 50],
+            [10, 10, 20, 30, 30, 20, 10, 10],
+            [5,  5, 10, 25, 25, 10,  5,  5],
+            [0,  0,  0, 20, 20,  0,  0,  0],
+            [5, -5,-10,  0,  0,-10, -5,  5],
+            [5, 10, 10,-20,-20, 10, 10,  5],
+            [0,  0,  0,  0,  0,  0,  0,  0]
+        ];
+
+        const knightTable = [
+            [-50,-40,-30,-30,-30,-30,-40,-50],
+            [-40,-20,  0,  0,  0,  0,-20,-40],
+            [-30,  0, 10, 15, 15, 10,  0,-30],
+            [-30,  5, 15, 20, 20, 15,  5,-30],
+            [-30,  0, 15, 20, 20, 15,  0,-30],
+            [-30,  5, 10, 15, 15, 10,  5,-30],
+            [-40,-20,  0,  5,  5,  0,-20,-40],
+            [-50,-40,-30,-30,-30,-30,-40,-50]
+        ];
+
+        const centerTable = [
+            [-20,-10,-10,-10,-10,-10,-10,-20],
+            [-10,  0,  0,  0,  0,  0,  0,-10],
+            [-10,  0,  5, 10, 10,  5,  0,-10],
+            [-10,  5,  5, 10, 10,  5,  5,-10],
+            [-10,  0, 10, 10, 10, 10,  0,-10],
+            [-10, 10, 10, 10, 10, 10, 10,-10],
+            [-10,  5,  0,  0,  0,  0,  5,-10],
+            [-20,-10,-10,-10,-10,-10,-10,-20]
+        ];
+
+        // Evaluate current position
+        function evaluatePosition() {
+            let score = 0;
+            
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const piece = board[r][c];
+                    if (!piece) continue;
+                    
+                    const isWhite = piece === piece.toUpperCase();
+                    const pieceType = piece.toLowerCase();
+                    let pieceScore = 0;
+                    
+                    // Material value
+                    pieceScore += pieceValues[pieceType] * 100;
+                    
+                    // Position bonuses
+                    const row = isWhite ? r : 7 - r;
+                    
+                    switch (pieceType) {
+                        case 'p':
+                            pieceScore += pawnTable[row][c];
+                            break;
+                        case 'n':
+                            pieceScore += knightTable[row][c];
+                            break;
+                        case 'b':
+                        case 'r':
+                        case 'q':
+                            pieceScore += centerTable[row][c];
+                            break;
+                        case 'k':
+                            // King safety bonus (simplified)
+                            if (row > 5) pieceScore += 20; // King on back rank
+                            break;
+                    }
+                    
+                    // Add bonus for piece development
+                    if (!isWhite && row < 6 && (pieceType === 'n' || pieceType === 'b')) {
+                        pieceScore += 10;
+                    }
+                    if (isWhite && row > 1 && (pieceType === 'n' || pieceType === 'b')) {
+                        pieceScore += 10;
+                    }
+                    
+                    score += isWhite ? pieceScore : -pieceScore;
+                }
+            }
+            
+            // Bonus for castling rights
+            if (!castlingRights.whiteKingMoved) {
+                score += 20;
+                if (!castlingRights.whiteRookRightMoved) score += 10;
+                if (!castlingRights.whiteRookLeftMoved) score += 10;
+            }
+            if (!castlingRights.blackKingMoved) {
+                score -= 20;
+                if (!castlingRights.blackRookRightMoved) score -= 10;
+                if (!castlingRights.blackRookLeftMoved) score -= 10;
+            }
+            
+            // Check/checkmate bonus
+            if (isInCheck(board, true)) score -= 50;
+            if (isInCheck(board, false)) score += 50;
+            
+            // Convert to relative score (-10 to +10 range)
+            return Math.max(-10, Math.min(10, score / 100));
+        }
+
+        // Update evaluation bar
+        function updateEvaluationBar() {
+            const evaluation = evaluatePosition();
+            const evalWhite = document.getElementById('evalWhite');
+            const evalBlack = document.getElementById('evalBlack');
+            const evalValue = document.getElementById('evalValue');
+            
+            // Update value display
+            const displayValue = Math.abs(evaluation).toFixed(1);
+            evalValue.textContent = evaluation >= 0 ? `+${displayValue}` : `-${displayValue}`;
+            
+            // Calculate percentage split based on evaluation
+            // evaluation range: -10 to +10
+            // Convert to percentage: 0% to 100% for white (now at bottom)
+            const normalizedEval = Math.max(-10, Math.min(10, evaluation)); // Clamp between -10 and +10
+            const whitePercentage = ((normalizedEval + 10) / 20) * 100; // Convert -10/+10 to 0-100%
+            const blackPercentage = 100 - whitePercentage;
+            
+            // Update the heights of white (bottom) and black (top) sections
+            evalWhite.style.height = `${whitePercentage}%`;
+            evalBlack.style.height = `${blackPercentage}%`;
+            
+            // Update evaluation value color based on advantage
+            if (evaluation > 0.5) {
+                evalValue.style.background = 'rgba(248, 249, 250, 0.9)';
+                evalValue.style.color = '#212529';
+            } else if (evaluation < -0.5) {
+                evalValue.style.background = 'rgba(33, 37, 41, 0.9)';
+                evalValue.style.color = '#f8f9fa';
+            } else {
+                evalValue.style.background = 'rgba(108, 117, 125, 0.9)';
+                evalValue.style.color = 'white';
+            }
+        }
 
         // Sound-System mit Web Audio API
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -1042,6 +1278,9 @@
                 statusEl.textContent = (isWhiteTurn ? "♔ Weiß" : "♚ Schwarz") + " ist am Zug";
             }
             boardEl.style.pointerEvents = (playerColor === (isWhiteTurn ? 'white' : 'black')) ? 'auto' : 'none';
+            
+            // Update evaluation bar
+            updateEvaluationBar();
         }
 
         function initGame() {
@@ -1059,6 +1298,7 @@
             boardEl.style.pointerEvents = (playerColor === 'white') ? 'auto' : 'none';
             updateStatus();
             drawBoard();
+            updateEvaluationBar(); // Initialize evaluation bar
             saveGame();
         }
 
