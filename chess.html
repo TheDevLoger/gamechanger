@@ -144,14 +144,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 68px;
             cursor: pointer;
             transition: all 0.2s ease;
             position: relative;
-            color: #000;
-            text-shadow: 
-                0 1px 2px rgba(0, 0, 0, 0.2),
-                0 0 1px rgba(0, 0, 0, 0.3);
+            padding: 8px;
         }
 
         .square::after {
@@ -175,23 +171,13 @@
             background: #b58863;
         }
 
-        /* Besserer Kontrast für weiße Figuren */
-        .light:has(.white-piece),
-        .dark:has(.white-piece) {
-            color: #fff;
-            text-shadow: 
-                0 1px 3px rgba(0, 0, 0, 0.8),
-                0 0 2px rgba(0, 0, 0, 0.9),
-                0 0 8px rgba(0, 0, 0, 0.3);
+        /* Schatten-Effekte für Figuren */
+        .white-piece {
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
         }
 
-        /* Besserer Kontrast für schwarze Figuren */
-        .light:has(.black-piece),
-        .dark:has(.black-piece) {
-            color: #000;
-            text-shadow: 
-                0 1px 2px rgba(255, 255, 255, 0.8),
-                0 0 1px rgba(255, 255, 255, 0.6);
+        .black-piece {
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
         }
 
         .square.selected {
@@ -329,7 +315,7 @@
             .square {
                 width: 55px;
                 height: 55px;
-                font-size: 44px;
+                padding: 6px;
             }
             
             button {
@@ -413,9 +399,9 @@
         const resetBtn = document.getElementById('resetBtn');
         const soundToggleBtn = document.getElementById('soundToggle');
         const gameContainer = document.querySelector('.game-container');
-        const pieceUnicode = {
-            'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟',
-            'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙'
+        const pieceSvg = {
+            'r': 'img/bR.svg', 'n': 'img/bN.svg', 'b': 'img/bB.svg', 'q': 'img/bQ.svg', 'k': 'img/bK.svg', 'p': 'img/bP.svg',
+            'R': 'img/R.svg', 'N': 'img/N.svg', 'B': 'img/B.svg', 'Q': 'img/Q.svg', 'K': 'img/K.svg', 'P': 'img/P.svg'
         };
         const startFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
         let board = [];
@@ -616,10 +602,13 @@
                     square.dataset.col = c;
                     const piece = board[r][c];
                     if (piece) {
-                        const pieceSpan = document.createElement('span');
-                        pieceSpan.textContent = pieceUnicode[piece];
-                        pieceSpan.classList.add(piece === piece.toUpperCase() ? 'white-piece' : 'black-piece');
-                        square.appendChild(pieceSpan);
+                        const pieceImg = document.createElement('img');
+                        pieceImg.src = pieceSvg[piece];
+                        pieceImg.style.width = '100%';
+                        pieceImg.style.height = '100%';
+                        pieceImg.style.objectFit = 'contain';
+                        pieceImg.classList.add(piece === piece.toUpperCase() ? 'white-piece' : 'black-piece');
+                        square.appendChild(pieceImg);
                         // Only animate the piece that just moved
                         if (lastMoveTo && lastMoveTo[0] === r && lastMoveTo[1] === c) {
                             square.classList.add('piece-move');
