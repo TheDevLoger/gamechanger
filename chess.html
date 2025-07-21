@@ -45,6 +45,8 @@
             50% { transform: scale(1.1) rotate(5deg); }
         }
 
+        /* Remove unused h1 styles */
+
         #playerSelect {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
@@ -142,9 +144,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 68px;
             cursor: pointer;
             transition: all 0.2s ease;
             position: relative;
+            color: #000;
+            text-shadow: 
+                0 1px 2px rgba(0, 0, 0, 0.2),
+                0 0 1px rgba(0, 0, 0, 0.3);
         }
 
         .square::after {
@@ -166,6 +173,25 @@
 
         .dark {
             background: #b58863;
+        }
+
+        /* Besserer Kontrast für weiße Figuren */
+        .light:has(.white-piece),
+        .dark:has(.white-piece) {
+            color: #fff;
+            text-shadow: 
+                0 1px 3px rgba(0, 0, 0, 0.8),
+                0 0 2px rgba(0, 0, 0, 0.9),
+                0 0 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Besserer Kontrast für schwarze Figuren */
+        .light:has(.black-piece),
+        .dark:has(.black-piece) {
+            color: #000;
+            text-shadow: 
+                0 1px 2px rgba(255, 255, 255, 0.8),
+                0 0 1px rgba(255, 255, 255, 0.6);
         }
 
         .square.selected {
@@ -197,48 +223,6 @@
                 transform: scale(1);
                 opacity: 1;
             }
-        }
-
-        /* Animation overlay for smooth piece movement */
-        .move-animation-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1000;
-        }
-
-        .animated-piece {
-            position: absolute;
-            width: 70px;
-            height: 70px;
-            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            filter: drop-shadow(4px 4px 8px rgba(0, 0, 0, 0.4));
-            z-index: 1001;
-        }
-
-        .animated-piece.capturing {
-            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-
-        .animated-piece.castling {
-            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        /* SVG piece styling */
-        .piece-svg {
-            width: 70px;
-            height: 70px;
-            filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
-            transition: all 0.2s ease;
-            pointer-events: none;
-        }
-
-        .square:hover .piece-svg {
-            transform: scale(1.05);
-            filter: drop-shadow(3px 3px 6px rgba(0, 0, 0, 0.4));
         }
 
         #status {
@@ -345,16 +329,7 @@
             .square {
                 width: 55px;
                 height: 55px;
-            }
-            
-            .piece-svg {
-                width: 45px;
-                height: 45px;
-            }
-            
-            .animated-piece {
-                width: 45px;
-                height: 45px;
+                font-size: 44px;
             }
             
             button {
@@ -438,13 +413,10 @@
         const resetBtn = document.getElementById('resetBtn');
         const soundToggleBtn = document.getElementById('soundToggle');
         const gameContainer = document.querySelector('.game-container');
-        
-        // SVG piece mapping
-        const pieceSVG = {
-            'r': 'bR.svg', 'n': 'bN.svg', 'b': 'bB.svg', 'q': 'bQ.svg', 'k': 'bK.svg', 'p': 'bP.svg',
-            'R': 'R.svg', 'N': 'N.svg', 'B': 'B.svg', 'Q': 'Q.svg', 'K': 'K.svg', 'P': 'P.svg'
+        const pieceUnicode = {
+            'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟',
+            'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙'
         };
-        
         const startFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
         let board = [];
         let selectedSquare = null;
@@ -612,136 +584,6 @@
         }
 
         let lastMoveTo = null; // Track the last move destination
-        let isAnimating = false; // Prevent moves during animation
-
-        // Animation system
-        function createAnimationOverlay() {
-            let overlay = document.querySelector('.move-animation-overlay');
-            if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.className = 'move-animation-overlay';
-                document.getElementById('board-wrapper').appendChild(overlay);
-            }
-            return overlay;
-        }
-
-        function getSquarePosition(row, col) {
-            const squareSize = window.innerWidth <= 768 ? 55 : 85;
-            return {
-                x: col * squareSize + squareSize / 2 - 35, // Center the piece
-                y: row * squareSize + squareSize / 2 - 35
-            };
-        }
-
-        function animateMove(fromRow, fromCol, toRow, toCol, piece, isCapture = false, isCastlingMove = false) {
-            if (isAnimating) return Promise.resolve();
-            
-            return new Promise((resolve) => {
-                isAnimating = true;
-                const overlay = createAnimationOverlay();
-                
-                // Create animated piece element
-                const animatedPiece = document.createElement('img');
-                animatedPiece.src = `img/${pieceSVG[piece]}`;
-                animatedPiece.className = `animated-piece ${isCapture ? 'capturing' : ''} ${isCastlingMove ? 'castling' : ''}`;
-                
-                // Set initial position
-                const startPos = getSquarePosition(fromRow, fromCol);
-                const endPos = getSquarePosition(toRow, toCol);
-                
-                animatedPiece.style.left = startPos.x + 'px';
-                animatedPiece.style.top = startPos.y + 'px';
-                
-                overlay.appendChild(animatedPiece);
-                
-                // Hide the original piece temporarily
-                const fromSquare = document.querySelector(`[data-row="${fromRow}"][data-col="${fromCol}"]`);
-                const originalPiece = fromSquare.querySelector('.piece-svg');
-                if (originalPiece) {
-                    originalPiece.style.opacity = '0';
-                }
-                
-                // Start animation after a small delay
-                requestAnimationFrame(() => {
-                    animatedPiece.style.left = endPos.x + 'px';
-                    animatedPiece.style.top = endPos.y + 'px';
-                    
-                    // Add rotation effect for captures
-                    if (isCapture) {
-                        animatedPiece.style.transform = 'rotate(15deg) scale(1.1)';
-                    }
-                    
-                    // Clean up after animation
-                    setTimeout(() => {
-                        overlay.removeChild(animatedPiece);
-                        if (originalPiece) {
-                            originalPiece.style.opacity = '1';
-                        }
-                        isAnimating = false;
-                        resolve();
-                    }, isCastlingMove ? 600 : (isCapture ? 400 : 500));
-                });
-            });
-        }
-
-        function animateCastling(kingFromRow, kingFromCol, kingToRow, kingToCol, rookFromRow, rookFromCol, rookToRow, rookToCol, kingPiece, rookPiece) {
-            if (isAnimating) return Promise.resolve();
-            
-            return new Promise((resolve) => {
-                isAnimating = true;
-                const overlay = createAnimationOverlay();
-                
-                // Create animated pieces
-                const animatedKing = document.createElement('img');
-                animatedKing.src = `img/${pieceSVG[kingPiece]}`;
-                animatedKing.className = 'animated-piece castling';
-                
-                const animatedRook = document.createElement('img');
-                animatedRook.src = `img/${pieceSVG[rookPiece]}`;
-                animatedRook.className = 'animated-piece castling';
-                
-                // Set initial positions
-                const kingStartPos = getSquarePosition(kingFromRow, kingFromCol);
-                const kingEndPos = getSquarePosition(kingToRow, kingToCol);
-                const rookStartPos = getSquarePosition(rookFromRow, rookFromCol);
-                const rookEndPos = getSquarePosition(rookToRow, rookToCol);
-                
-                animatedKing.style.left = kingStartPos.x + 'px';
-                animatedKing.style.top = kingStartPos.y + 'px';
-                animatedRook.style.left = rookStartPos.x + 'px';
-                animatedRook.style.top = rookStartPos.y + 'px';
-                
-                overlay.appendChild(animatedKing);
-                overlay.appendChild(animatedRook);
-                
-                // Hide original pieces
-                const kingSquare = document.querySelector(`[data-row="${kingFromRow}"][data-col="${kingFromCol}"]`);
-                const rookSquare = document.querySelector(`[data-row="${rookFromRow}"][data-col="${rookFromCol}"]`);
-                const originalKing = kingSquare.querySelector('.piece-svg');
-                const originalRook = rookSquare.querySelector('.piece-svg');
-                
-                if (originalKing) originalKing.style.opacity = '0';
-                if (originalRook) originalRook.style.opacity = '0';
-                
-                // Start animation
-                requestAnimationFrame(() => {
-                    animatedKing.style.left = kingEndPos.x + 'px';
-                    animatedKing.style.top = kingEndPos.y + 'px';
-                    animatedRook.style.left = rookEndPos.x + 'px';
-                    animatedRook.style.top = rookEndPos.y + 'px';
-                    
-                    // Clean up after animation
-                    setTimeout(() => {
-                        if (overlay.contains(animatedKing)) overlay.removeChild(animatedKing);
-                        if (overlay.contains(animatedRook)) overlay.removeChild(animatedRook);
-                        if (originalKing) originalKing.style.opacity = '1';
-                        if (originalRook) originalRook.style.opacity = '1';
-                        isAnimating = false;
-                        resolve();
-                    }, 600);
-                });
-            });
-        }
 
         function drawBoard() {
             boardEl.innerHTML = '';
@@ -773,24 +615,18 @@
                     square.dataset.row = r;
                     square.dataset.col = c;
                     const piece = board[r][c];
-                    
                     if (piece) {
-                        const pieceImg = document.createElement('img');
-                        pieceImg.src = `img/${pieceSVG[piece]}`;
-                        pieceImg.alt = piece;
-                        pieceImg.className = 'piece-svg';
-                        pieceImg.draggable = false;
-                        
+                        const pieceSpan = document.createElement('span');
+                        pieceSpan.textContent = pieceUnicode[piece];
+                        pieceSpan.classList.add(piece === piece.toUpperCase() ? 'white-piece' : 'black-piece');
+                        square.appendChild(pieceSpan);
                         // Only animate the piece that just moved
                         if (lastMoveTo && lastMoveTo[0] === r && lastMoveTo[1] === c) {
                             square.classList.add('piece-move');
                             // Reset lastMoveTo after animation
                             setTimeout(() => { lastMoveTo = null; }, 300);
                         }
-                        
-                        square.appendChild(pieceImg);
                     }
-                    
                     if (selectedSquare && selectedSquare[0] === r && selectedSquare[1] === c) {
                         square.classList.add('selected');
                     }
@@ -1080,7 +916,7 @@
         }
 
         // Führe Zug aus (nur wenn gültig)
-        async function executeMove(from, to, isFromFirestore = false) {
+        function executeMove(from, to, isFromFirestore = false) {
             const [fr, fc] = from;
             const [tr, tc] = to;
             const piece = board[fr][fc];
@@ -1093,52 +929,33 @@
             const isWhite = piece === piece.toUpperCase();
             const capturedPiece = board[tr][tc];
             let isCastling = false;
-            let animationPromise = Promise.resolve();
 
-            // Determine move type and create appropriate animation
-            if (p === 'k' && Math.abs(tc - fc) === 2) {
-                // Castling move
-                isCastling = true;
-                const isKingSide = tc > fc;
-                const rookFromCol = isKingSide ? 7 : 0;
-                const rookToCol = isKingSide ? tc - 1 : tc + 1;
-                const rookPiece = board[fr][rookFromCol];
-                
-                // Animate castling (king and rook together)
-                animationPromise = animateCastling(
-                    fr, fc, tr, tc,           // King movement
-                    fr, rookFromCol, fr, rookToCol,  // Rook movement
-                    piece, rookPiece
-                );
-                
-                // Update castling rights
+            // Spezialfall Rochade
+            if (p === 'k') {
+                // König bewegt => Castling Rechte sperren
                 if (isWhite) castlingRights.whiteKingMoved = true;
                 else castlingRights.blackKingMoved = true;
 
-                // Move the rook
-                if (isKingSide) {
+                // Rochade kurz
+                if (tc - fc === 2) {
                     board[tr][tc - 1] = board[tr][7];
                     board[tr][7] = null;
                     if (isWhite) castlingRights.whiteRookRightMoved = true;
                     else castlingRights.blackRookRightMoved = true;
-                } else {
+                    isCastling = true;
+                }
+                // Rochade lang
+                else if (tc - fc === -2) {
                     board[tr][tc + 1] = board[tr][0];
                     board[tr][0] = null;
                     if (isWhite) castlingRights.whiteRookLeftMoved = true;
                     else castlingRights.blackRookLeftMoved = true;
+                    isCastling = true;
                 }
-            } else {
-                // Regular move animation
-                animationPromise = animateMove(fr, fc, tr, tc, piece, !!capturedPiece, false);
-            }
-
-            // Handle castling rights for king and rook moves
-            if (p === 'k') {
-                if (isWhite) castlingRights.whiteKingMoved = true;
-                else castlingRights.blackKingMoved = true;
             }
 
             if (p === 'r') {
+                // Turmzug => Rechte sperren
                 if (isWhite) {
                     if (fr === 7 && fc === 0) castlingRights.whiteRookLeftMoved = true;
                     if (fr === 7 && fc === 7) castlingRights.whiteRookRightMoved = true;
@@ -1148,7 +965,7 @@
                 }
             }
 
-            // Execute the move on the board
+            // Normaler Zug
             board[tr][tc] = piece;
             board[fr][fc] = null;
             
@@ -1157,23 +974,18 @@
 
             checkPromotion();
 
-            // Play sounds after animation completes
-            animationPromise.then(() => {
-                if (!isFromFirestore || lastMoveFromFirestore) {
-                    if (isCastling) {
-                        playSound('castle');
-                    } else if (capturedPiece) {
-                        playSound('capture');
-                    } else {
-                        playSound('move');
-                    }
+            // Spiele Sounds nur ab, wenn der Zug nicht von Firestore kommt
+            // oder wenn es der eigene Zug ist (für beide Spieler hörbar)
+            if (!isFromFirestore || lastMoveFromFirestore) {
+                if (isCastling) {
+                    playSound('castle');
+                } else if (capturedPiece) {
+                    playSound('capture');
+                } else {
+                    playSound('move');
                 }
-                
-                // Redraw board after animation
-                drawBoard();
-            });
+            }
 
-            // Return true immediately for game logic, animation handles the rest
             return true;
         }
 
@@ -1183,7 +995,7 @@
         }
 
         function onSquareClick(event) {
-            if (!playerColor || isAnimating) return;
+            if (!playerColor) return;
 
             const r = parseInt(event.currentTarget.dataset.row);
             const c = parseInt(event.currentTarget.dataset.col);
@@ -1202,21 +1014,19 @@
                 drawBoard();
             } else {
                 // Zweiter Klick: Versuche zu ziehen
-                executeMove(selectedSquare, [r, c]).then(success => {
-                    if (success) {
-                        isWhiteTurn = !isWhiteTurn;
-                        lastMoveFromFirestore = false;
-                        saveGame();
-                        selectedSquare = null;
-                        updateStatus();
-                        // drawBoard() is called after animation in executeMove
-                    } else {
-                        // Ungültiger Zug
-                        playSound('invalid');
-                        selectedSquare = null;
-                        drawBoard();
-                    }
-                });
+                if (executeMove(selectedSquare, [r, c])) {
+                    isWhiteTurn = !isWhiteTurn;
+                    lastMoveFromFirestore = false;
+                    saveGame();
+                    selectedSquare = null;
+                    updateStatus();
+                    drawBoard();
+                } else {
+                    // Ungültiger Zug
+                    playSound('invalid');
+                    selectedSquare = null;
+                    drawBoard();
+                }
             }
         }
 
@@ -1299,125 +1109,61 @@
                     const newFen = data.fen;
                     
                     if (oldFen !== newFen) {
-                        // Find the move that was made by comparing boards
+                        // Finde den Zug, der gemacht wurde
                         const oldBoard = board.map(row => row.slice());
-                        const newBoard = fenToBoard(data.fen);
+                        board = fenToBoard(data.fen);
                         
-                        // Find move details for animation
-                        let moveFrom = null;
-                        let moveTo = null;
-                        let movedPiece = null;
-                        let capturedPiece = null;
-                        let isCastlingMove = false;
-                        
-                        // Find the piece that moved
-                        for (let r = 0; r < 8; r++) {
-                            for (let c = 0; c < 8; c++) {
-                                // Find where a piece disappeared (move from)
-                                if (oldBoard[r][c] && !newBoard[r][c]) {
-                                    // Check if this is part of castling
-                                    const piece = oldBoard[r][c];
-                                    if (piece.toLowerCase() === 'k') {
-                                        // Look for king destination
-                                        for (let tr = 0; tr < 8; tr++) {
-                                            for (let tc = 0; tc < 8; tc++) {
-                                                if (!oldBoard[tr][tc] && newBoard[tr][tc] === piece) {
-                                                    if (Math.abs(tc - c) === 2) {
-                                                        isCastlingMove = true;
-                                                    }
-                                                    moveFrom = [r, c];
-                                                    moveTo = [tr, tc];
-                                                    movedPiece = piece;
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                    } else {
-                                        // Regular piece move
-                                        for (let tr = 0; tr < 8; tr++) {
-                                            for (let tc = 0; tc < 8; tc++) {
-                                                if (!oldBoard[tr][tc] && newBoard[tr][tc] === piece) {
-                                                    moveFrom = [r, c];
-                                                    moveTo = [tr, tc];
-                                                    movedPiece = piece;
-                                                    break;
-                                                }
-                                                // Check for captures
-                                                if (oldBoard[tr][tc] && newBoard[tr][tc] === piece) {
-                                                    moveFrom = [r, c];
-                                                    moveTo = [tr, tc];
-                                                    movedPiece = piece;
-                                                    capturedPiece = oldBoard[tr][tc];
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        
-                        // Mark this as a Firestore update
+                        // Markiere dass dies ein Firestore-Update ist
                         lastMoveFromFirestore = true;
                         
-                        // Animate the move if we found it
-                        if (moveFrom && moveTo && movedPiece) {
-                            let animationPromise;
-                            
-                            if (isCastlingMove) {
-                                // Handle castling animation
-                                const [fr, fc] = moveFrom;
-                                const [tr, tc] = moveTo;
-                                const isKingSide = tc > fc;
-                                const rookFromCol = isKingSide ? 7 : 0;
-                                const rookToCol = isKingSide ? tc - 1 : tc + 1;
-                                const rookPiece = oldBoard[fr][rookFromCol];
-                                
-                                animationPromise = animateCastling(
-                                    fr, fc, tr, tc,
-                                    fr, rookFromCol, fr, rookToCol,
-                                    movedPiece, rookPiece
-                                );
-                            } else {
-                                // Regular move animation
-                                const [fr, fc] = moveFrom;
-                                const [tr, tc] = moveTo;
-                                animationPromise = animateMove(fr, fc, tr, tc, movedPiece, !!capturedPiece, false);
-                            }
-                            
-                            // Update board state after animation
-                            animationPromise.then(() => {
-                                board = newBoard;
-                                lastMoveTo = moveTo;
-                                
-                                // Play sound for the received move
-                                if (isCastlingMove) {
-                                    playSound('castle');
-                                } else if (capturedPiece) {
-                                    playSound('capture');
-                                } else {
-                                    playSound('move');
+                        // Finde Unterschiede für Sound
+                        let moveFound = false;
+                        let captureFound = false;
+                        let castlingFound = false;
+                        
+                        for (let r = 0; r < 8; r++) {
+                            for (let c = 0; c < 8; c++) {
+                                if (oldBoard[r][c] !== board[r][c]) {
+                                    if (oldBoard[r][c] && board[r][c] && oldBoard[r][c] !== board[r][c]) {
+                                        captureFound = true;
+                                    }
+                                    moveFound = true;
                                 }
-                                
-                                isWhiteTurn = data.isWhiteTurn;
-                                castlingRights = data.castlingRights || castlingRights;
-                                updateStatus();
-                                drawBoard();
-                            });
-                        } else {
-                            // Fallback: update without animation
-                            board = newBoard;
-                            isWhiteTurn = data.isWhiteTurn;
-                            castlingRights = data.castlingRights || castlingRights;
-                            updateStatus();
-                            drawBoard();
+                            }
                         }
-                    } else {
-                        // No board changes, just update turn and status
-                        isWhiteTurn = data.isWhiteTurn;
-                        castlingRights = data.castlingRights || castlingRights;
-                        updateStatus();
+                        
+                        // Prüfe auf Rochade (König bewegt sich 2 Felder)
+                        for (let c = 0; c < 8; c++) {
+                            if ((oldBoard[0][c] === 'k' && board[0][c] === null && (board[0][c-2] === 'k' || board[0][c+2] === 'k')) ||
+                                (oldBoard[7][c] === 'K' && board[7][c] === null && (board[7][c-2] === 'K' || board[7][c+2] === 'K'))) {
+                                castlingFound = true;
+                            }
+                        }
+                        
+                        // Spiele Sound für den empfangenen Zug
+                        if (castlingFound) {
+                            playSound('castle');
+                        } else if (captureFound) {
+                            playSound('capture');
+                        } else if (moveFound) {
+                            playSound('move');
+                        }
+                        
+                        // Find the moved piece position for animation
+                        for (let r = 0; r < 8; r++) {
+                            for (let c = 0; c < 8; c++) {
+                                if (!oldBoard[r][c] && board[r][c]) {
+                                    lastMoveTo = [r, c];
+                                    break;
+                                }
+                            }
+                        }
                     }
+                    
+                    isWhiteTurn = data.isWhiteTurn;
+                    castlingRights = data.castlingRights || castlingRights;
+                    updateStatus();
+                    drawBoard();
                 }
             });
         }
