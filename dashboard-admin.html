@@ -569,31 +569,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Vergleichs-Section -->
-        <div class="user-section">
-            <div class="user-header">
-                <div class="user-info">
-                    <div class="user-avatar" style="background: linear-gradient(135deg, var(--warning-color), #d97706);">VS</div>
-                    <div>
-                        <div class="user-name">Vergleichsanalyse</div>
-                        <div style="color: #6b7280; font-size: 0.875rem;">Erik vs. Eric</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="charts-grid">
-                <div class="chart-card" style="grid-column: 1 / -1;">
-                    <div class="chart-header">
-                        <h3 class="chart-title">⚔️ Direktvergleich</h3>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="comparisonChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <button class="logout-btn" onclick="logout()">
@@ -730,11 +705,8 @@
                 { key: "BenutzerB_B", idSuffix: "B", name: "Eric Tamme" }
             ];
 
-            const userData = {};
-
             for (let benutzer of benutzerListe) {
                 const data = await loadUserData(benutzer.key);
-                userData[benutzer.idSuffix] = data;
 
                 // Erstelle Charts für jeden Benutzer
                 createUserCharts(benutzer.idSuffix, data);
@@ -743,9 +715,6 @@
                 // Update individual user stats
                 updateUserStats(benutzer.idSuffix, data);
             }
-
-            // Erstelle Vergleichs-Chart
-            createComparisonChart(userData);
         }
 
         async function loadUserData(benutzerKey) {
@@ -995,73 +964,6 @@
 
             // Streak (vereinfacht - zählt zusammenhängende Tage)
             document.getElementById('streak').textContent = Math.min(totalDays, 7); // Placeholder
-        }
-
-        function createComparisonChart(userData) {
-            const ctx = document.getElementById('comparisonChart').getContext('2d');
-
-            const categories = ['Gesamtstunden', 'Trading', 'Drittes Feld'];
-            const erikData = [
-                userData.A.totalHours,
-                formatHours(userData.A.zeiten.arbeit),
-                formatHours(userData.A.zeiten.sport)
-            ];
-            const ericData = [
-                userData.B.totalHours,
-                formatHours(userData.B.zeiten.arbeit),
-                formatHours(userData.B.zeiten.sport)
-            ];
-
-            new Chart(ctx, {
-                type: 'radar',
-                data: {
-                    labels: categories,
-                    datasets: [
-                        {
-                            label: 'Erik Lähner',
-                            data: erikData,
-                            borderColor: colors.primary,
-                            backgroundColor: colors.primary + '20',
-                            pointBackgroundColor: colors.primary,
-                            pointBorderColor: '#fff',
-                            pointHoverBackgroundColor: '#fff',
-                            pointHoverBorderColor: colors.primary
-                        },
-                        {
-                            label: 'Eric Tamme',
-                            data: ericData,
-                            borderColor: colors.success,
-                            backgroundColor: colors.success + '20',
-                            pointBackgroundColor: colors.success,
-                            pointBorderColor: '#fff',
-                            pointHoverBackgroundColor: '#fff',
-                            pointHoverBorderColor: colors.success
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        r: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
-                            },
-                            pointLabels: {
-                                font: {
-                                    size: 14
-                                }
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
         }
 
         function logout() {
