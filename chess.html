@@ -45,8 +45,6 @@
             50% { transform: scale(1.1) rotate(5deg); }
         }
 
-        /* Remove unused h1 styles */
-
         #playerSelect {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
@@ -55,6 +53,16 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.1);
             animation: slideUp 0.6s ease-out;
+        }
+
+        #playerSelect h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         #playerSelect p {
@@ -66,8 +74,15 @@
 
         .button-group {
             display: flex;
-            gap: 1.5rem;
-            justify-content: center;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .mode-section {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
         }
 
         button {
@@ -83,6 +98,12 @@
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
             position: relative;
             overflow: hidden;
+            min-width: 200px;
+        }
+
+        button.bot-mode {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
         }
 
         button::before {
@@ -103,6 +124,10 @@
         button:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        button.bot-mode:hover {
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
         }
 
         button:active {
@@ -240,6 +265,11 @@
             animation: statusWin 0.6s ease-out;
         }
 
+        #status.bot-thinking {
+            background: rgba(255, 193, 7, 0.2);
+            border-color: rgba(255, 193, 7, 0.3);
+        }
+
         @keyframes statusPulse {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.02); }
@@ -271,6 +301,7 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            min-width: auto;
         }
 
         .control-btn:hover {
@@ -344,6 +375,10 @@
             button {
                 padding: 0.8rem 1.5rem;
                 font-size: 1rem;
+            }
+
+            .mode-section {
+                flex-direction: column;
             }
         }
 
@@ -437,10 +472,14 @@
 <body>
 
     <div id="playerSelect">
-        <p>Wähle deine Spielfarbe</p>
+        <h2>♔ Schach Spielen</h2>
+        <p>Wähle deinen Spielmodus</p>
         <div class="button-group">
-            <button onclick="selectPlayer('white')">♔ Weiß spielen</button>
-            <button onclick="selectPlayer('black')">♚ Schwarz spielen</button>
+            <div class="mode-section">
+                <button onclick="selectPlayer('white')">♔ Weiß (Online)</button>
+                <button onclick="selectPlayer('black')">♚ Schwarz (Online)</button>
+            </div>
+            <button class="bot-mode" onclick="playAgainstBot()">🤖 Gegen Bot spielen</button>
         </div>
     </div>
 
@@ -503,6 +542,8 @@
         let gameDocRef = db.collection("games").doc("demoGame");
         let soundEnabled = true;
         let lastMoveFromFirestore = false;
+        let isPlayingBot = false;
+        let botThinking = false;
 
         // Piece values for evaluation
         const pieceValues = {
@@ -770,7 +811,16 @@
         };
 
         function selectPlayer(color) {
+            isPlayingBot = false;
             playerColor = color;
+            document.getElementById('playerSelect').style.display = 'none';
+            gameContainer.style.display = 'block';
+            initGame();
+        }
+
+        function playAgainstBot() {
+            isPlayingBot = true;
+            playerColor = 'white'; // Player plays white, bot plays black
             document.getElementById('playerSelect').style.display = 'none';
             gameContainer.style.display = 'block';
             initGame();
@@ -1127,6 +1177,140 @@
             return false;
         }
 
+        // **Bot Functions**
+        // Get all valid moves for a color
+        function getAllValidMoves(isWhite) {
+            const moves = [];
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const piece = board[r][c];
+                    if (piece && (isWhite ? piece === piece.toUpperCase() : piece === piece.toLowerCase())) {
+                        for (let tr = 0; tr < 8; tr++) {
+                            for (let tc = 0; tc < 8; tc++) {
+                                if (isValidMove([r, c], [tr, tc], isWhite)) {
+                                    moves.push({
+                                        from: [r, c],
+                                        to: [tr, tc],
+                                        piece: piece
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return moves;
+        }
+
+        // Simple bot evaluation function
+        function evaluateMove(move, isWhite) {
+            const [fr, fc] = move.from;
+            const [tr, tc] = move.to;
+            const piece = board[fr][fc];
+            const target = board[tr][tc];
+            
+            let score = 0;
+            
+            // Capture bonus
+            if (target) {
+                score += pieceValues[target.toLowerCase()] * 100;
+                
+                // Bonus for capturing with lower value piece
+                if (pieceValues[piece.toLowerCase()] < pieceValues[target.toLowerCase()]) {
+                    score += 50;
+                }
+            }
+            
+            // Center control bonus
+            if (tr >= 3 && tr <= 4 && tc >= 3 && tc <= 4) {
+                score += 30;
+            }
+            
+            // Development bonus for knights and bishops
+            const pieceType = piece.toLowerCase();
+            if (pieceType === 'n' || pieceType === 'b') {
+                if (!isWhite && tr > fr) score += 20; // Black pieces moving forward
+                if (isWhite && tr < fr) score += 20; // White pieces moving forward
+            }
+            
+            // Pawn advancement bonus
+            if (pieceType === 'p') {
+                if (!isWhite && tr > fr) score += 10; // Black pawns advancing
+                if (isWhite && tr < fr) score += 10; // White pawns advancing
+            }
+            
+            // King safety - avoid moving king early
+            if (pieceType === 'k' && (tr !== 0 && tr !== 7)) {
+                score -= 30;
+            }
+            
+            // Avoid putting pieces in danger
+            const tempBoard = board.map(row => row.slice());
+            tempBoard[tr][tc] = piece;
+            tempBoard[fr][fc] = null;
+            
+            // Check if the moved piece can be captured
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const enemyPiece = tempBoard[r][c];
+                    if (enemyPiece && (isWhite ? enemyPiece === enemyPiece.toLowerCase() : enemyPiece === enemyPiece.toUpperCase())) {
+                        if (canAttackSquare(tempBoard, [r, c], [tr, tc])) {
+                            score -= pieceValues[piece.toLowerCase()] * 50; // Danger penalty
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            return score;
+        }
+
+        // Make bot move
+        function makeBotMove() {
+            if (!isPlayingBot || isWhiteTurn || botThinking) return;
+            
+            botThinking = true;
+            statusEl.textContent = "🤖 Bot denkt nach...";
+            statusEl.classList.add('bot-thinking');
+            boardEl.style.pointerEvents = 'none';
+            
+            setTimeout(() => {
+                const validMoves = getAllValidMoves(false); // Bot plays black
+                
+                if (validMoves.length === 0) {
+                    botThinking = false;
+                    updateStatus();
+                    return;
+                }
+                
+                // Evaluate all moves and pick the best one
+                let bestMove = validMoves[0];
+                let bestScore = -Infinity;
+                
+                for (const move of validMoves) {
+                    const score = evaluateMove(move, false) + Math.random() * 50; // Add some randomness
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestMove = move;
+                    }
+                }
+                
+                // Execute the best move
+                if (executeMove(bestMove.from, bestMove.to)) {
+                    isWhiteTurn = !isWhiteTurn;
+                    botThinking = false;
+                    statusEl.classList.remove('bot-thinking');
+                    updateStatus();
+                    drawBoard();
+                }
+                
+                // Re-enable board for player
+                if (isWhiteTurn) {
+                    boardEl.style.pointerEvents = 'auto';
+                }
+            }, 1000 + Math.random() * 1000); // Bot thinks for 1-2 seconds
+        }
+
         // **Umwandlung**: Prüft nach Zug, ob Bauer letzte Reihe erreicht hat, und fragt den Spieler
         function checkPromotion() {
             // Prüfe letzte Reihe auf Bauern
@@ -1221,7 +1405,8 @@
 
         function onSquareClick(event) {
             if (!playerColor) return;
-
+            if (botThinking) return; // Don't allow moves while bot is thinking
+            
             const r = parseInt(event.currentTarget.dataset.row);
             const c = parseInt(event.currentTarget.dataset.col);
 
@@ -1229,11 +1414,18 @@
                 // Erster Klick: Wähle Stein, wenn der Spieler am Zug ist und der Stein seine Farbe hat
                 const piece = board[r][c];
                 if (!piece) return;
-                if ((playerColor === 'white' && piece !== piece.toUpperCase()) ||
-                    (playerColor === 'black' && piece !== piece.toLowerCase())) {
-                    return;
+                
+                if (isPlayingBot) {
+                    // In bot mode, only allow white pieces and only when it's white's turn
+                    if (piece !== piece.toUpperCase() || !isWhiteTurn) return;
+                } else {
+                    // Online mode logic
+                    if ((playerColor === 'white' && piece !== piece.toUpperCase()) ||
+                        (playerColor === 'black' && piece !== piece.toLowerCase())) {
+                        return;
+                    }
+                    if ((playerColor === 'white' && !isWhiteTurn) || (playerColor === 'black' && isWhiteTurn)) return;
                 }
-                if ((playerColor === 'white' && !isWhiteTurn) || (playerColor === 'black' && isWhiteTurn)) return;
 
                 selectedSquare = [r, c];
                 drawBoard();
@@ -1242,10 +1434,19 @@
                 if (executeMove(selectedSquare, [r, c])) {
                     isWhiteTurn = !isWhiteTurn;
                     lastMoveFromFirestore = false;
-                    saveGame();
+                    
+                    if (!isPlayingBot) {
+                        saveGame(); // Only save to Firestore in online mode
+                    }
+                    
                     selectedSquare = null;
                     updateStatus();
                     drawBoard();
+                    
+                    // Trigger bot move if playing against bot and it's bot's turn
+                    if (isPlayingBot && !isWhiteTurn) {
+                        setTimeout(makeBotMove, 500);
+                    }
                 } else {
                     // Ungültiger Zug
                     playSound('invalid');
@@ -1256,11 +1457,12 @@
         }
 
         function updateStatus() {
-            statusEl.classList.remove('check', 'checkmate');
+            statusEl.classList.remove('check', 'checkmate', 'bot-thinking');
             
             if (isInCheck(board, isWhiteTurn)) {
                 if (!hasAnyValidMove(isWhiteTurn)) {
-                    statusEl.textContent = `Schachmatt! ${isWhiteTurn ? "Schwarz" : "Weiß"} gewinnt! 🎉`;
+                    const winner = isWhiteTurn ? (isPlayingBot ? "Bot" : "Schwarz") : (isPlayingBot ? "Du" : "Weiß");
+                    statusEl.textContent = `Schachmatt! ${winner} gewinnt! 🎉`;
                     statusEl.classList.add('checkmate');
                     boardEl.style.pointerEvents = 'none';
                     playSound('checkmate');
@@ -1275,9 +1477,19 @@
                     boardEl.style.pointerEvents = 'none';
                     return;
                 }
-                statusEl.textContent = (isWhiteTurn ? "♔ Weiß" : "♚ Schwarz") + " ist am Zug";
+                
+                if (isPlayingBot) {
+                    statusEl.textContent = isWhiteTurn ? "♔ Du bist am Zug" : "♚ Bot ist am Zug";
+                } else {
+                    statusEl.textContent = (isWhiteTurn ? "♔ Weiß" : "♚ Schwarz") + " ist am Zug";
+                }
             }
-            boardEl.style.pointerEvents = (playerColor === (isWhiteTurn ? 'white' : 'black')) ? 'auto' : 'none';
+            
+            if (isPlayingBot) {
+                boardEl.style.pointerEvents = isWhiteTurn ? 'auto' : 'none';
+            } else {
+                boardEl.style.pointerEvents = (playerColor === (isWhiteTurn ? 'white' : 'black')) ? 'auto' : 'none';
+            }
             
             // Update evaluation bar
             updateEvaluationBar();
@@ -1287,6 +1499,7 @@
             board = fenToBoard(startFEN);
             isWhiteTurn = true;
             selectedSquare = null;
+            botThinking = false;
             castlingRights = {
                 whiteKingMoved: false,
                 whiteRookLeftMoved: false,
@@ -1295,22 +1508,37 @@
                 blackRookLeftMoved: false,
                 blackRookRightMoved: false
             };
-            boardEl.style.pointerEvents = (playerColor === 'white') ? 'auto' : 'none';
+            
+            if (isPlayingBot) {
+                boardEl.style.pointerEvents = 'auto'; // Player (white) starts
+            } else {
+                boardEl.style.pointerEvents = (playerColor === 'white') ? 'auto' : 'none';
+            }
+            
             updateStatus();
             drawBoard();
             updateEvaluationBar(); // Initialize evaluation bar
-            saveGame();
+            
+            if (!isPlayingBot) {
+                saveGame();
+            }
         }
 
         resetBtn.addEventListener('click', () => {
             if (confirm('Möchtest du wirklich ein neues Spiel starten?')) {
                 initGame();
-                boardEl.style.pointerEvents = (playerColor === 'white') ? 'auto' : 'none';
+                if (isPlayingBot) {
+                    boardEl.style.pointerEvents = 'auto';
+                } else {
+                    boardEl.style.pointerEvents = (playerColor === 'white') ? 'auto' : 'none';
+                }
             }
         });
 
         // Firestore Synchronisation (einfaches Demo, keine Kollisionserkennung)
         function saveGame() {
+            if (isPlayingBot) return; // Don't save bot games to Firestore
+            
             const fen = boardToFen(board);
             gameDocRef.set({
                 fen,
@@ -1321,6 +1549,8 @@
         }
 
         function loadGame() {
+            if (isPlayingBot) return; // Don't load from Firestore in bot mode
+            
             let lastUpdateTime = 0;
             
             gameDocRef.onSnapshot(doc => {
@@ -1397,7 +1627,10 @@
             });
         }
 
-        loadGame();
+        // Only load game if not playing bot
+        if (!isPlayingBot) {
+            loadGame();
+        }
 
     </script>
 </body>
