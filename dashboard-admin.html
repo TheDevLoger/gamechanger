@@ -19,6 +19,7 @@
             --success-color: #10b981;
             --warning-color: #f59e0b;
             --danger-color: #ef4444;
+            --info-color: #3b82f6;
             --dark-color: #1f2937;
             --light-color: #f9fafb;
             --border-color: #e5e7eb;
@@ -300,6 +301,248 @@
             font-size: 0.875rem;
         }
 
+        .analysis-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            position: relative;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .analysis-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .analysis-btn:hover::before {
+            left: 100%;
+        }
+
+        .analysis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        /* Analysis Modal */
+        .analysis-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: flex-start;
+            z-index: 1000;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .analysis-modal.show {
+            display: flex;
+        }
+
+        .analysis-content {
+            background: white;
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 1000px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            margin-top: 2rem;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .analysis-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem;
+            border-radius: var(--radius) var(--radius) 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .analysis-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .analysis-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.1);
+        }
+
+        .analysis-body {
+            padding: 2rem;
+        }
+
+        .analysis-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--light-color);
+            border-radius: var(--radius);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .analysis-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .insight-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--success-color);
+            transition: var(--transition);
+        }
+
+        .insight-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .insight-card.warning {
+            border-left-color: var(--warning-color);
+        }
+
+        .insight-card.danger {
+            border-left-color: var(--danger-color);
+        }
+
+        .insight-title {
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .insight-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .insight-description {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .recommendation-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .recommendation-list li {
+            background: white;
+            margin-bottom: 0.75rem;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--info-color);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .recommendation-icon {
+            font-size: 1.2rem;
+            margin-top: 0.1rem;
+        }
+
+        .recommendation-text {
+            flex: 1;
+        }
+
+        .trend-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .trend-up {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+
+        .trend-down {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+
+        .trend-stable {
+            background: rgba(107, 114, 128, 0.1);
+            color: #6b7280;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         .logout-btn {
             position: fixed;
             bottom: 2rem;
@@ -332,10 +575,6 @@
             border-radius: 50%;
             border-top-color: var(--primary-color);
             animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
         }
 
         .empty-state {
@@ -384,6 +623,12 @@
             background: #9ca3af;
         }
 
+        /* Chart.js Custom Styling */
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .container {
@@ -409,12 +654,6 @@
                 right: 1rem;
                 padding: 0.75rem 1.5rem;
             }
-        }
-
-        /* Chart.js Custom Styling */
-        .chart-container {
-            position: relative;
-            height: 300px;
         }
     </style>
 </head>
@@ -459,6 +698,13 @@
                     <div class="stat-value" id="streakA">0</div>
                     <div class="stat-label">Tage in Folge</div>
                 </div>
+            </div>
+
+            <!-- Intelligence Analysis Button -->
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <button class="analysis-btn" onclick="showIntelligentAnalysis('A', 'Erik Lähner')">
+                    🧠 Intelligente Datenauswertung
+                </button>
             </div>
 
             <div class="charts-grid">
@@ -534,6 +780,13 @@
                 </div>
             </div>
 
+            <!-- Intelligence Analysis Button -->
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <button class="analysis-btn" onclick="showIntelligentAnalysis('B', 'Eric Tamme')">
+                    🧠 Intelligente Datenauswertung
+                </button>
+            </div>
+
             <div class="charts-grid">
                 <div class="chart-card">
                     <div class="chart-header">
@@ -569,12 +822,32 @@
                     </div>
                 </div>
             </div>
+        </div>
     </div>
 
     <button class="logout-btn" onclick="logout()">
         <span>🔒</span>
         <span>Logout</span>
     </button>
+
+    <!-- Analysis Modal -->
+    <div class="analysis-modal" id="analysisModal">
+        <div class="analysis-content">
+            <div class="analysis-header">
+                <div>
+                    <h2 id="analysisTitle">🧠 Intelligente Datenauswertung</h2>
+                    <p id="analysisSubtitle">Lade Analyse...</p>
+                </div>
+                <button class="analysis-close" onclick="closeAnalysis()">×</button>
+            </div>
+            <div class="analysis-body" id="analysisBody">
+                <div style="text-align: center; padding: 3rem;">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 1rem; color: #6b7280;">Analysiere Daten...</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -615,6 +888,23 @@
             danger: '#ef4444',
             info: '#3b82f6'
         };
+
+        // Global data storage for analysis
+        let userData = {};
+        let userActivities = {};
+
+        // Store user data for analysis
+        function storeUserData(suffix, data) {
+            userData[suffix] = {
+                ...data,
+                analysisTimestamp: Date.now()
+            };
+        }
+
+        // Store user activities for deeper analysis
+        function storeUserActivities(suffix, activities) {
+            userActivities[suffix] = activities;
+        }
 
         // Auth Check
         onAuthStateChanged(auth, user => {
@@ -691,11 +981,11 @@
             // Farbcodierung für Produktivität
             const productivityEl = document.getElementById(`productivity${suffix}`);
             if (productivity >= 80) {
-                productivityEl.className = 'value positive';
+                productivityEl.className = 'stat-value positive';
             } else if (productivity >= 60) {
-                productivityEl.className = 'value';
+                productivityEl.className = 'stat-value';
             } else {
-                productivityEl.className = 'value negative';
+                productivityEl.className = 'stat-value negative';
             }
         }
 
@@ -707,6 +997,10 @@
 
             for (let benutzer of benutzerListe) {
                 const data = await loadUserData(benutzer.key);
+
+                // Store data for intelligent analysis
+                storeUserData(benutzer.idSuffix, data);
+                storeUserActivities(benutzer.idSuffix, data.activities);
 
                 // Erstelle Charts für jeden Benutzer
                 createUserCharts(benutzer.idSuffix, data);
@@ -959,11 +1253,11 @@
 
             if (activities.length === 0) {
                 container.innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-state-icon">📭</div>
-                            <p>Keine Aktivitäten vorhanden</p>
-                        </div>
-                    `;
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <p>Keine Aktivitäten vorhanden</p>
+                    </div>
+                `;
                 return;
             }
 
@@ -978,32 +1272,730 @@
                 const label = activity.type === 'arbeit' ? 'Trading' : (suffix === 'A' ? 'Gamedev' : 'Workout');
 
                 return `
-                        <div class="activity-item">
-                            <div class="activity-date">${dateStr}</div>
-                            <div class="activity-time">
-                                <span>${icon}</span>
-                                <span>${label}: ${startTime} - ${endTime} (${duration})</span>
-                            </div>
+                    <div class="activity-item">
+                        <div class="activity-date">${dateStr}</div>
+                        <div class="activity-time">
+                            <span>${icon}</span>
+                            <span>${label}: ${startTime} - ${endTime} (${duration})</span>
                         </div>
-                    `;
+                    </div>
+                `;
             }).join('');
         }
 
-        function updateTotalStats(totalHours, totalDays) {
-            // Gesamtstunden
-            document.getElementById('totalHours').textContent = totalHours.toFixed(1);
+        // Intelligent Analysis Functions
+        async function showIntelligentAnalysis(userSuffix, userName) {
+            const modal = document.getElementById('analysisModal');
+            const title = document.getElementById('analysisTitle');
+            const subtitle = document.getElementById('analysisSubtitle');
+            const body = document.getElementById('analysisBody');
+            
+            title.textContent = `🧠 Intelligente Analyse für ${userName}`;
+            subtitle.textContent = 'Analysiere Verhaltensmuster und erstelle Empfehlungen...';
+            
+            // Show loading state
+            body.innerHTML = `
+                <div style="text-align: center; padding: 3rem;">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 1rem; color: #6b7280;">Analysiere Daten...</p>
+                </div>
+            `;
+            
+            modal.classList.add('show');
+            
+            // Simulate analysis delay for realistic feel
+            setTimeout(() => {
+                const analysis = generateIntelligentAnalysis(userSuffix, userName);
+                body.innerHTML = analysis;
+                subtitle.textContent = `Analyse abgeschlossen - ${new Date().toLocaleDateString('de-DE')}`;
+            }, 2000);
+        }
 
-            // Durchschnitt pro Tag
-            const avgDaily = totalDays > 0 ? (totalHours / totalDays).toFixed(1) : 0;
-            document.getElementById('avgDaily').textContent = avgDaily;
+        function closeAnalysis() {
+            document.getElementById('analysisModal').classList.remove('show');
+        }
 
-            // Produktivität (Beispielberechnung)
-            const targetHours = 8; // Ziel: 8 Stunden pro Tag
-            const productivity = Math.min(100, Math.round((avgDaily / targetHours) * 100));
-            document.getElementById('productivity').textContent = productivity + '%';
+        function generateIntelligentAnalysis(userSuffix, userName) {
+            const data = userData[userSuffix] || {};
+            const insights = analyzeUserData(data, userSuffix);
+            
+            return `
+                <!-- Performance Overview -->
+                <div class="analysis-section">
+                    <h3>📊 Leistungsüberblick</h3>
+                    <div class="analysis-grid">
+                        <div class="insight-card">
+                            <div class="insight-title">Gesamtaktivität</div>
+                            <div class="insight-value">${insights.totalHours.toFixed(1)}h</div>
+                            <div class="insight-description">
+                                ${insights.totalHours > 100 ? 'Sehr aktiv' : insights.totalHours > 50 ? 'Moderat aktiv' : 'Wenig aktiv'}
+                            </div>
+                        </div>
+                        <div class="insight-card ${insights.productivityTrend === 'up' ? '' : insights.productivityTrend === 'down' ? 'danger' : 'warning'}">
+                            <div class="insight-title">Produktivitätstrend</div>
+                            <div class="insight-value">
+                                <span class="trend-indicator trend-${insights.productivityTrend}">
+                                    ${insights.productivityTrend === 'up' ? '↗️' : insights.productivityTrend === 'down' ? '↘️' : '➡️'}
+                                    ${insights.productivityTrend === 'up' ? '+' : insights.productivityTrend === 'down' ? '-' : ''}${Math.abs(insights.productivityChange).toFixed(1)}%
+                                </span>
+                            </div>
+                            <div class="insight-description">
+                                ${insights.productivityTrend === 'up' ? 'Positive Entwicklung' : 
+                                  insights.productivityTrend === 'down' ? 'Rückläufige Tendenz' : 'Stabile Performance'}
+                            </div>
+                        </div>
+                        <div class="insight-card">
+                            <div class="insight-title">Konsistenz-Score</div>
+                            <div class="insight-value">${insights.consistencyScore}/10</div>
+                            <div class="insight-description">
+                                ${insights.consistencyScore >= 8 ? 'Sehr konsistent' : 
+                                  insights.consistencyScore >= 6 ? 'Gut konsistent' : 'Verbesserungsbedarf'}
+                            </div>
+                        </div>
+                        <div class="insight-card">
+                            <div class="insight-title">Beste Aktivitätszeit</div>
+                            <div class="insight-value">${insights.bestTimeSlot}</div>
+                            <div class="insight-description">Höchste Produktivität</div>
+                        </div>
+                    </div>
+                </div>
 
-            // Streak (vereinfacht - zählt zusammenhängende Tage)
-            document.getElementById('streak').textContent = Math.min(totalDays, 7); // Placeholder
+                <!-- Strengths & Weaknesses -->
+                <div class="analysis-section">
+                    <h3>💪 Stärken & Schwächen</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                        <div>
+                            <h4 style="color: var(--success-color); margin-bottom: 1rem;">🎯 Stärken</h4>
+                            <ul class="recommendation-list">
+                                ${insights.strengths.map(strength => `
+                                    <li style="border-left-color: var(--success-color);">
+                                        <span class="recommendation-icon">✅</span>
+                                        <span class="recommendation-text">${strength}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 style="color: var(--danger-color); margin-bottom: 1rem;">⚠️ Verbesserungsbereiche</h4>
+                            <ul class="recommendation-list">
+                                ${insights.weaknesses.map(weakness => `
+                                    <li style="border-left-color: var(--danger-color);">
+                                        <span class="recommendation-icon">⚡</span>
+                                        <span class="recommendation-text">${weakness}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Behavioral Patterns -->
+                <div class="analysis-section">
+                    <h3>🔍 Verhaltensmuster</h3>
+                    <div class="analysis-grid">
+                        ${insights.patterns.map(pattern => `
+                            <div class="insight-card">
+                                <div class="insight-title">${pattern.title}</div>
+                                <div class="insight-description">${pattern.description}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- Recommendations -->
+                <div class="analysis-section">
+                    <h3>🚀 Personalisierte Empfehlungen</h3>
+                    <ul class="recommendation-list">
+                        ${insights.recommendations.map(rec => `
+                            <li>
+                                <span class="recommendation-icon">${rec.icon}</span>
+                                <div class="recommendation-text">
+                                    <strong>${rec.title}</strong><br>
+                                    ${rec.description}
+                                </div>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+
+                <!-- Action Plan -->
+                <div class="analysis-section">
+                    <h3>📋 30-Tage Aktionsplan</h3>
+                    <div style="display: grid; gap: 1rem;">
+                        ${insights.actionPlan.map((item, index) => `
+                            <div class="insight-card">
+                                <div class="insight-title">Woche ${index + 1}: ${item.title}</div>
+                                <div class="insight-description">${item.description}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function analyzeUserData(data, userSuffix) {
+            if (!data || !data.zeiten) {
+                return getDefaultInsights(userSuffix);
+            }
+
+            const totalHours = data.totalHours || 0;
+            const activeDays = data.allDates?.length || 0;
+            const avgDaily = activeDays > 0 ? (totalHours / activeDays) : 0;
+            const streak = calculateCurrentStreak(data.allDates);
+            const activities = userActivities[userSuffix] || [];
+
+            // Berechne Produktivitätstrend
+            const productivityTrend = calculateProductivityTrend(data, activities);
+            const consistencyScore = calculateConsistencyScore(data, activities);
+            const bestTimeSlot = calculateBestTimeSlot(activities);
+            const activityBalance = calculateActivityBalance(data.zeiten, userSuffix);
+
+            const insights = {
+                totalHours,
+                avgDaily,
+                activeDays,
+                streak,
+                productivityTrend: productivityTrend.direction,
+                productivityChange: productivityTrend.change,
+                consistencyScore,
+                bestTimeSlot,
+                activityBalance,
+                
+                strengths: generateStrengths(totalHours, avgDaily, streak, userSuffix, data, activities),
+                weaknesses: generateWeaknesses(totalHours, avgDaily, streak, userSuffix, data, activities),
+                patterns: generatePatterns(totalHours, avgDaily, userSuffix, data, activities),
+                recommendations: generateRecommendations(totalHours, avgDaily, streak, userSuffix, data, activities),
+                actionPlan: generateActionPlan(totalHours, avgDaily, userSuffix, data)
+            };
+            
+            return insights;
+        }
+
+        function getDefaultInsights(userSuffix) {
+            return {
+                totalHours: 0,
+                avgDaily: 0,
+                activeDays: 0,
+                streak: 0,
+                productivityTrend: 'stable',
+                productivityChange: 0,
+                consistencyScore: 5,
+                bestTimeSlot: 'Noch nicht genügend Daten',
+                activityBalance: { trading: 0, other: 0 },
+                strengths: ['Bereit für den Start', 'Potenzial vorhanden'],
+                weaknesses: ['Mehr Daten für bessere Analyse benötigt'],
+                patterns: [{ title: 'Analysephase', description: 'Sammle mehr Daten für detaillierte Muster' }],
+                recommendations: [
+                    {
+                        icon: '🚀',
+                        title: 'Los geht\'s!',
+                        description: 'Beginne mit regelmäßigen Aktivitäten, um aussagekräftige Analysen zu erhalten.'
+                    }
+                ],
+                actionPlan: [
+                    { title: 'Datensammlung starten', description: 'Verwende das Dashboard täglich für erste Einblicke.' },
+                    { title: 'Routine entwickeln', description: 'Etabliere regelmäßige Arbeitszeiten.' },
+                    { title: 'Erste Muster erkennen', description: 'Nach einer Woche erste Trends beobachten.' },
+                    { title: 'Optimierungen vornehmen', description: 'Anpassungen basierend auf gesammelten Daten.' }
+                ]
+            };
+        }
+
+        function calculateCurrentStreak(allDates) {
+            if (!allDates || allDates.length === 0) return 0;
+            
+            const sortedDates = allDates.slice().sort((a, b) => new Date(b) - new Date(a));
+            let streak = 0;
+            const today = new Date();
+            
+            for (let i = 0; i < sortedDates.length; i++) {
+                const date = new Date(sortedDates[i]);
+                const daysDiff = Math.floor((today - date) / (1000 * 60 * 60 * 24));
+                
+                if (daysDiff === streak) {
+                    streak++;
+                } else if (daysDiff > streak + 1) {
+                    break;
+                }
+            }
+            
+            return streak;
+        }
+
+        function calculateProductivityTrend(data, activities) {
+            if (!activities || activities.length < 7) {
+                return { direction: 'stable', change: 0 };
+            }
+
+            // Teile Aktivitäten in zwei Hälften
+            const half = Math.floor(activities.length / 2);
+            const firstHalf = activities.slice(-activities.length, -half);
+            const secondHalf = activities.slice(-half);
+
+            const firstHalfAvg = firstHalf.reduce((sum, act) => sum + (act.dauer || 0), 0) / firstHalf.length;
+            const secondHalfAvg = secondHalf.reduce((sum, act) => sum + (act.dauer || 0), 0) / secondHalf.length;
+
+            const change = ((secondHalfAvg - firstHalfAvg) / firstHalfAvg) * 100;
+
+            if (change > 10) return { direction: 'up', change: Math.abs(change) };
+            if (change < -10) return { direction: 'down', change: Math.abs(change) };
+            return { direction: 'stable', change: Math.abs(change) };
+        }
+
+        function calculateConsistencyScore(data, activities) {
+            if (!data.allDates || data.allDates.length < 3) return 3;
+
+            const totalDays = data.allDates.length;
+            const avgDaily = data.totalHours / totalDays;
+            
+            // Berechne Varianz in täglichen Aktivitäten
+            const dailyHours = {};
+            activities.forEach(act => {
+                const date = act.date;
+                if (!dailyHours[date]) dailyHours[date] = 0;
+                dailyHours[date] += (act.dauer || 0) / 3600000; // Convert to hours
+            });
+
+            const variance = Object.values(dailyHours).reduce((sum, hours) => {
+                return sum + Math.pow(hours - avgDaily, 2);
+            }, 0) / Object.keys(dailyHours).length;
+
+            const stdDev = Math.sqrt(variance);
+            
+            // Score basierend auf Konsistenz (niedrigere Standardabweichung = höherer Score)
+            let score = Math.max(1, Math.min(10, 10 - (stdDev * 2)));
+            
+            // Bonus für längere Streaks
+            const streak = calculateCurrentStreak(data.allDates);
+            if (streak > 7) score = Math.min(10, score + 1);
+            if (streak > 14) score = Math.min(10, score + 1);
+
+            return Math.round(score);
+        }
+
+        function calculateBestTimeSlot(activities) {
+            if (!activities || activities.length < 5) return 'Noch nicht genügend Daten';
+
+            const timeSlots = {
+                'Früh (6-9 Uhr)': 0,
+                'Vormittag (9-12 Uhr)': 0,
+                'Mittag (12-15 Uhr)': 0,
+                'Nachmittag (15-18 Uhr)': 0,
+                'Abend (18-21 Uhr)': 0,
+                'Nacht (21-24 Uhr)': 0
+            };
+
+            activities.forEach(activity => {
+                if (activity.start) {
+                    const hour = new Date(activity.start).getHours();
+                    if (hour >= 6 && hour < 9) timeSlots['Früh (6-9 Uhr)']++;
+                    else if (hour >= 9 && hour < 12) timeSlots['Vormittag (9-12 Uhr)']++;
+                    else if (hour >= 12 && hour < 15) timeSlots['Mittag (12-15 Uhr)']++;
+                    else if (hour >= 15 && hour < 18) timeSlots['Nachmittag (15-18 Uhr)']++;
+                    else if (hour >= 18 && hour < 21) timeSlots['Abend (18-21 Uhr)']++;
+                    else if (hour >= 21 && hour < 24) timeSlots['Nacht (21-24 Uhr)']++;
+                }
+            });
+
+            return Object.keys(timeSlots).reduce((a, b) => timeSlots[a] > timeSlots[b] ? a : b);
+        }
+
+        function calculateActivityBalance(zeiten, userSuffix) {
+            if (!zeiten) return { trading: 0, other: 0 };
+
+            const tradingHours = (zeiten.arbeit || 0) / 3600000; // Convert to hours
+            const otherHours = (zeiten.sport || 0) / 3600000;
+            const total = tradingHours + otherHours;
+
+            return {
+                trading: total > 0 ? Math.round((tradingHours / total) * 100) : 0,
+                other: total > 0 ? Math.round((otherHours / total) * 100) : 0,
+                tradingHours: tradingHours.toFixed(1),
+                otherHours: otherHours.toFixed(1)
+            };
+        }
+
+        function generateStrengths(totalHours, avgDaily, streak, userSuffix, data, activities) {
+            const strengths = [];
+            
+            // Quantitative Stärken
+            if (avgDaily > 4) strengths.push(`Hohe tägliche Arbeitsleistung (${avgDaily.toFixed(1)}h/Tag)`);
+            if (streak > 7) strengths.push(`Exzellente Konsistenz - ${streak} Tage aktiv`);
+            if (totalHours > 100) strengths.push(`Starkes Engagement mit ${totalHours.toFixed(0)} Gesamtstunden`);
+            if (streak > 14) strengths.push('Außergewöhnliche Durchhaltekraft');
+            
+            // Aktivitätsspezifische Stärken
+            const balance = data.activityBalance || calculateActivityBalance(data.zeiten, userSuffix);
+            if (userSuffix === 'A') {
+                if (balance.trading > 0 && balance.other > 0) {
+                    strengths.push(`Ausgewogene Balance: ${balance.tradingHours}h Trading, ${balance.otherHours}h Gamedev`);
+                }
+                if (activities && activities.length > 20) {
+                    strengths.push('Vielfältige Projektaktivität mit regelmäßigen Sessions');
+                }
+            } else {
+                if (balance.trading > 0 && balance.other > 0) {
+                    strengths.push(`Gute Work-Life-Balance: ${balance.tradingHours}h Trading, ${balance.otherHours}h Sport`);
+                }
+                if (balance.other > balance.trading * 0.3) {
+                    strengths.push('Gute Integration von körperlicher Aktivität');
+                }
+            }
+            
+            // Konsistenz-basierte Stärken
+            const consistencyScore = calculateConsistencyScore(data, activities);
+            if (consistencyScore >= 8) {
+                strengths.push('Sehr gleichmäßige Arbeitszeiten und Routine');
+            }
+            
+            // Trend-basierte Stärken
+            const trend = calculateProductivityTrend(data, activities);
+            if (trend.direction === 'up') {
+                strengths.push(`Positive Entwicklung: +${trend.change.toFixed(1)}% Produktivitätssteigerung`);
+            }
+            
+            // Fallback wenn zu wenig Stärken
+            if (strengths.length < 2) {
+                strengths.push('Zuverlässige Arbeitsweise');
+                strengths.push('Bereitschaft zur Selbstverbesserung');
+            }
+            
+            return strengths.slice(0, 5); // Maximal 5 Stärken
+        }
+
+        function generateWeaknesses(totalHours, avgDaily, streak, userSuffix, data, activities) {
+            const weaknesses = [];
+            
+            // Quantitative Schwächen
+            if (avgDaily < 2) {
+                weaknesses.push(`Niedrige tägliche Arbeitszeit (${avgDaily.toFixed(1)}h/Tag - Ziel: 4-6h)`);
+            } else if (avgDaily < 4) {
+                weaknesses.push(`Ausbaubare tägliche Arbeitszeit (${avgDaily.toFixed(1)}h/Tag)`);
+            }
+            
+            if (streak < 3) {
+                weaknesses.push('Inkonsistente tägliche Routine - mehr Regelmäßigkeit nötig');
+            } else if (streak < 7) {
+                weaknesses.push('Konsistenz könnte verbessert werden');
+            }
+            
+            if (totalHours < 30) {
+                weaknesses.push('Gesamtvolumen der Aktivitäten noch ausbaubar');
+            }
+            
+            // Aktivitätsspezifische Schwächen
+            const balance = data.activityBalance || calculateActivityBalance(data.zeiten, userSuffix);
+            if (userSuffix === 'A') {
+                if (balance.other === 0) {
+                    weaknesses.push('Gamedev-Aktivitäten fehlen für ausgewogene Entwicklung');
+                } else if (balance.trading === 0) {
+                    weaknesses.push('Trading-Aktivitäten könnten intensiviert werden');
+                } else if (balance.trading > 80) {
+                    weaknesses.push('Zu wenig Zeit für kreative Gamedev-Projekte');
+                }
+            } else {
+                if (balance.other === 0) {
+                    weaknesses.push('Sportliche Aktivitäten fehlen für optimale Work-Life-Balance');
+                } else if (balance.trading === 0) {
+                    weaknesses.push('Trading-Fokus könnte verstärkt werden');
+                } else if (balance.other < 20) {
+                    weaknesses.push('Mehr körperliche Aktivität empfohlen');
+                }
+            }
+            
+            // Konsistenz-basierte Schwächen
+            const consistencyScore = calculateConsistencyScore(data, activities);
+            if (consistencyScore < 5) {
+                weaknesses.push('Unregelmäßige Arbeitszeiten beeinträchtigen Produktivität');
+            }
+            
+            // Trend-basierte Schwächen
+            const trend = calculateProductivityTrend(data, activities);
+            if (trend.direction === 'down') {
+                weaknesses.push(`Rückläufiger Trend: -${trend.change.toFixed(1)}% in letzter Zeit`);
+            }
+            
+            // Session-Längen-Analyse
+            if (activities && activities.length > 5) {
+                const avgSessionLength = activities.reduce((sum, act) => sum + (act.dauer || 0), 0) / activities.length / 3600000;
+                if (avgSessionLength < 1) {
+                    weaknesses.push('Sessions zu kurz - längere Fokuszeiten empfohlen');
+                } else if (avgSessionLength > 6) {
+                    weaknesses.push('Sessions sehr lang - regelmäßige Pausen wichtig');
+                }
+            }
+            
+            // Fallback für minimale Schwächen
+            if (weaknesses.length === 0) {
+                weaknesses.push('Potenzial für noch effizientere Zeitnutzung');
+            }
+            
+            return weaknesses.slice(0, 4); // Maximal 4 Schwächen
+        }
+
+        function generatePatterns(totalHours, avgDaily, userSuffix, data, activities) {
+            const patterns = [];
+            
+            // Aktivitätsmuster
+            if (avgDaily > 4) {
+                patterns.push({
+                    title: 'Hochproduktive Phasen',
+                    description: `Regelmäßige Sessions mit durchschnittlich ${avgDaily.toFixed(1)} Stunden täglich`
+                });
+            } else if (avgDaily < 2) {
+                patterns.push({
+                    title: 'Sporadische Aktivität',
+                    description: 'Unregelmäßige Arbeitszeiten mit Optimierungspotenzial'
+                });
+            }
+            
+            // Zeitbasierte Muster
+            const bestTime = calculateBestTimeSlot(activities);
+            if (bestTime !== 'Noch nicht genügend Daten') {
+                patterns.push({
+                    title: 'Optimale Arbeitszeit',
+                    description: `Höchste Aktivität ${bestTime.toLowerCase()}`
+                });
+            }
+            
+            // Konsistenzmuster
+            const consistencyScore = calculateConsistencyScore(data, activities);
+            if (consistencyScore >= 8) {
+                patterns.push({
+                    title: 'Stabile Routine',
+                    description: 'Sehr regelmäßige Arbeitszeiten und hohe Konsistenz'
+                });
+            } else if (consistencyScore < 5) {
+                patterns.push({
+                    title: 'Wechselhafte Routine',
+                    description: 'Stark schwankende tägliche Aktivitäten'
+                });
+            }
+            
+            // Aktivitäts-Balance-Muster
+            const balance = data.activityBalance || calculateActivityBalance(data.zeiten, userSuffix);
+            if (userSuffix === 'A') {
+                if (balance.trading > balance.other) {
+                    patterns.push({
+                        title: 'Trading-Fokus',
+                        description: `${balance.trading}% Trading vs ${balance.other}% Gamedev - Trading dominiert`
+                    });
+                } else if (balance.other > balance.trading) {
+                    patterns.push({
+                        title: 'Kreativ-Fokus',
+                        description: `${balance.other}% Gamedev vs ${balance.trading}% Trading - Kreativität im Vordergrund`
+                    });
+                } else {
+                    patterns.push({
+                        title: 'Ausgewogene Balance',
+                        description: `Gleichmäßige Verteilung: ${balance.trading}% Trading, ${balance.other}% Gamedev`
+                    });
+                }
+            } else {
+                if (balance.trading > balance.other * 2) {
+                    patterns.push({
+                        title: 'Work-intensiv',
+                        description: `${balance.trading}% Trading vs ${balance.other}% Sport - Arbeit dominiert`
+                    });
+                } else if (balance.other > balance.trading) {
+                    patterns.push({
+                        title: 'Sport-aktiv',
+                        description: `${balance.other}% Sport vs ${balance.trading}% Trading - Gute Work-Life-Balance`
+                    });
+                }
+            }
+            
+            // Entwicklungstrend
+            const trend = calculateProductivityTrend(data, activities);
+            if (trend.direction === 'up') {
+                patterns.push({
+                    title: 'Aufwärtstrend',
+                    description: `Positive Entwicklung mit ${trend.change.toFixed(1)}% Steigerung`
+                });
+            } else if (trend.direction === 'down') {
+                patterns.push({
+                    title: 'Rückläufiger Trend',
+                    description: `${trend.change.toFixed(1)}% Rückgang - Refokussierung empfohlen`
+                });
+            }
+            
+            // Fallback-Muster
+            if (patterns.length === 0) {
+                patterns.push({
+                    title: 'Entwicklungsphase',
+                    description: 'Muster werden durch mehr Aktivitätsdaten deutlicher'
+                });
+            }
+            
+            return patterns.slice(0, 4); // Maximal 4 Muster
+        }
+
+        function generateRecommendations(totalHours, avgDaily, streak, userSuffix, data, activities) {
+            const recommendations = [];
+            const balance = data.activityBalance || calculateActivityBalance(data.zeiten, userSuffix);
+            const consistencyScore = calculateConsistencyScore(data, activities);
+            const trend = calculateProductivityTrend(data, activities);
+            
+            // Grundlegende Empfehlungen basierend auf Performance
+            if (avgDaily < 3) {
+                recommendations.push({
+                    icon: '⏰',
+                    title: 'Tägliche Ziele erhöhen',
+                    description: `Aktuelle ${avgDaily.toFixed(1)}h/Tag sind ausbaubar. Starte mit einem Ziel von 4-5 Stunden täglich und erhöhe schrittweise um 30 Minuten pro Woche.`
+                });
+            } else if (avgDaily > 8) {
+                recommendations.push({
+                    icon: '⚖️',
+                    title: 'Work-Life-Balance beachten',
+                    description: `${avgDaily.toFixed(1)}h/Tag sind sehr hoch. Plane bewusst Erholungspausen ein, um Burnout zu vermeiden.`
+                });
+            }
+            
+            if (streak < 5) {
+                recommendations.push({
+                    icon: '🔥',
+                    title: 'Konsistenz aufbauen',
+                    description: `Aktueller Streak: ${streak} Tage. Starte eine 21-Tage-Challenge für eine stabile tägliche Routine. Kleine, tägliche Fortschritte sind effektiver als sporadische Marathons.`
+                });
+            } else if (streak > 21) {
+                recommendations.push({
+                    icon: '🏆',
+                    title: 'Streak würdigen',
+                    description: `Großartige ${streak}-Tage-Konsistenz! Belohne dich für diese Leistung und plane einen bewussten Erholungstag.`
+                });
+            }
+            
+            // Konsistenz-basierte Empfehlungen
+            if (consistencyScore < 6) {
+                recommendations.push({
+                    icon: '📊',
+                    title: 'Routine stabilisieren',
+                    description: `Konsistenz-Score: ${consistencyScore}/10. Etabliere feste Zeiten für deine Aktivitäten. Verwende Time-Blocking und plane deine Sessions im Voraus.`
+                });
+            }
+            
+            // Trend-basierte Empfehlungen
+            if (trend.direction === 'down') {
+                recommendations.push({
+                    icon: '📈',
+                    title: 'Motivation wiederfinden',
+                    description: `Rückgang von ${trend.change.toFixed(1)}% erkannt. Analysiere, was sich geändert hat, und setze dir neue, erreichbare Zwischenziele.`
+                });
+            }
+            
+            // Aktivitätsspezifische Empfehlungen
+            if (userSuffix === 'A') {
+                if (balance.trading === 0) {
+                    recommendations.push({
+                        icon: '📊',
+                        title: 'Trading beginnen',
+                        description: 'Starte mit 1-2 Stunden täglich Trading-Analyse und Demo-Trading, um Erfahrungen zu sammeln.'
+                    });
+                } else if (balance.other === 0) {
+                    recommendations.push({
+                        icon: '🎮',
+                        title: 'Gamedev-Projekte starten',
+                        description: 'Beginne mit kleinen Gamedev-Projekten (30min/Tag). Dies fördert Kreativität und kann Trading-Stress reduzieren.'
+                    });
+                } else {
+                    const ratio = balance.trading / balance.other;
+                    if (ratio > 3) {
+                        recommendations.push({
+                            icon: '🎨',
+                            title: 'Mehr kreative Balance',
+                            description: `Trading dominiert stark (${balance.trading}% vs ${balance.other}%). Erhöhe Gamedev-Zeit für bessere Work-Life-Balance.`
+                        });
+                    } else if (ratio < 0.5) {
+                        recommendations.push({
+                            icon: '💼',
+                            title: 'Trading-Fokus verstärken',
+                            description: `Gamedev dominiert (${balance.other}% vs ${balance.trading}%). Mehr Trading-Zeit könnte finanzielle Ziele unterstützen.`
+                        });
+                    } else {
+                        recommendations.push({
+                            icon: '🔄',
+                            title: 'Synergien nutzen',
+                            description: 'Nutze Programmierkenntnisse aus Gamedev für Trading-Automatisierung und erstelle Trading-basierte Spiele.'
+                        });
+                    }
+                }
+            } else {
+                if (balance.trading === 0) {
+                    recommendations.push({
+                        icon: '📊',
+                        title: 'Trading-Routine aufbauen',
+                        description: 'Etabliere eine morgendliche Trading-Routine (1-2h) für konsistente Marktteilnahme.'
+                    });
+                } else if (balance.other === 0) {
+                    recommendations.push({
+                        icon: '💪',
+                        title: 'Sport integrieren',
+                        description: 'Füge 30-45min Sport nach Trading-Sessions hinzu. Körperliche Aktivität verbessert mentale Klarheit für Trades.'
+                    });
+                } else {
+                    const ratio = balance.trading / balance.other;
+                    if (ratio > 4) {
+                        recommendations.push({
+                            icon: '🏃',
+                            title: 'Mehr körperlicher Ausgleich',
+                            description: `Trading dominiert (${balance.trading}% vs ${balance.other}%). Sport als mentaler Reset zwischen Trading-Sessions nutzen.`
+                        });
+                    } else {
+                        recommendations.push({
+                            icon: '🧘',
+                            title: 'Mindful Trading',
+                            description: 'Integriere 10min Meditation vor Trading-Sessions. Sport-Disziplin auf Trading-Psychologie übertragen.'
+                        });
+                    }
+                }
+            }
+            
+            // Standard-Empfehlungen wenn zu wenig spezifische
+            if (recommendations.length < 3) {
+                recommendations.push({
+                    icon: '📋',
+                    title: 'Wöchentliche Reviews',
+                    description: 'Plane jeden Sonntag 15min für Reflexion der vergangenen Woche und Ziele für die kommende Woche.'
+                });
+                
+                recommendations.push({
+                    icon: '🎯',
+                    title: 'SMART-Ziele setzen',
+                    description: 'Definiere spezifische, messbare, erreichbare, relevante und terminierte Ziele für die nächsten 30 Tage.'
+                });
+            }
+            
+            return recommendations.slice(0, 6); // Maximal 6 Empfehlungen
+        }
+
+        function generateActionPlan(totalHours, avgDaily, userSuffix, data) {
+            const balance = data.activityBalance || calculateActivityBalance(data.zeiten, userSuffix);
+            const consistencyScore = calculateConsistencyScore(data, userActivities[userSuffix] || []);
+            
+            const basePlan = [
+                {
+                    title: 'Analyse & Zielsetzung',
+                    description: `Aktuelle Performance: ${avgDaily.toFixed(1)}h/Tag, ${totalHours.toFixed(0)}h gesamt. Setze realistische Ziele: +20% mehr tägliche Aktivität über 4 Wochen.`
+                },
+                {
+                    title: 'Routine optimieren',
+                    description: consistencyScore < 6 ? 
+                        'Etabliere feste Zeiten für deine Aktivitäten. Nutze Time-Blocking und halte täglich zur gleichen Zeit an.' :
+                        'Optimiere bestehende Routine durch Effizienz-Analyse. Identifiziere produktivste Zeiten und verstärke diese.'
+                },
+                {
+                    title: 'Balance ausbauen',
+                    description: userSuffix === 'A' ?
+                        `Trading/Gamedev-Balance optimieren (aktuell ${balance.trading}%/${balance.other}%). Ziel: 60/40 oder 70/30 je nach Priorität.` :
+                        `Trading/Sport-Balance optimieren (aktuell ${balance.trading}%/${balance.other}%). Ziel: 70/30 für optimale Performance.`
+                },
+                {
+                    title: 'Nachhaltigkeit & Skalierung',
+                    description: 'Evaluiere Fortschritte, belohne Erfolge und plane langfristige Entwicklung. Erstelle Feedback-Loops für kontinuierliche Verbesserung.'
+                }
+            ];
+            
+            return basePlan;
         }
 
         function logout() {
@@ -1014,7 +2006,23 @@
             }
         }
 
-        // Export logout function
+        // Close modal when clicking outside
+        document.getElementById('analysisModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAnalysis();
+            }
+        });
+
+        // Close modal with escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeAnalysis();
+            }
+        });
+
+        // Export functions to global scope
+        window.showIntelligentAnalysis = showIntelligentAnalysis;
+        window.closeAnalysis = closeAnalysis;
         window.logout = logout;
     </script>
 </body>
