@@ -271,6 +271,124 @@
             overflow-y: auto;
         }
 
+        .activity-dropdown-card {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .activity-dropdown-card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .dropdown-header {
+            padding: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .dropdown-header:hover {
+            background: var(--light-color);
+        }
+
+        .dropdown-arrow {
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .dropdown-arrow.rotated {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            background: var(--light-color);
+        }
+
+        .dropdown-content.expanded {
+            max-height: 600px;
+            padding: 1.5rem;
+        }
+
+        .dropdown-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .dropdown-controls select,
+        .dropdown-controls input {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: white;
+            font-size: 0.875rem;
+            transition: var(--transition);
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .dropdown-controls select:focus,
+        .dropdown-controls input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+        }
+
+        .all-activities-list {
+            max-height: 400px;
+            overflow-y: auto;
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .all-activities-list .activity-item {
+            margin-bottom: 0.75rem;
+            padding: 1rem;
+            background: var(--light-color);
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            transition: var(--transition);
+        }
+
+        .all-activities-list .activity-item:hover {
+            transform: translateX(4px);
+            box-shadow: var(--shadow);
+        }
+
+        .all-activities-list .activity-item.arbeit {
+            border-left-color: var(--warning-color);
+        }
+
+        .all-activities-list .activity-item.sport {
+            border-left-color: var(--success-color);
+        }
+
+        .activity-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+
+        .activity-duration {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
         .activity-item {
             padding: 1rem;
             border-bottom: 1px solid var(--border-color);
@@ -741,6 +859,26 @@
                         <div class="loading"></div>
                     </div>
                 </div>
+
+                <div class="activity-dropdown-card">
+                    <div class="dropdown-header" onclick="toggleAllActivities('A')">
+                        <h3 class="chart-title">📋 Alle Aktivitäten</h3>
+                        <div class="dropdown-arrow" id="dropdownArrowA">▼</div>
+                    </div>
+                    <div class="dropdown-content" id="allActivitiesA">
+                        <div class="dropdown-controls">
+                            <select id="filterTypeA" onchange="filterActivities('A')">
+                                <option value="all">Alle Aktivitäten</option>
+                                <option value="arbeit">Nur Trading</option>
+                                <option value="sport">Nur Gamedev</option>
+                            </select>
+                            <input type="date" id="filterDateA" onchange="filterActivities('A')" placeholder="Datum filtern">
+                        </div>
+                        <div class="all-activities-list" id="allActivitiesListA">
+                            <div class="loading"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -821,6 +959,26 @@
                         <div class="loading"></div>
                     </div>
                 </div>
+
+                <div class="activity-dropdown-card">
+                    <div class="dropdown-header" onclick="toggleAllActivities('B')">
+                        <h3 class="chart-title">📋 Alle Aktivitäten</h3>
+                        <div class="dropdown-arrow" id="dropdownArrowB">▼</div>
+                    </div>
+                    <div class="dropdown-content" id="allActivitiesB">
+                        <div class="dropdown-controls">
+                            <select id="filterTypeB" onchange="filterActivities('B')">
+                                <option value="all">Alle Aktivitäten</option>
+                                <option value="arbeit">Nur Trading</option>
+                                <option value="sport">Nur Workout</option>
+                            </select>
+                            <input type="date" id="filterDateB" onchange="filterActivities('B')" placeholder="Datum filtern">
+                        </div>
+                        <div class="all-activities-list" id="allActivitiesListB">
+                            <div class="loading"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -892,6 +1050,7 @@
         // Global data storage for analysis
         let userData = {};
         let userActivities = {};
+        let allUserActivities = {}; // Store all activities for dropdown
 
         // Store user data for analysis
         function storeUserData(suffix, data) {
@@ -904,6 +1063,11 @@
         // Store user activities for deeper analysis
         function storeUserActivities(suffix, activities) {
             userActivities[suffix] = activities;
+        }
+
+        // Store all user activities for dropdown
+        function storeAllUserActivities(suffix, activities) {
+            allUserActivities[suffix] = activities;
         }
 
         // Auth Check
@@ -1001,10 +1165,12 @@
                 // Store data for intelligent analysis
                 storeUserData(benutzer.idSuffix, data);
                 storeUserActivities(benutzer.idSuffix, data.activities);
+                storeAllUserActivities(benutzer.idSuffix, data.allActivities);
 
                 // Erstelle Charts für jeden Benutzer
                 createUserCharts(benutzer.idSuffix, data);
                 displayActivities(benutzer.idSuffix, data.activities);
+                displayAllActivities(benutzer.idSuffix, data.allActivities);
                 
                 // Update individual user stats
                 updateUserStats(benutzer.idSuffix, data);
@@ -1092,7 +1258,8 @@
             return {
                 zeiten,
                 weekData,
-                activities: activities.slice(0, 10), // Nur die letzten 10
+                activities: activities.slice(0, 10), // Nur die letzten 10 für die normale Anzeige
+                allActivities: activities, // Alle Aktivitäten für die Dropdown-Anzeige
                 totalHours: zeiten.protokoll / 3600000, // Nur Tagesübersicht
                 allDates: Array.from(allDates)
             };
@@ -1281,6 +1448,119 @@
                     </div>
                 `;
             }).join('');
+        }
+
+        function displayAllActivities(suffix, activities) {
+            const container = document.getElementById(`allActivitiesList${suffix}`);
+            
+            if (activities.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <p>Keine Aktivitäten vorhanden</p>
+                    </div>
+                `;
+                return;
+            }
+
+            renderActivityList(suffix, activities);
+        }
+
+        function renderActivityList(suffix, activities) {
+            const container = document.getElementById(`allActivitiesList${suffix}`);
+            
+            if (activities.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <p>Keine Aktivitäten gefunden</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Gruppiere Aktivitäten nach Datum
+            const groupedActivities = activities.reduce((groups, activity) => {
+                const date = activity.date;
+                if (!groups[date]) {
+                    groups[date] = [];
+                }
+                groups[date].push(activity);
+                return groups;
+            }, {});
+
+            let html = '';
+            const sortedDates = Object.keys(groupedActivities).sort((a, b) => new Date(b) - new Date(a));
+
+            sortedDates.forEach(date => {
+                const dateObj = new Date(date);
+                const dateStr = dateObj.toLocaleDateString('de-DE', { 
+                    weekday: 'long', 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric' 
+                });
+
+                html += `<div style="font-weight: 600; color: var(--primary-color); margin: 1rem 0 0.5rem 0; font-size: 1.1rem;">${dateStr}</div>`;
+
+                groupedActivities[date].forEach(activity => {
+                    const startTime = new Date(activity.start).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                    const endTime = new Date(activity.ende).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                    const duration = formatTime(activity.dauer);
+                    const hours = (activity.dauer / 3600000).toFixed(1);
+
+                    const icon = activity.type === 'arbeit' ? '📊' : (suffix === 'A' ? '👾' : '💪');
+                    const label = activity.type === 'arbeit' ? 'Trading' : (suffix === 'A' ? 'Gamedev' : 'Workout');
+
+                    html += `
+                        <div class="activity-item ${activity.type}">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <span style="font-size: 1.2rem;">${icon}</span>
+                                <span style="font-weight: 600;">${label}</span>
+                            </div>
+                            <div class="activity-stats">
+                                <span>🕒 ${startTime} - ${endTime}</span>
+                                <span class="activity-duration">${hours}h (${duration})</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+
+            container.innerHTML = html;
+        }
+
+        function toggleAllActivities(suffix) {
+            const content = document.getElementById(`allActivities${suffix}`);
+            const arrow = document.getElementById(`dropdownArrow${suffix}`);
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                arrow.classList.remove('rotated');
+            } else {
+                content.classList.add('expanded');
+                arrow.classList.add('rotated');
+            }
+        }
+
+        function filterActivities(suffix) {
+            const typeFilter = document.getElementById(`filterType${suffix}`).value;
+            const dateFilter = document.getElementById(`filterDate${suffix}`).value;
+            const allActivities = allUserActivities[suffix] || [];
+            
+            let filteredActivities = allActivities;
+
+            // Filter by type
+            if (typeFilter !== 'all') {
+                filteredActivities = filteredActivities.filter(activity => activity.type === typeFilter);
+            }
+
+            // Filter by date
+            if (dateFilter) {
+                filteredActivities = filteredActivities.filter(activity => activity.date === dateFilter);
+            }
+
+            renderActivityList(suffix, filteredActivities);
         }
 
         // Intelligent Analysis Functions
@@ -2024,6 +2304,8 @@
         window.showIntelligentAnalysis = showIntelligentAnalysis;
         window.closeAnalysis = closeAnalysis;
         window.logout = logout;
+        window.toggleAllActivities = toggleAllActivities;
+        window.filterActivities = filterActivities;
     </script>
 </body>
 </html>
