@@ -1093,7 +1093,7 @@
                 zeiten,
                 weekData,
                 activities: activities.slice(0, 10), // Nur die letzten 10
-                totalHours: (zeiten.protokoll + zeiten.arbeit + zeiten.sport) / 3600000,
+                totalHours: zeiten.protokoll / 3600000, // Nur Tagesübersicht
                 allDates: Array.from(allDates)
             };
         }
