@@ -1205,55 +1205,63 @@
             return mobility;
         }
 
-        // Enhanced minimax with deeper search for Grandmaster
+        // Simplified and optimized minimax for better performance
         function iterativeDeepening(testBoard, maxDepth, timeLimit) {
             const startTime = Date.now();
             let bestMove = null;
             let bestScore = -Infinity;
             
+            // Clear data structures
             transpositionTable.clear();
-            killerMoves = Array(15).fill().map(() => Array(2).fill(null)); // Reduced from 20
+            killerMoves = Array(10).fill().map(() => Array(2).fill(null)); // Further reduced
             historyTable = {};
             
-            // Adjust max depth based on bot difficulty - optimized for performance
+            // Conservative max depth to prevent infinite loops
             let adjustedMaxDepth;
             switch(botDifficulty) {
                 case 'grandmaster':
-                    adjustedMaxDepth = Math.min(maxDepth, 7); // Reduced from 10
+                    adjustedMaxDepth = 5; // Reduced significantly
                     break;
                 case 'hard':
-                    adjustedMaxDepth = Math.min(maxDepth, 6);
+                    adjustedMaxDepth = 4; // Reduced
                     break;
                 default:
-                    adjustedMaxDepth = maxDepth;
+                    adjustedMaxDepth = 3;
             }
+            
+            const moves = getAllValidMovesOrdered(testBoard, false, 0);
+            if (moves.length === 0) return null;
+            
+            // Always have a fallback move
+            bestMove = moves[0];
             
             for (let depth = 1; depth <= adjustedMaxDepth; depth++) {
                 const timeUsed = Date.now() - startTime;
-                if (timeUsed > timeLimit * 0.8) break; // Break earlier to ensure responsiveness
-                
-                const moves = getAllValidMovesOrdered(testBoard, false, depth);
-                if (moves.length === 0) break;
+                if (timeUsed > timeLimit * 0.6) break; // Very conservative time limit
                 
                 let currentBestMove = null;
                 let currentBestScore = -Infinity;
                 
-                // Limit the number of moves to consider for deeper searches
-                const moveLimit = botDifficulty === 'grandmaster' && depth > 4 ? 
-                    Math.min(moves.length, 12) : moves.length;
+                // Limit moves to prevent timeout
+                const moveLimit = Math.min(moves.length, depth > 3 ? 8 : 12);
                 
                 for (let i = 0; i < moveLimit; i++) {
-                    const move = moves[i];
-                    if (Date.now() - startTime > timeLimit * 0.9) break; // More aggressive time management
+                    if (Date.now() - startTime > timeLimit * 0.7) break; // Early exit
                     
+                    const move = moves[i];
                     const newBoard = makeMove(testBoard, move.from, move.to);
                     const newCastlingRights = updateCastlingRights(castlingRights, move.from, move.to, newBoard);
                     
-                    const score = -minimax(newBoard, depth - 1, -Infinity, Infinity, true, newCastlingRights, 1);
-                    
-                    if (score > currentBestScore) {
-                        currentBestScore = score;
-                        currentBestMove = move;
+                    try {
+                        const score = -minimax(newBoard, depth - 1, -Infinity, Infinity, true, newCastlingRights, 1, startTime, timeLimit);
+                        
+                        if (score > currentBestScore) {
+                            currentBestScore = score;
+                            currentBestMove = move;
+                        }
+                    } catch (e) {
+                        // Timeout or error - use current best
+                        break;
                     }
                 }
                 
@@ -1262,20 +1270,23 @@
                     bestScore = currentBestScore;
                 }
                 
-                // For Grandmaster, don't search too deep if we already have a good move
-                if (botDifficulty === 'grandmaster' && depth >= 5 && bestScore > 50) {
-                    break; // We found a good tactical move, no need to search deeper
-                }
+                // Stop early if we found a very good move
+                if (bestScore > 200) break;
             }
             
             return bestMove;
         }
 
-        function minimax(testBoard, depth, alpha, beta, maximizingPlayer, testCastlingRights, ply) {
-            // Optimized search depth for better performance
-            const maxPly = botDifficulty === 'grandmaster' ? 12 : 10; // Reduced from 15
+        function minimax(testBoard, depth, alpha, beta, maximizingPlayer, testCastlingRights, ply, startTime, timeLimit) {
+            // Timeout check to prevent infinite loops
+            if (startTime && Date.now() - startTime > timeLimit * 0.8) {
+                throw new Error("Timeout");
+            }
             
-            // Transposition table lookup
+            // Conservative max ply to prevent deep recursion
+            const maxPly = 8;
+            
+            // Transposition table lookup (simplified)
             const boardKey = getBoardKey(testBoard, maximizingPlayer);
             const ttEntry = transpositionTable.get(boardKey);
             if (ttEntry && ttEntry.depth >= depth) {
@@ -1285,8 +1296,7 @@
             }
             
             if (depth === 0 || ply > maxPly) {
-                const qDepth = botDifficulty === 'grandmaster' ? 4 : 3; // Reduced quiescence depth
-                return quiescenceSearch(testBoard, alpha, beta, maximizingPlayer, qDepth);
+                return evaluatePosition(testBoard); // Simplified - no quiescence for performance
             }
             
             const moves = getAllValidMovesOrdered(testBoard, maximizingPlayer, ply);
@@ -1303,68 +1313,55 @@
             let bestMove = null;
             let flag = TT_ALPHA;
             
-            // Limit moves to consider in deeper positions for performance
-            const moveLimit = depth > 3 && moves.length > 20 ? 20 : moves.length;
+            // Limit moves to consider for performance
+            const moveLimit = Math.min(moves.length, depth > 2 ? 10 : 15);
             
             for (let i = 0; i < moveLimit; i++) {
                 const move = moves[i];
                 const newBoard = makeMove(testBoard, move.from, move.to);
                 const newCastlingRights = updateCastlingRights(testCastlingRights, move.from, move.to, newBoard);
                 
-                // Late move reduction for performance - more aggressive
-                let reduction = 0;
-                if (botDifficulty === 'grandmaster' && depth > 2 && i > 3 && !move.capturedPiece) {
-                    reduction = 1;
-                }
-                
-                const score = minimax(newBoard, depth - 1 - reduction, alpha, beta, !maximizingPlayer, newCastlingRights, ply + 1);
-                
-                if (maximizingPlayer) {
-                    if (score > bestScore) {
-                        bestScore = score;
-                        bestMove = move;
-                    }
-                    alpha = Math.max(alpha, score);
-                    if (beta <= alpha) {
-                        // Update killer moves
-                        if (ply < killerMoves.length && killerMoves[ply][0] !== move) {
-                            killerMoves[ply][1] = killerMoves[ply][0];
-                            killerMoves[ply][0] = move;
+                try {
+                    const score = minimax(newBoard, depth - 1, alpha, beta, !maximizingPlayer, newCastlingRights, ply + 1, startTime, timeLimit);
+                    
+                    if (maximizingPlayer) {
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestMove = move;
                         }
-                        // Update history
-                        const histKey = getHistoryKey(move.from, move.to);
-                        historyTable[histKey] = (historyTable[histKey] || 0) + depth * depth;
-                        flag = TT_BETA;
-                        break;
-                    }
-                } else {
-                    if (score < bestScore) {
-                        bestScore = score;
-                        bestMove = move;
-                    }
-                    beta = Math.min(beta, score);
-                    if (beta <= alpha) {
-                        if (ply < killerMoves.length && killerMoves[ply][0] !== move) {
-                            killerMoves[ply][1] = killerMoves[ply][0];
-                            killerMoves[ply][0] = move;
+                        alpha = Math.max(alpha, score);
+                        if (beta <= alpha) {
+                            flag = TT_BETA;
+                            break;
                         }
-                        const histKey = getHistoryKey(move.from, move.to);
-                        historyTable[histKey] = (historyTable[histKey] || 0) + depth * depth;
-                        flag = TT_BETA;
-                        break;
+                    } else {
+                        if (score < bestScore) {
+                            bestScore = score;
+                            bestMove = move;
+                        }
+                        beta = Math.min(beta, score);
+                        if (beta <= alpha) {
+                            flag = TT_BETA;
+                            break;
+                        }
                     }
+                } catch (e) {
+                    // Timeout - return current best
+                    break;
                 }
             }
             
             if (bestScore > alpha && bestScore < beta) flag = TT_EXACT;
             
-            // Store in transposition table
-            transpositionTable.set(boardKey, {
-                score: bestScore,
-                depth: depth,
-                flag: flag,
-                move: bestMove
-            });
+            // Store in transposition table (only if we have space)
+            if (transpositionTable.size < 10000) {
+                transpositionTable.set(boardKey, {
+                    score: bestScore,
+                    depth: depth,
+                    flag: flag,
+                    move: bestMove
+                });
+            }
             
             return bestScore;
         }
@@ -2218,22 +2215,22 @@
             botThinking = true;
             let statusClass, botName, thinkTime;
             
-            // Set different parameters based on bot difficulty
+            // Set different parameters based on bot difficulty - optimized for responsiveness
             switch(botDifficulty) {
                 case 'easy':
                     statusClass = 'bot-thinking';
                     botName = '🤖 Bot denkt nach...';
-                    thinkTime = 600;
+                    thinkTime = 500; // Reduced from 600
                     break;
                 case 'hard':
                     statusClass = 'strong-bot-thinking';
                     botName = '🔥 Starker Bot analysiert...';
-                    thinkTime = 800;
+                    thinkTime = 700; // Reduced from 800
                     break;
                 case 'grandmaster':
                     statusClass = 'grandmaster-bot-thinking';
                     botName = '👑 Grandmaster analysiert...';
-                    thinkTime = 900; // Optimized thinking time for Grandmaster
+                    thinkTime = 800; // Reduced from 900
                     break;
             }
             
@@ -2262,56 +2259,54 @@
                     }
                 }
                 
+                // Try advanced algorithms with strict timeouts
                 if (!bestMove) {
-                    if (botDifficulty === 'grandmaster') {
-                        // Use the most advanced algorithm with optimized search
-                        bestMove = iterativeDeepening(board, 6, thinkTime - 100); // Optimized depth
-                        if (!bestMove) {
-                            // Fallback with enhanced evaluation
-                            let bestScore = -Infinity;
-                            bestMove = validMoves[0];
-                            
-                            for (const move of validMoves.slice(0, 10)) { // Reduced from 15
-                                const newBoard = makeMove(board, move.from, move.to);
-                                const score = -evaluatePosition(newBoard) * 100; // Enhanced scoring
-                                
-                                // Add strategic bonuses for Grandmaster
-                                if (move.capturedPiece) score += PIECE_VALUES[move.capturedPiece.toLowerCase()];
-                                if (isCheckMove(newBoard, true)) score += 50;
-                                
-                                if (score > bestScore) {
-                                    bestScore = score;
-                                    bestMove = move;
-                                }
-                            }
+                    try {
+                        if (botDifficulty === 'grandmaster') {
+                            // Use optimized algorithm with timeout protection
+                            bestMove = iterativeDeepening(board, 5, thinkTime - 100);
+                        } else if (botDifficulty === 'hard') {
+                            // Use simpler algorithm for hard bot
+                            bestMove = iterativeDeepening(board, 4, thinkTime - 50);
                         }
-                    } else if (botDifficulty === 'hard') {
-                        // Use advanced algorithm with time limit
-                        bestMove = iterativeDeepening(board, 6, thinkTime - 100);
-                        if (!bestMove) {
-                            let bestScore = -Infinity;
-                            bestMove = validMoves[0];
-                            
-                            for (const move of validMoves.slice(0, 10)) {
-                                const newBoard = makeMove(board, move.from, move.to);
-                                const score = -evaluatePosition(newBoard);
-                                if (score > bestScore) {
-                                    bestScore = score;
-                                    bestMove = move;
-                                }
-                            }
-                        }
-                    } else {
-                        // Use simple evaluation for easy bot
-                        let bestScore = -Infinity;
-                        bestMove = validMoves[0];
+                    } catch (e) {
+                        // Algorithm timed out - use fallback
+                        bestMove = null;
+                    }
+                }
+                
+                // Simple fallback if advanced algorithms fail
+                if (!bestMove) {
+                    let bestScore = -Infinity;
+                    bestMove = validMoves[0]; // Always have a move
+                    
+                    const moveLimit = Math.min(validMoves.length, botDifficulty === 'grandmaster' ? 8 : 6);
+                    
+                    for (let i = 0; i < moveLimit; i++) {
+                        const move = validMoves[i];
+                        let score = 0;
                         
-                        for (const move of validMoves) {
-                            const score = evaluateMove(move, false) + Math.random() * 100;
-                            if (score > bestScore) {
-                                bestScore = score;
-                                bestMove = move;
+                        if (botDifficulty === 'easy') {
+                            score = evaluateMove(move, false) + Math.random() * 100;
+                        } else {
+                            // Simple position evaluation
+                            const newBoard = makeMove(board, move.from, move.to);
+                            score = -evaluatePosition(newBoard) * 50;
+                            
+                            // Bonus for captures
+                            if (move.capturedPiece) {
+                                score += PIECE_VALUES[move.capturedPiece.toLowerCase()];
                             }
+                            
+                            // Bonus for checks
+                            if (isCheckMove(newBoard, true)) {
+                                score += 30;
+                            }
+                        }
+                        
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestMove = move;
                         }
                     }
                 }
