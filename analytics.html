@@ -1,0 +1,1996 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trading Analytics Dashboard - Erik Lähner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --secondary: #764ba2;
+            --success: #48bb78;
+            --danger: #f56565;
+            --warning: #ed8936;
+            --info: #4299e1;
+            --background: #f7fafc;
+            --surface: #ffffff;
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            line-height: 1.6;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(103, 126, 234, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 50%, rgba(118, 75, 162, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 50% 100%, rgba(72, 187, 120, 0.1) 0%, transparent 50%);
+            animation: bgPulse 20s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes bgPulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* Header */
+        .dashboard-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: slideDown 0.8s ease-out;
+        }
+
+        .dashboard-header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .header-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .header-stat {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 12px;
+            transition: var(--transition);
+        }
+
+        .header-stat:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .header-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .header-stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .positive { color: var(--success); }
+        .negative { color: var(--danger); }
+
+        /* Cards */
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: var(--transition);
+            animation: fadeInUp 0.6s ease-out;
+            animation-fill-mode: both;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Grid Layouts */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .performance-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 350px;
+            margin: 1rem 0;
+        }
+
+        .chart-small {
+            height: 250px;
+        }
+
+        .chart-large {
+            height: 400px;
+        }
+
+        /* Metrics Cards */
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .metric-card:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+        }
+
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-change {
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        .metric-change.positive {
+            background: rgba(72, 187, 120, 0.1);
+            color: var(--success);
+        }
+
+        .metric-change.negative {
+            background: rgba(245, 101, 101, 0.1);
+            color: var(--danger);
+        }
+
+        /* Risk Assessment */
+        .risk-gauge {
+            position: relative;
+            width: 200px;
+            height: 100px;
+            margin: 1rem auto;
+        }
+
+        .risk-gauge canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .risk-label {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* Recommendations */
+        .recommendations-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .recommendation-item {
+            background: rgba(255, 255, 255, 0.7);
+            margin-bottom: 1rem;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--info);
+            transition: var(--transition);
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .recommendation-item:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateX(4px);
+        }
+
+        .recommendation-item.priority-high {
+            border-left-color: var(--danger);
+        }
+
+        .recommendation-item.priority-medium {
+            border-left-color: var(--warning);
+        }
+
+        .recommendation-item.priority-low {
+            border-left-color: var(--info);
+        }
+
+        .recommendation-icon {
+            font-size: 1.5rem;
+            margin-top: 0.25rem;
+        }
+
+        .recommendation-content h4 {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .recommendation-content p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* Trade List */
+        .trade-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .trade-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            transition: var(--transition);
+        }
+
+        .trade-item:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .trade-symbol {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .trade-pnl {
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .trade-pnl.positive {
+            background: rgba(72, 187, 120, 0.1);
+            color: var(--success);
+        }
+
+        .trade-pnl.negative {
+            background: rgba(245, 101, 101, 0.1);
+            color: var(--danger);
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn.secondary {
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn.secondary:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn.danger {
+            background: linear-gradient(135deg, var(--danger), #e53e3e);
+        }
+
+        /* Loading States */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Analysis Modal */
+        .analysis-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: flex-start;
+            z-index: 1000;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .analysis-modal.show {
+            display: flex;
+        }
+
+        .analysis-content {
+            background: white;
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            margin-top: 2rem;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .analysis-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 2rem;
+            border-radius: var(--radius) var(--radius) 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .analysis-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .analysis-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.1);
+        }
+
+        .analysis-body {
+            padding: 2rem;
+        }
+
+        /* Animations */
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Animation Delays */
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.2s; }
+        .card:nth-child(3) { animation-delay: 0.3s; }
+        .card:nth-child(4) { animation-delay: 0.4s; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0.5rem;
+            }
+
+            .dashboard-header h1 {
+                font-size: 2rem;
+            }
+
+            .performance-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(102, 126, 234, 0.5);
+        }
+
+        /* Alert Styles */
+        .alert {
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            border-left: 4px solid;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .alert-success {
+            background: rgba(72, 187, 120, 0.1);
+            border-left-color: var(--success);
+            color: var(--success);
+        }
+
+        .alert-warning {
+            background: rgba(237, 137, 54, 0.1);
+            border-left-color: var(--warning);
+            color: var(--warning);
+        }
+
+        .alert-danger {
+            background: rgba(245, 101, 101, 0.1);
+            border-left-color: var(--danger);
+            color: var(--danger);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header with Quick Stats -->
+        <div class="dashboard-header">
+            <h1>📊 Trading Analytics Dashboard</h1>
+            <p style="color: var(--text-secondary); font-size: 1.1rem;">Erweiterte Analyse für Erik Lähner</p>
+            
+            <div class="header-stats" id="headerStats">
+                <div class="header-stat">
+                    <div class="header-stat-value loading-spinner" style="width: 20px; height: 20px; margin: 0 auto;"></div>
+                    <div class="header-stat-label">Gesamter PnL</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-stat-value loading-spinner" style="width: 20px; height: 20px; margin: 0 auto;"></div>
+                    <div class="header-stat-label">Win Rate</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-stat-value loading-spinner" style="width: 20px; height: 20px; margin: 0 auto;"></div>
+                    <div class="header-stat-label">Trades Total</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-stat-value loading-spinner" style="width: 20px; height: 20px; margin: 0 auto;"></div>
+                    <div class="header-stat-label">Sharpe Ratio</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-stat-value loading-spinner" style="width: 20px; height: 20px; margin: 0 auto;"></div>
+                    <div class="header-stat-label">Max Drawdown</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-stat-value loading-spinner" style="width: 20px; height: 20px; margin: 0 auto;"></div>
+                    <div class="header-stat-label">Risk Score</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Overview -->
+        <div class="performance-grid">
+            <div class="card">
+                <h3>📈 Performance Entwicklung</h3>
+                <div class="chart-container chart-large">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>⚖️ Risk Assessment</h3>
+                <div class="risk-gauge">
+                    <canvas id="riskGauge"></canvas>
+                </div>
+                <div class="metrics-row">
+                    <div class="metric-card">
+                        <div class="metric-value" id="varValue">-</div>
+                        <div class="metric-label">Value at Risk</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="kellyValue">-</div>
+                        <div class="metric-label">Kelly %</div>
+                    </div>
+                </div>
+                <div id="riskAlerts"></div>
+            </div>
+        </div>
+
+        <!-- Analytics Grid -->
+        <div class="analytics-grid">
+            <div class="card">
+                <h3>📊 Trade Distribution</h3>
+                <div class="chart-container chart-small">
+                    <canvas id="distributionChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>⏰ Performance by Time</h3>
+                <div class="chart-container chart-small">
+                    <canvas id="timeChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>💹 Symbol Performance</h3>
+                <div class="chart-container chart-small">
+                    <canvas id="symbolChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🎯 Strategy Analysis</h3>
+                <div class="chart-container chart-small">
+                    <canvas id="strategyChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Insights and Recommendations -->
+        <div class="insights-grid">
+            <div class="card">
+                <h3>🧠 Trading Insights</h3>
+                <div id="tradingInsights">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        Analysiere Trading-Muster...
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🚀 Empfehlungen</h3>
+                <ul class="recommendations-list" id="recommendationsList">
+                    <li class="loading">
+                        <div class="loading-spinner"></div>
+                        Generiere Empfehlungen...
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>📋 Letzte Trades</h3>
+                <div class="trade-list" id="recentTrades">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        Lade Trades...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <a href="journal-A.html" class="btn">
+                📓 Trading Journal öffnen
+            </a>
+            <button class="btn secondary" onclick="exportAnalysis()">
+                📊 Analyse exportieren
+            </button>
+            <button class="btn secondary" onclick="showDetailedAnalysis()">
+                🔍 Detailanalyse
+            </button>
+            <a href="dashboard-a.html" class="btn danger">
+                ← Zurück zum Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Detailed Analysis Modal -->
+    <div class="analysis-modal" id="analysisModal">
+        <div class="analysis-content">
+            <div class="analysis-header">
+                <div>
+                    <h2>🔍 Detaillierte Trading-Analyse</h2>
+                    <p>Tiefgreifende Auswertung Ihrer Trading-Performance</p>
+                </div>
+                <button class="analysis-close" onclick="closeDetailedAnalysis()">×</button>
+            </div>
+            <div class="analysis-body" id="analysisBody">
+                <!-- Content will be dynamically generated -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAujeUok4jKYwnr5GEXze_EadszqMdY1y4",
+            authDomain: "gamechanger-78fb4.firebaseapp.com",
+            projectId: "gamechanger-78fb4",
+            storageBucket: "gamechanger-78fb4.firebasestorage.app",
+            messagingSenderId: "510513691722",
+            appId: "1:510513691722:web:c0c1a97141ddfda4377ab3"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const tradesRef = db.collection("users").doc("a").collection("trades");
+
+        // Global Variables
+        let allTrades = [];
+        let analytics = {};
+        let charts = {};
+
+        // Chart.js Defaults
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.plugins.legend.position = 'bottom';
+        Chart.defaults.plugins.legend.labels.padding = 20;
+        Chart.defaults.plugins.legend.labels.usePointStyle = true;
+
+        const colors = {
+            primary: '#667eea',
+            secondary: '#764ba2',
+            success: '#48bb78',
+            danger: '#f56565',
+            warning: '#ed8936',
+            info: '#4299e1'
+        };
+
+        // Initialize Dashboard
+        async function initDashboard() {
+            try {
+                await loadTrades();
+                calculateAnalytics();
+                updateHeaderStats();
+                createCharts();
+                generateInsights();
+                generateRecommendations();
+                displayRecentTrades();
+            } catch (error) {
+                console.error('Error initializing dashboard:', error);
+                showError('Fehler beim Laden der Trading-Daten');
+            }
+        }
+
+        // Load Trades from Firebase
+        async function loadTrades() {
+            const snapshot = await tradesRef.get();
+            allTrades = [];
+
+            snapshot.forEach(doc => {
+                const trade = doc.data();
+                trade.id = doc.id;
+                
+                // Convert date format and add parsed date
+                if (trade.date) {
+                    const [day, month, year] = trade.date.split("-");
+                    trade.parsedDate = new Date(year, month - 1, day);
+                }
+                
+                allTrades.push(trade);
+            });
+
+            // Sort trades by date
+            allTrades.sort((a, b) => a.parsedDate - b.parsedDate);
+        }
+
+        // Calculate Advanced Analytics
+        function calculateAnalytics() {
+            if (allTrades.length === 0) {
+                analytics = getDefaultAnalytics();
+                return;
+            }
+
+            const winningTrades = allTrades.filter(t => (t.pnl || 0) > 0);
+            const losingTrades = allTrades.filter(t => (t.pnl || 0) < 0);
+            const totalPnL = allTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+            
+            // Basic metrics
+            const totalTrades = allTrades.length;
+            const winRate = totalTrades > 0 ? (winningTrades.length / totalTrades) * 100 : 0;
+            const avgWin = winningTrades.length > 0 ? winningTrades.reduce((sum, t) => sum + t.pnl, 0) / winningTrades.length : 0;
+            const avgLoss = losingTrades.length > 0 ? losingTrades.reduce((sum, t) => sum + t.pnl, 0) / losingTrades.length : 0;
+            
+            // Advanced metrics
+            const profitFactor = Math.abs(avgLoss) > 0 ? Math.abs(avgWin * winningTrades.length) / Math.abs(avgLoss * losingTrades.length) : 0;
+            const expectancy = (winRate / 100) * avgWin + ((100 - winRate) / 100) * avgLoss;
+            
+            // Risk metrics
+            const returns = allTrades.map(t => t.pnl || 0);
+            const sharpeRatio = calculateSharpeRatio(returns);
+            const maxDrawdown = calculateMaxDrawdown(allTrades);
+            const var95 = calculateVaR(returns, 0.95);
+            const kellyPercent = calculateKellyPercentage(winRate, avgWin, Math.abs(avgLoss));
+            
+            // Time-based analysis
+            const hourlyPerformance = analyzeHourlyPerformance(allTrades);
+            const dayOfWeekPerformance = analyzeDayOfWeekPerformance(allTrades);
+            
+            // Symbol and strategy analysis
+            const symbolPerformance = analyzeSymbolPerformance(allTrades);
+            const strategyPerformance = analyzeStrategyPerformance(allTrades);
+            
+            analytics = {
+                totalTrades,
+                totalPnL,
+                winRate,
+                avgWin,
+                avgLoss,
+                profitFactor,
+                expectancy,
+                sharpeRatio,
+                maxDrawdown,
+                var95,
+                kellyPercent,
+                bestTrade: Math.max(...returns),
+                worstTrade: Math.min(...returns),
+                hourlyPerformance,
+                dayOfWeekPerformance,
+                symbolPerformance,
+                strategyPerformance,
+                winningTrades: winningTrades.length,
+                losingTrades: losingTrades.length,
+                consecutiveWins: calculateConsecutiveWins(allTrades),
+                consecutiveLosses: calculateConsecutiveLosses(allTrades),
+                riskScore: calculateRiskScore(sharpeRatio, maxDrawdown, var95)
+            };
+        }
+
+        function getDefaultAnalytics() {
+            return {
+                totalTrades: 0,
+                totalPnL: 0,
+                winRate: 0,
+                avgWin: 0,
+                avgLoss: 0,
+                profitFactor: 0,
+                expectancy: 0,
+                sharpeRatio: 0,
+                maxDrawdown: 0,
+                var95: 0,
+                kellyPercent: 0,
+                bestTrade: 0,
+                worstTrade: 0,
+                riskScore: 50
+            };
+        }
+
+        // Advanced Calculation Functions
+        function calculateSharpeRatio(returns) {
+            if (returns.length < 2) return 0;
+            
+            const mean = returns.reduce((sum, r) => sum + r, 0) / returns.length;
+            const variance = returns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / returns.length;
+            const stdDev = Math.sqrt(variance);
+            
+            return stdDev > 0 ? (mean / stdDev) * Math.sqrt(252) : 0; // Annualized
+        }
+
+        function calculateMaxDrawdown(trades) {
+            let peak = 0;
+            let maxDrawdown = 0;
+            let runningTotal = 0;
+
+            for (const trade of trades) {
+                runningTotal += trade.pnl || 0;
+                
+                if (runningTotal > peak) {
+                    peak = runningTotal;
+                }
+                
+                const drawdown = peak - runningTotal;
+                if (drawdown > maxDrawdown) {
+                    maxDrawdown = drawdown;
+                }
+            }
+
+            return maxDrawdown;
+        }
+
+        function calculateVaR(returns, confidence) {
+            if (returns.length === 0) return 0;
+            
+            const sortedReturns = [...returns].sort((a, b) => a - b);
+            const index = Math.floor((1 - confidence) * sortedReturns.length);
+            return Math.abs(sortedReturns[index] || 0);
+        }
+
+        function calculateKellyPercentage(winRate, avgWin, avgLoss) {
+            if (avgLoss === 0) return 0;
+            
+            const winRateDecimal = winRate / 100;
+            const payoffRatio = avgWin / avgLoss;
+            const kelly = winRateDecimal - ((1 - winRateDecimal) / payoffRatio);
+            
+            return Math.max(0, Math.min(100, kelly * 100)); // Clamp between 0-100%
+        }
+
+        function calculateRiskScore(sharpe, drawdown, var95) {
+            let score = 50; // Base score
+            
+            // Sharpe ratio component (0-40 points)
+            if (sharpe > 2) score += 20;
+            else if (sharpe > 1) score += 10;
+            else if (sharpe > 0) score += 5;
+            else score -= 10;
+            
+            // Drawdown component (0-30 points)
+            if (drawdown < 5) score += 15;
+            else if (drawdown < 10) score += 10;
+            else if (drawdown < 20) score += 5;
+            else score -= 10;
+            
+            // VaR component (0-30 points)
+            if (var95 < 2) score += 15;
+            else if (var95 < 5) score += 10;
+            else if (var95 < 10) score += 5;
+            else score -= 5;
+            
+            return Math.max(0, Math.min(100, score));
+        }
+
+        function analyzeHourlyPerformance(trades) {
+            const hourlyData = {};
+            
+            trades.forEach(trade => {
+                if (trade.parsedDate) {
+                    const hour = trade.parsedDate.getHours();
+                    if (!hourlyData[hour]) {
+                        hourlyData[hour] = { trades: 0, pnl: 0 };
+                    }
+                    hourlyData[hour].trades++;
+                    hourlyData[hour].pnl += trade.pnl || 0;
+                }
+            });
+            
+            return hourlyData;
+        }
+
+        function analyzeDayOfWeekPerformance(trades) {
+            const dayData = {};
+            const dayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+            
+            trades.forEach(trade => {
+                if (trade.parsedDate) {
+                    const day = dayNames[trade.parsedDate.getDay()];
+                    if (!dayData[day]) {
+                        dayData[day] = { trades: 0, pnl: 0 };
+                    }
+                    dayData[day].trades++;
+                    dayData[day].pnl += trade.pnl || 0;
+                }
+            });
+            
+            return dayData;
+        }
+
+        function analyzeSymbolPerformance(trades) {
+            const symbolData = {};
+            
+            trades.forEach(trade => {
+                const symbol = trade.symbol || 'Unknown';
+                if (!symbolData[symbol]) {
+                    symbolData[symbol] = { trades: 0, pnl: 0, wins: 0 };
+                }
+                symbolData[symbol].trades++;
+                symbolData[symbol].pnl += trade.pnl || 0;
+                if ((trade.pnl || 0) > 0) symbolData[symbol].wins++;
+            });
+            
+            // Calculate win rates
+            Object.keys(symbolData).forEach(symbol => {
+                symbolData[symbol].winRate = (symbolData[symbol].wins / symbolData[symbol].trades) * 100;
+            });
+            
+            return symbolData;
+        }
+
+        function analyzeStrategyPerformance(trades) {
+            const strategyData = {};
+            
+            trades.forEach(trade => {
+                const strategy = trade.strategy || 'Unknown';
+                if (!strategyData[strategy]) {
+                    strategyData[strategy] = { trades: 0, pnl: 0, wins: 0 };
+                }
+                strategyData[strategy].trades++;
+                strategyData[strategy].pnl += trade.pnl || 0;
+                if ((trade.pnl || 0) > 0) strategyData[strategy].wins++;
+            });
+            
+            Object.keys(strategyData).forEach(strategy => {
+                strategyData[strategy].winRate = (strategyData[strategy].wins / strategyData[strategy].trades) * 100;
+            });
+            
+            return strategyData;
+        }
+
+        function calculateConsecutiveWins(trades) {
+            let maxWins = 0;
+            let currentWins = 0;
+            
+            trades.forEach(trade => {
+                if ((trade.pnl || 0) > 0) {
+                    currentWins++;
+                    maxWins = Math.max(maxWins, currentWins);
+                } else {
+                    currentWins = 0;
+                }
+            });
+            
+            return maxWins;
+        }
+
+        function calculateConsecutiveLosses(trades) {
+            let maxLosses = 0;
+            let currentLosses = 0;
+            
+            trades.forEach(trade => {
+                if ((trade.pnl || 0) < 0) {
+                    currentLosses++;
+                    maxLosses = Math.max(maxLosses, currentLosses);
+                } else {
+                    currentLosses = 0;
+                }
+            });
+            
+            return maxLosses;
+        }
+
+        // Update Header Stats
+        function updateHeaderStats() {
+            const headerStats = document.getElementById('headerStats');
+            
+            headerStats.innerHTML = `
+                <div class="header-stat">
+                    <div class="header-stat-value ${analytics.totalPnL >= 0 ? 'positive' : 'negative'}">
+                        ${analytics.totalPnL >= 0 ? '+' : ''}${analytics.totalPnL.toFixed(2)}%
+                    </div>
+                    <div class="header-stat-label">Gesamter PnL</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-stat-value ${analytics.winRate >= 50 ? 'positive' : 'negative'}">
+                        ${analytics.winRate.toFixed(1)}%
+                    </div>
+                    <div class="header-stat-label">Win Rate</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-stat-value">
+                        ${analytics.totalTrades}
+                    </div>
+                    <div class="header-stat-label">Trades Total</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-stat-value ${analytics.sharpeRatio >= 1 ? 'positive' : 'negative'}">
+                        ${analytics.sharpeRatio.toFixed(2)}
+                    </div>
+                    <div class="header-stat-label">Sharpe Ratio</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-stat-value ${analytics.maxDrawdown <= 10 ? 'positive' : 'negative'}">
+                        ${analytics.maxDrawdown.toFixed(2)}%
+                    </div>
+                    <div class="header-stat-label">Max Drawdown</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-stat-value ${analytics.riskScore >= 70 ? 'positive' : analytics.riskScore >= 50 ? '' : 'negative'}">
+                        ${analytics.riskScore}/100
+                    </div>
+                    <div class="header-stat-label">Risk Score</div>
+                </div>
+            `;
+        }
+
+        // Create Charts
+        function createCharts() {
+            createPerformanceChart();
+            createRiskGauge();
+            createDistributionChart();
+            createTimeChart();
+            createSymbolChart();
+            createStrategyChart();
+        }
+
+        function createPerformanceChart() {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            
+            // Calculate cumulative PnL
+            let cumulativePnL = 0;
+            const performanceData = allTrades.map((trade, index) => {
+                cumulativePnL += trade.pnl || 0;
+                return {
+                    x: index + 1,
+                    y: cumulativePnL
+                };
+            });
+
+            charts.performance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: 'Kumulativer PnL (%)',
+                        data: performanceData,
+                        borderColor: colors.primary,
+                        backgroundColor: colors.primary + '20',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Trade Nummer'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'PnL (%)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `PnL: ${context.parsed.y.toFixed(2)}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createRiskGauge() {
+            const ctx = document.getElementById('riskGauge').getContext('2d');
+            const riskScore = analytics.riskScore;
+            
+            charts.riskGauge = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [riskScore, 100 - riskScore],
+                        backgroundColor: [
+                            riskScore >= 70 ? colors.success : riskScore >= 50 ? colors.warning : colors.danger,
+                            '#e2e8f0'
+                        ],
+                        borderWidth: 0,
+                        cutout: '70%'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: false
+                        }
+                    },
+                    rotation: -90,
+                    circumference: 180
+                },
+                plugins: [{
+                    afterDraw: function(chart) {
+                        const ctx = chart.ctx;
+                        ctx.save();
+                        ctx.font = 'bold 24px Inter';
+                        ctx.textAlign = 'center';
+                        ctx.fillStyle = riskScore >= 70 ? colors.success : riskScore >= 50 ? colors.warning : colors.danger;
+                        ctx.fillText(riskScore + '/100', chart.width / 2, chart.height / 2 + 10);
+                        ctx.restore();
+                    }
+                }]
+            });
+
+            // Update VaR and Kelly values
+            document.getElementById('varValue').textContent = analytics.var95.toFixed(2) + '%';
+            document.getElementById('kellyValue').textContent = analytics.kellyPercent.toFixed(1) + '%';
+
+            // Update risk alerts
+            updateRiskAlerts();
+        }
+
+        function updateRiskAlerts() {
+            const alertsContainer = document.getElementById('riskAlerts');
+            const alerts = [];
+
+            if (analytics.maxDrawdown > 20) {
+                alerts.push({
+                    type: 'danger',
+                    message: `Hoher Drawdown: ${analytics.maxDrawdown.toFixed(1)}% - Risikomanagement überprüfen`
+                });
+            }
+
+            if (analytics.kellyPercent > 25) {
+                alerts.push({
+                    type: 'warning',
+                    message: `Kelly-Kriterium sehr hoch: ${analytics.kellyPercent.toFixed(1)}% - Positionsgröße reduzieren`
+                });
+            }
+
+            if (analytics.sharpeRatio < 0.5) {
+                alerts.push({
+                    type: 'warning',
+                    message: `Niedrige Sharpe Ratio: ${analytics.sharpeRatio.toFixed(2)} - Strategieoptimierung empfohlen`
+                });
+            }
+
+            if (analytics.consecutiveLosses > 5) {
+                alerts.push({
+                    type: 'danger',
+                    message: `${analytics.consecutiveLosses} aufeinanderfolgende Verluste - Trading-Pause empfohlen`
+                });
+            }
+
+            alertsContainer.innerHTML = alerts.map(alert => `
+                <div class="alert alert-${alert.type}">
+                    ${alert.message}
+                </div>
+            `).join('');
+        }
+
+        function createDistributionChart() {
+            const ctx = document.getElementById('distributionChart').getContext('2d');
+            
+            const pnlRanges = {
+                '< -10%': 0,
+                '-10% bis -5%': 0,
+                '-5% bis 0%': 0,
+                '0% bis 5%': 0,
+                '5% bis 10%': 0,
+                '> 10%': 0
+            };
+
+            allTrades.forEach(trade => {
+                const pnl = trade.pnl || 0;
+                if (pnl < -10) pnlRanges['< -10%']++;
+                else if (pnl < -5) pnlRanges['-10% bis -5%']++;
+                else if (pnl < 0) pnlRanges['-5% bis 0%']++;
+                else if (pnl < 5) pnlRanges['0% bis 5%']++;
+                else if (pnl < 10) pnlRanges['5% bis 10%']++;
+                else pnlRanges['> 10%']++;
+            });
+
+            charts.distribution = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(pnlRanges),
+                    datasets: [{
+                        label: 'Anzahl Trades',
+                        data: Object.values(pnlRanges),
+                        backgroundColor: [
+                            colors.danger,
+                            colors.warning + '80',
+                            colors.warning + '40',
+                            colors.success + '40',
+                            colors.success + '80',
+                            colors.success
+                        ],
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Anzahl Trades'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createTimeChart() {
+            const ctx = document.getElementById('timeChart').getContext('2d');
+            
+            const dayData = analytics.dayOfWeekPerformance;
+            const days = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag'];
+            
+            charts.time = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: days,
+                    datasets: [{
+                        label: 'Durchschnittlicher PnL',
+                        data: days.map(day => {
+                            const data = dayData[day];
+                            return data ? (data.pnl / data.trades).toFixed(2) : 0;
+                        }),
+                        backgroundColor: days.map(day => {
+                            const data = dayData[day];
+                            const avgPnl = data ? (data.pnl / data.trades) : 0;
+                            return avgPnl >= 0 ? colors.success : colors.danger;
+                        }),
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Durchschn. PnL (%)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createSymbolChart() {
+            const ctx = document.getElementById('symbolChart').getContext('2d');
+            
+            const symbolData = analytics.symbolPerformance;
+            const topSymbols = Object.entries(symbolData)
+                .sort((a, b) => b[1].pnl - a[1].pnl)
+                .slice(0, 8);
+
+            charts.symbol = new Chart(ctx, {
+                type: 'horizontalBar',
+                data: {
+                    labels: topSymbols.map(([symbol]) => symbol),
+                    datasets: [{
+                        label: 'Gesamt PnL',
+                        data: topSymbols.map(([, data]) => data.pnl.toFixed(2)),
+                        backgroundColor: topSymbols.map(([, data]) => 
+                            data.pnl >= 0 ? colors.success : colors.danger
+                        ),
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'PnL (%)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createStrategyChart() {
+            const ctx = document.getElementById('strategyChart').getContext('2d');
+            
+            const strategyData = analytics.strategyPerformance;
+            const strategies = Object.entries(strategyData);
+
+            if (strategies.length === 0) {
+                ctx.fillText('Keine Strategiedaten verfügbar', 200, 100);
+                return;
+            }
+
+            charts.strategy = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: strategies.map(([strategy]) => strategy),
+                    datasets: [{
+                        data: strategies.map(([, data]) => Math.abs(data.pnl)),
+                        backgroundColor: [
+                            colors.primary,
+                            colors.secondary,
+                            colors.success,
+                            colors.warning,
+                            colors.info,
+                            colors.danger
+                        ].slice(0, strategies.length),
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const strategy = strategies[context.dataIndex];
+                                    return `${strategy[0]}: ${strategy[1].pnl.toFixed(2)}% (${strategy[1].trades} Trades)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Generate Insights
+        function generateInsights() {
+            const insights = [];
+
+            // Performance insights
+            if (analytics.totalPnL > 0) {
+                insights.push(`✅ Positive Gesamtperformance von ${analytics.totalPnL.toFixed(2)}%`);
+            } else {
+                insights.push(`⚠️ Negative Gesamtperformance von ${analytics.totalPnL.toFixed(2)}%`);
+            }
+
+            // Win rate insights
+            if (analytics.winRate >= 60) {
+                insights.push(`🎯 Hohe Trefferquote von ${analytics.winRate.toFixed(1)}%`);
+            } else if (analytics.winRate >= 50) {
+                insights.push(`📊 Ausgewogene Trefferquote von ${analytics.winRate.toFixed(1)}%`);
+            } else {
+                insights.push(`📉 Niedrige Trefferquote von ${analytics.winRate.toFixed(1)}% - Optimierung nötig`);
+            }
+
+            // Risk-reward insights
+            if (analytics.profitFactor > 1.5) {
+                insights.push(`💰 Starker Profit-Faktor von ${analytics.profitFactor.toFixed(2)}`);
+            } else if (analytics.profitFactor > 1) {
+                insights.push(`⚖️ Ausgewogener Profit-Faktor von ${analytics.profitFactor.toFixed(2)}`);
+            } else {
+                insights.push(`⚠️ Niedrige Profit-Faktor von ${analytics.profitFactor.toFixed(2)} - Risk/Reward überprüfen`);
+            }
+
+            // Expectancy insights
+            if (analytics.expectancy > 0.5) {
+                insights.push(`📈 Positive Erwartung von ${analytics.expectancy.toFixed(2)}% pro Trade`);
+            } else if (analytics.expectancy > 0) {
+                insights.push(`📊 Schwach positive Erwartung von ${analytics.expectancy.toFixed(2)}% pro Trade`);
+            } else {
+                insights.push(`📉 Negative Erwartung von ${analytics.expectancy.toFixed(2)}% - Strategie überdenken`);
+            }
+
+            // Risk insights
+            if (analytics.maxDrawdown > 20) {
+                insights.push(`🚨 Hoher maximaler Drawdown von ${analytics.maxDrawdown.toFixed(1)}% - Risikomanagement kritisch`);
+            } else if (analytics.maxDrawdown > 10) {
+                insights.push(`⚠️ Moderater maximaler Drawdown von ${analytics.maxDrawdown.toFixed(1)}%`);
+            } else {
+                insights.push(`✅ Niedriger maximaler Drawdown von ${analytics.maxDrawdown.toFixed(1)}%`);
+            }
+
+            // Consistency insights
+            if (analytics.consecutiveWins > 5) {
+                insights.push(`🔥 Beste Gewinnserie: ${analytics.consecutiveWins} Trades in Folge`);
+            }
+            
+            if (analytics.consecutiveLosses > 3) {
+                insights.push(`😟 Längste Verlustserie: ${analytics.consecutiveLosses} Trades - Mentale Stärke wichtig`);
+            }
+
+            document.getElementById('tradingInsights').innerHTML = insights.map(insight => 
+                `<div style="padding: 0.75rem; margin-bottom: 0.5rem; background: rgba(255,255,255,0.7); border-radius: 8px; border-left: 4px solid ${colors.info};">${insight}</div>`
+            ).join('');
+        }
+
+        // Generate Recommendations
+        function generateRecommendations() {
+            const recommendations = [];
+
+            // Win rate recommendations
+            if (analytics.winRate < 40) {
+                recommendations.push({
+                    priority: 'high',
+                    icon: '🎯',
+                    title: 'Trefferquote verbessern',
+                    description: `Aktuelle Trefferquote von ${analytics.winRate.toFixed(1)}% ist niedrig. Analysiere verlustbringende Trades und verfeinere Einstiegssignale.`
+                });
+            }
+
+            // Risk management recommendations
+            if (analytics.maxDrawdown > 15) {
+                recommendations.push({
+                    priority: 'high',
+                    icon: '⚠️',
+                    title: 'Risikomanagement überarbeiten',
+                    description: `Maximaler Drawdown von ${analytics.maxDrawdown.toFixed(1)}% ist zu hoch. Reduziere Positionsgrößen und verwende engere Stop-Loss-Orders.`
+                });
+            }
+
+            // Kelly criterion recommendations
+            if (analytics.kellyPercent > 25) {
+                recommendations.push({
+                    priority: 'medium',
+                    icon: '📊',
+                    title: 'Positionsgröße anpassen',
+                    description: `Kelly-Kriterium von ${analytics.kellyPercent.toFixed(1)}% ist sehr hoch. Verwende maximal 25% für eine sichere Positionierung.`
+                });
+            }
+
+            // Strategy diversification
+            const strategyCount = Object.keys(analytics.strategyPerformance).length;
+            if (strategyCount < 3) {
+                recommendations.push({
+                    priority: 'medium',
+                    icon: '🔄',
+                    title: 'Strategiediversifikation',
+                    description: `Nur ${strategyCount} verschiedene Strategien verwendet. Entwickle zusätzliche Ansätze für bessere Diversifikation.`
+                });
+            }
+
+            // Performance consistency
+            if (analytics.sharpeRatio < 1) {
+                recommendations.push({
+                    priority: 'medium',
+                    icon: '📈',
+                    title: 'Konsistenz verbessern',
+                    description: `Sharpe Ratio von ${analytics.sharpeRatio.toFixed(2)} deutet auf inkonsistente Performance hin. Fokussiere auf wiederholbare Setups.`
+                });
+            }
+
+            // Profit factor recommendations
+            if (analytics.profitFactor < 1.2) {
+                recommendations.push({
+                    priority: 'medium',
+                    icon: '💰',
+                    title: 'Risk-Reward-Verhältnis optimieren',
+                    description: `Profit-Faktor von ${analytics.profitFactor.toFixed(2)} ist niedrig. Arbeite an einem besseren Gewinn-Verlust-Verhältnis.`
+                });
+            }
+
+            // Time-based recommendations
+            const dayPerf = analytics.dayOfWeekPerformance;
+            const worstDay = Object.entries(dayPerf).reduce((worst, [day, data]) => {
+                const avgPnl = data.trades > 0 ? data.pnl / data.trades : 0;
+                const worstAvg = worst.data.trades > 0 ? worst.data.pnl / worst.data.trades : 0;
+                return avgPnl < worstAvg ? { day, data } : worst;
+            }, { day: '', data: { trades: 0, pnl: 0 } });
+
+            if (worstDay.data.trades > 0 && (worstDay.data.pnl / worstDay.data.trades) < -2) {
+                recommendations.push({
+                    priority: 'low',
+                    icon: '📅',
+                    title: 'Zeitbasierte Optimierung',
+                    description: `${worstDay.day} zeigt schwache Performance. Vermeide Trading an diesem Tag oder passe Strategie an.`
+                });
+            }
+
+            // Default recommendations if none found
+            if (recommendations.length === 0) {
+                recommendations.push({
+                    priority: 'low',
+                    icon: '📚',
+                    title: 'Kontinuierliches Lernen',
+                    description: 'Gute Performance! Bleibe am Ball mit Weiterbildung und Marktanalyse.'
+                });
+            }
+
+            const recommendationsList = document.getElementById('recommendationsList');
+            recommendationsList.innerHTML = recommendations.map(rec => `
+                <li class="recommendation-item priority-${rec.priority}">
+                    <div class="recommendation-icon">${rec.icon}</div>
+                    <div class="recommendation-content">
+                        <h4>${rec.title}</h4>
+                        <p>${rec.description}</p>
+                    </div>
+                </li>
+            `).join('');
+        }
+
+        // Display Recent Trades
+        function displayRecentTrades() {
+            const recentTrades = allTrades.slice(-10).reverse();
+            const tradesContainer = document.getElementById('recentTrades');
+
+            if (recentTrades.length === 0) {
+                tradesContainer.innerHTML = '<div style="text-align: center; padding: 2rem; color: #718096;">Keine Trades vorhanden</div>';
+                return;
+            }
+
+            tradesContainer.innerHTML = recentTrades.map(trade => `
+                <div class="trade-item">
+                    <div>
+                        <div class="trade-symbol">${trade.symbol || 'Unknown'}</div>
+                        <div style="font-size: 0.8rem; color: #718096;">${trade.date || 'Unknown Date'}</div>
+                    </div>
+                    <div class="trade-pnl ${(trade.pnl || 0) >= 0 ? 'positive' : 'negative'}">
+                        ${(trade.pnl || 0) >= 0 ? '+' : ''}${(trade.pnl || 0).toFixed(2)}%
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Detailed Analysis Modal
+        function showDetailedAnalysis() {
+            const modal = document.getElementById('analysisModal');
+            const body = document.getElementById('analysisBody');
+            
+            body.innerHTML = generateDetailedAnalysisContent();
+            modal.classList.add('show');
+        }
+
+        function closeDetailedAnalysis() {
+            document.getElementById('analysisModal').classList.remove('show');
+        }
+
+        function generateDetailedAnalysisContent() {
+            return `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                    <!-- Risk Analysis -->
+                    <div class="card" style="margin: 0;">
+                        <h3>⚠️ Risiko-Analyse</h3>
+                        <div class="metrics-row">
+                            <div class="metric-card">
+                                <div class="metric-value">${analytics.var95.toFixed(2)}%</div>
+                                <div class="metric-label">Value at Risk (95%)</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value">${analytics.sharpeRatio.toFixed(2)}</div>
+                                <div class="metric-label">Sharpe Ratio</div>
+                            </div>
+                        </div>
+                        <p style="margin-top: 1rem; color: #718096; font-size: 0.9rem;">
+                            ${analytics.riskScore >= 70 ? 'Niedriges Risikoprofil - Gutes Risikomanagement' : 
+                              analytics.riskScore >= 50 ? 'Moderates Risikoprofil - Überwachung empfohlen' : 
+                              'Hohes Risikoprofil - Sofortige Optimierung nötig'}
+                        </p>
+                    </div>
+
+                    <!-- Performance Breakdown -->
+                    <div class="card" style="margin: 0;">
+                        <h3>📊 Performance-Aufschlüsselung</h3>
+                        <div class="metrics-row">
+                            <div class="metric-card">
+                                <div class="metric-value positive">${analytics.winningTrades}</div>
+                                <div class="metric-label">Gewinn-Trades</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value negative">${analytics.losingTrades}</div>
+                                <div class="metric-label">Verlust-Trades</div>
+                            </div>
+                        </div>
+                        <div class="metrics-row">
+                            <div class="metric-card">
+                                <div class="metric-value">${analytics.profitFactor.toFixed(2)}</div>
+                                <div class="metric-label">Profit Faktor</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value">${analytics.expectancy.toFixed(2)}%</div>
+                                <div class="metric-label">Erwartung/Trade</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Metrics -->
+                    <div class="card" style="margin: 0;">
+                        <h3>🎯 Erweiterte Metriken</h3>
+                        <div class="metrics-row">
+                            <div class="metric-card">
+                                <div class="metric-value positive">${analytics.bestTrade.toFixed(2)}%</div>
+                                <div class="metric-label">Bester Trade</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value negative">${analytics.worstTrade.toFixed(2)}%</div>
+                                <div class="metric-label">Schlechtester Trade</div>
+                            </div>
+                        </div>
+                        <div class="metrics-row">
+                            <div class="metric-card">
+                                <div class="metric-value">${analytics.consecutiveWins}</div>
+                                <div class="metric-label">Max. Gewinn-Serie</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value">${analytics.consecutiveLosses}</div>
+                                <div class="metric-label">Max. Verlust-Serie</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trading Psychology Insights -->
+                <div class="card" style="margin-top: 2rem;">
+                    <h3>🧠 Trading-Psychologie Insights</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                        ${generatePsychologyInsights()}
+                    </div>
+                </div>
+
+                <!-- Symbol Deep Dive -->
+                <div class="card" style="margin-top: 2rem;">
+                    <h3>💹 Symbol-Analyse</h3>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #f7fafc;">
+                                    <th style="padding: 0.75rem; text-align: left;">Symbol</th>
+                                    <th style="padding: 0.75rem; text-align: right;">Trades</th>
+                                    <th style="padding: 0.75rem; text-align: right;">PnL</th>
+                                    <th style="padding: 0.75rem; text-align: right;">Win Rate</th>
+                                    <th style="padding: 0.75rem; text-align: right;">Avg. PnL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${Object.entries(analytics.symbolPerformance)
+                                    .sort((a, b) => b[1].pnl - a[1].pnl)
+                                    .map(([symbol, data]) => `
+                                        <tr style="border-bottom: 1px solid #e2e8f0;">
+                                            <td style="padding: 0.75rem; font-weight: 600;">${symbol}</td>
+                                            <td style="padding: 0.75rem; text-align: right;">${data.trades}</td>
+                                            <td style="padding: 0.75rem; text-align: right; color: ${data.pnl >= 0 ? colors.success : colors.danger};">${data.pnl >= 0 ? '+' : ''}${data.pnl.toFixed(2)}%</td>
+                                            <td style="padding: 0.75rem; text-align: right;">${data.winRate.toFixed(1)}%</td>
+                                            <td style="padding: 0.75rem; text-align: right;">${(data.pnl / data.trades).toFixed(2)}%</td>
+                                        </tr>
+                                    `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generatePsychologyInsights() {
+            const insights = [];
+
+            // Consistency analysis
+            const avgTradeSize = analytics.totalPnL / analytics.totalTrades;
+            if (Math.abs(analytics.bestTrade) > Math.abs(avgTradeSize) * 3) {
+                insights.push({
+                    title: 'Risiko-Disziplin',
+                    text: 'Große Einzelgewinne erkannt - achte auf konstante Positionsgrößen',
+                    color: colors.warning
+                });
+            }
+
+            // Loss cutting analysis
+            if (Math.abs(analytics.worstTrade) > Math.abs(analytics.avgLoss) * 2) {
+                insights.push({
+                    title: 'Stop-Loss Disziplin',
+                    text: 'Einzelverluste übersteigen Plan - Stop-Loss-Disziplin verbessern',
+                    color: colors.danger
+                });
+            }
+
+            // Consecutive trades analysis
+            if (analytics.consecutiveLosses > 5) {
+                insights.push({
+                    title: 'Emotionale Kontrolle',
+                    text: 'Lange Verlustserie - Trading-Pausen zur emotionalen Reset nutzen',
+                    color: colors.danger
+                });
+            }
+
+            // Win rate vs profit factor
+            if (analytics.winRate < 50 && analytics.profitFactor > 1.5) {
+                insights.push({
+                    title: 'Trend-Trader Profil',
+                    text: 'Niedrige Trefferquote, hoher Profit-Faktor - klassisches Trend-Following',
+                    color: colors.success
+                });
+            }
+
+            if (insights.length === 0) {
+                insights.push({
+                    title: 'Ausgewogenes Trading',
+                    text: 'Keine kritischen psychologischen Muster erkannt - weiter so!',
+                    color: colors.success
+                });
+            }
+
+            return insights.map(insight => `
+                <div style="padding: 1rem; background: rgba(255,255,255,0.7); border-radius: 8px; border-left: 4px solid ${insight.color};">
+                    <h4 style="margin-bottom: 0.5rem; color: ${insight.color};">${insight.title}</h4>
+                    <p style="color: #718096; font-size: 0.9rem;">${insight.text}</p>
+                </div>
+            `).join('');
+        }
+
+        // Export Analysis
+        function exportAnalysis() {
+            const analysisData = {
+                timestamp: new Date().toISOString(),
+                totalTrades: analytics.totalTrades,
+                totalPnL: analytics.totalPnL,
+                winRate: analytics.winRate,
+                sharpeRatio: analytics.sharpeRatio,
+                maxDrawdown: analytics.maxDrawdown,
+                profitFactor: analytics.profitFactor,
+                expectancy: analytics.expectancy,
+                var95: analytics.var95,
+                kellyPercent: analytics.kellyPercent,
+                riskScore: analytics.riskScore,
+                symbolPerformance: analytics.symbolPerformance,
+                strategyPerformance: analytics.strategyPerformance
+            };
+
+            const blob = new Blob([JSON.stringify(analysisData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `trading-analysis-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Error Handling
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-danger';
+            errorDiv.style.position = 'fixed';
+            errorDiv.style.top = '20px';
+            errorDiv.style.right = '20px';
+            errorDiv.style.zIndex = '9999';
+            errorDiv.innerHTML = message;
+            
+            document.body.appendChild(errorDiv);
+            
+            setTimeout(() => {
+                document.body.removeChild(errorDiv);
+            }, 5000);
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', initDashboard);
+
+        // Close modal when clicking outside
+        document.getElementById('analysisModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDetailedAnalysis();
+            }
+        });
+
+        // Close modal with escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeDetailedAnalysis();
+            }
+        });
+
+        // Export functions to global scope
+        window.showDetailedAnalysis = showDetailedAnalysis;
+        window.closeDetailedAnalysis = closeDetailedAnalysis;
+        window.exportAnalysis = exportAnalysis;
+    </script>
+</body>
+</html>
