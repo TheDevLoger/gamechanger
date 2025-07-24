@@ -1093,51 +1093,140 @@
             allUserActivities[suffix] = activities;
         }
 
-        // Auth Check
+        // Configuration - Set to true to use demo data for testing
+        const USE_DEMO_DATA = false; // Change to false for real Firebase data
+
+        // Auth Check with better error handling
         onAuthStateChanged(auth, user => {
+            console.log("Auth state changed:", user ? "User logged in" : "No user");
+            
+            if (USE_DEMO_DATA) {
+                console.log("Using demo data for testing...");
+                loadDemoData();
+                return;
+            }
+            
             if (!user) {
+                console.log("No user found, redirecting to login...");
                 alert("Bitte zuerst einloggen.");
                 window.location.href = 'index.html';
                 return;
+            } else {
+                console.log("User authenticated, loading data...");
+                loadAllData();
             }
-
-            loadAllData();
         });
+
+        // Demo data for testing
+        function loadDemoData() {
+            console.log("Loading demo data...");
+            
+            const demoDataA = {
+                zeiten: { protokoll: 15.5, arbeit: 45.2, sport: 28.3 },
+                weekData: {
+                    'Mo': { protokoll: 2.1, arbeit: 6.5, sport: 4.2 },
+                    'Di': { protokoll: 2.3, arbeit: 7.1, sport: 3.8 },
+                    'Mi': { protokoll: 1.9, arbeit: 6.8, sport: 4.5 },
+                    'Do': { protokoll: 2.5, arbeit: 7.3, sport: 4.1 },
+                    'Fr': { protokoll: 2.2, arbeit: 6.9, sport: 3.9 },
+                    'Sa': { protokoll: 2.1, arbeit: 5.8, sport: 4.2 },
+                    'So': { protokoll: 2.4, arbeit: 4.8, sport: 3.6 }
+                },
+                activities: [
+                    { date: '2025-01-23', type: 'arbeit', dauer: 7.2, beschreibung: 'Trading Session - EUR/USD Analysis' },
+                    { date: '2025-01-23', type: 'sport', dauer: 1.5, beschreibung: 'Game Development - Unity Scripting' },
+                    { date: '2025-01-22', type: 'arbeit', dauer: 6.8, beschreibung: 'Market Research und Strategy' },
+                    { date: '2025-01-22', type: 'protokoll', dauer: 0.5, beschreibung: 'Daily Review' },
+                    { date: '2025-01-21', type: 'sport', dauer: 2.0, beschreibung: 'Game Testing und Bug Fixes' }
+                ],
+                allActivities: [
+                    { date: '2025-01-23', type: 'arbeit', dauer: 7.2, beschreibung: 'Trading Session - EUR/USD Analysis' },
+                    { date: '2025-01-23', type: 'sport', dauer: 1.5, beschreibung: 'Game Development - Unity Scripting' },
+                    { date: '2025-01-22', type: 'arbeit', dauer: 6.8, beschreibung: 'Market Research und Strategy' },
+                    { date: '2025-01-22', type: 'protokoll', dauer: 0.5, beschreibung: 'Daily Review' },
+                    { date: '2025-01-21', type: 'sport', dauer: 2.0, beschreibung: 'Game Testing und Bug Fixes' },
+                    { date: '2025-01-21', type: 'arbeit', dauer: 6.5, beschreibung: 'Forex Analysis' },
+                    { date: '2025-01-20', type: 'protokoll', dauer: 0.8, beschreibung: 'Weekly Planning' }
+                ],
+                allDates: ['2025-01-23', '2025-01-22', '2025-01-21', '2025-01-20', '2025-01-19'],
+                totalHours: 89.0,
+                avgDaily: 17.8
+            };
+
+            const demoDataB = {
+                zeiten: { protokoll: 12.3, arbeit: 52.1, sport: 31.6 },
+                weekData: {
+                    'Mo': { protokoll: 1.8, arbeit: 7.2, sport: 4.5 },
+                    'Di': { protokoll: 1.9, arbeit: 7.8, sport: 4.2 },
+                    'Mi': { protokoll: 1.7, arbeit: 7.5, sport: 4.8 },
+                    'Do': { protokoll: 1.8, arbeit: 8.1, sport: 4.3 },
+                    'Fr': { protokoll: 2.0, arbeit: 7.6, sport: 4.1 },
+                    'Sa': { protokoll: 1.6, arbeit: 6.9, sport: 5.2 },
+                    'So': { protokoll: 1.5, arbeit: 6.0, sport: 4.5 }
+                },
+                activities: [
+                    { date: '2025-01-23', type: 'arbeit', dauer: 8.1, beschreibung: 'Forex Trading - Gold Analysis' },
+                    { date: '2025-01-23', type: 'sport', dauer: 1.8, beschreibung: 'Cardio Training' },
+                    { date: '2025-01-22', type: 'arbeit', dauer: 7.5, beschreibung: 'Options Trading Strategy' },
+                    { date: '2025-01-22', type: 'sport', dauer: 2.1, beschreibung: 'Strength Training' },
+                    { date: '2025-01-21', type: 'protokoll', dauer: 0.7, beschreibung: 'Performance Review' }
+                ],
+                allActivities: [
+                    { date: '2025-01-23', type: 'arbeit', dauer: 8.1, beschreibung: 'Forex Trading - Gold Analysis' },
+                    { date: '2025-01-23', type: 'sport', dauer: 1.8, beschreibung: 'Cardio Training' },
+                    { date: '2025-01-22', type: 'arbeit', dauer: 7.5, beschreibung: 'Options Trading Strategy' },
+                    { date: '2025-01-22', type: 'sport', dauer: 2.1, beschreibung: 'Strength Training' },
+                    { date: '2025-01-21', type: 'protokoll', dauer: 0.7, beschreibung: 'Performance Review' },
+                    { date: '2025-01-21', type: 'arbeit', dauer: 7.8, beschreibung: 'Market Analysis' },
+                    { date: '2025-01-20', type: 'sport', dauer: 1.9, beschreibung: 'HIIT Workout' }
+                ],
+                allDates: ['2025-01-23', '2025-01-22', '2025-01-21', '2025-01-20', '2025-01-19'],
+                totalHours: 96.0,
+                avgDaily: 19.2
+            };
+
+            // Store demo data
+            storeUserData('A', demoDataA);
+            storeUserActivities('A', demoDataA.activities);
+            storeAllUserActivities('A', demoDataA.allActivities);
+
+            storeUserData('B', demoDataB);
+            storeUserActivities('B', demoDataB.activities);
+            storeAllUserActivities('B', demoDataB.allActivities);
+
+            // Create charts and display data
+            createUserCharts('A', demoDataA);
+            displayActivities('A', demoDataA.activities);
+            displayAllActivities('A', demoDataA.allActivities);
+            updateUserStats('A', demoDataA);
+
+            createUserCharts('B', demoDataB);
+            displayActivities('B', demoDataB.activities);
+            displayAllActivities('B', demoDataB.allActivities);
+            updateUserStats('B', demoDataB);
+
+            console.log("Demo data loaded successfully!");
+        }
 
         function toggleAllActivities(suffix) {
             const dropdown = document.getElementById(`allActivities${suffix}`);
             const arrow = document.getElementById(`dropdownArrow${suffix}`);
             
-            dropdown.classList.toggle('show');
-            arrow.style.transform = dropdown.classList.contains('show') ? 'rotate(180deg)' : 'rotate(0deg)';
-        }
-
-        function renderActivityList(suffix, activities) {
-            const container = document.getElementById(`allActivitiesListA${suffix === 'A' ? '' : suffix}`);
-            
-            if (!activities || activities.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 2rem;">Keine Aktivitäten gefunden</p>';
+            if (!dropdown || !arrow) {
+                console.error(`Dropdown elements not found for suffix ${suffix}`);
                 return;
             }
-
-            const html = activities.slice(0, 50).map(activity => `
-                <div class="activity-item">
-                    <div class="activity-info">
-                        <span class="activity-type ${activity.type}">${activity.type}</span>
-                        <span>${activity.date}</span>
-                        <span>${activity.beschreibung || 'Keine Beschreibung'}</span>
-                    </div>
-                    <div class="activity-duration">${activity.dauer}h</div>
-                </div>
-            `).join('');
-
-            container.innerHTML = html;
+            
+            dropdown.classList.toggle('show');
+            arrow.style.transform = dropdown.classList.contains('show') ? 'rotate(180deg)' : 'rotate(0deg)';
         }
 
         function filterActivities(suffix) {
             const typeFilter = document.getElementById(`filterType${suffix}`).value;
             const dateFilter = document.getElementById(`filterDate${suffix}`).value;
             const allActivities = allUserActivities[suffix] || [];
+            
+            console.log(`Filtering activities for ${suffix}:`, { typeFilter, dateFilter, totalActivities: allActivities.length });
             
             let filteredActivities = allActivities;
 
@@ -1151,6 +1240,7 @@
                 filteredActivities = filteredActivities.filter(activity => activity.date === dateFilter);
             }
 
+            console.log(`Filtered to ${filteredActivities.length} activities`);
             renderActivityList(suffix, filteredActivities);
         }
 
@@ -2213,8 +2303,34 @@
         }
 
         function displayAllActivities(suffix, activities) {
-            const container = document.getElementById(`allActivitiesListA${suffix === 'A' ? '' : suffix}`);
             renderActivityList(suffix, activities);
+        }
+
+        function renderActivityList(suffix, activities) {
+            const container = document.getElementById(`allActivitiesList${suffix}`);
+            
+            if (!container) {
+                console.error(`Container allActivitiesList${suffix} not found`);
+                return;
+            }
+            
+            if (!activities || activities.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 2rem;">Keine Aktivitäten gefunden</p>';
+                return;
+            }
+
+            const html = activities.slice(0, 50).map(activity => `
+                <div class="activity-item">
+                    <div class="activity-info">
+                        <span class="activity-type ${activity.type}">${activity.type}</span>
+                        <span>${activity.date}</span>
+                        <span>${activity.beschreibung || 'Keine Beschreibung'}</span>
+                    </div>
+                    <div class="activity-duration">${activity.dauer}h</div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
         }
 
         function updateUserStats(suffix, data) {
