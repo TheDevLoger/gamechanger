@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Termin-Sharing App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+            --dark-color: #1f2937;
+            --light-color: #f9fafb;
+            --border-color: #e5e7eb;
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .app-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-lg);
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .app-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .app-header p {
+            color: #6b7280;
+            font-size: 1.125rem;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .appointment-form-card,
+        .appointments-list-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius);
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            animation: fadeInUp 0.6s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .appointment-form-card {
+            animation-delay: 0.1s;
+        }
+
+        .appointments-list-card {
+            animation-delay: 0.2s;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            margin-right: 1rem;
+            transition: var(--transition);
+        }
+
+        .card-header:hover .card-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            box-shadow: var(--shadow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: var(--dark-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger-color), #dc2626);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.25);
+        }
+
+        .appointment-item {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: var(--transition);
+            animation: slideInRight 0.5s ease-out;
+        }
+
+        .appointment-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-color);
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .appointment-header {
+            display: flex;
+            justify-content: between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .appointment-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .appointment-date {
+            font-size: 0.875rem;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .appointment-description {
+            color: #6b7280;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .appointment-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .appointment-author {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .appointment-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .priority-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .priority-high {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .priority-medium {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .priority-low {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .notification {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            animation: slideInDown 0.3s ease-out;
+            max-width: 400px;
+        }
+
+        .notification.success {
+            background: var(--success-color);
+        }
+
+        .notification.error {
+            background: var(--danger-color);
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .app-header h1 {
+                font-size: 2rem;
+            }
+
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .appointment-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .appointment-actions {
+                margin-top: 1rem;
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--light-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="app-header">
+            <h1>📅 Termin-Sharing</h1>
+            <p>Teilen Sie Termine einfach mit Ihren Kollegen und bleiben Sie synchron</p>
+        </header>
+
+        <div class="main-grid">
+            <!-- Termin erstellen -->
+            <div class="appointment-form-card">
+                <div class="card-header">
+                    <div class="card-icon">➕</div>
+                    <h2 class="card-title">Neuen Termin erstellen</h2>
+                </div>
+
+                <form id="appointmentForm">
+                    <div class="form-group">
+                        <label class="form-label" for="title">Titel *</label>
+                        <input type="text" id="title" class="form-input" required placeholder="z.B. Team Meeting">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="description">Beschreibung</label>
+                        <textarea id="description" class="form-textarea" placeholder="Zusätzliche Details zum Termin..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="date">Datum *</label>
+                        <input type="date" id="date" class="form-input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="time">Zeit *</label>
+                        <input type="time" id="time" class="form-input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="location">Ort</label>
+                        <input type="text" id="location" class="form-input" placeholder="z.B. Konferenzraum A">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="priority">Priorität</label>
+                        <select id="priority" class="form-select">
+                            <option value="low">Niedrig</option>
+                            <option value="medium" selected>Mittel</option>
+                            <option value="high">Hoch</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="author">Ihr Name *</label>
+                        <input type="text" id="author" class="form-input" required placeholder="Ihr Name">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <span id="submitText">Termin erstellen</span>
+                        <div id="submitLoader" class="loading" style="display: none;"></div>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Termine anzeigen -->
+            <div class="appointments-list-card">
+                <div class="card-header">
+                    <div class="card-icon">📋</div>
+                    <h2 class="card-title">Aktuelle Termine</h2>
+                </div>
+
+                <div class="form-group">
+                    <button type="button" id="refreshBtn" class="btn btn-secondary">
+                        🔄 Aktualisieren
+                    </button>
+                </div>
+
+                <div id="appointmentsList">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📅</div>
+                        <p>Noch keine Termine vorhanden</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Konfiguration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAujeUok4jKYwnr5GEXze_EadszqMdY1y4",
+            authDomain: "gamechanger-78fb4.firebaseapp.com",
+            projectId: "gamechanger-78fb4",
+            storageBucket: "gamechanger-78fb4.firebasestorage.app",
+            messagingSenderId: "510513691722",
+            appId: "1:510513691722:web:c0c1a97141ddfda4377ab3"
+        };
+
+        // Firebase initialisieren
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // DOM Elemente
+        const appointmentForm = document.getElementById('appointmentForm');
+        const appointmentsList = document.getElementById('appointmentsList');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const submitText = document.getElementById('submitText');
+        const submitLoader = document.getElementById('submitLoader');
+
+        // Hilfsfunktionen
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('de-DE', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        function formatTime(timeString) {
+            return timeString;
+        }
+
+        function getPriorityBadge(priority) {
+            const badges = {
+                low: '<span class="priority-badge priority-low">Niedrig</span>',
+                medium: '<span class="priority-badge priority-medium">Mittel</span>',
+                high: '<span class="priority-badge priority-high">Hoch</span>'
+            };
+            return badges[priority] || badges.medium;
+        }
+
+        // Termine laden
+        async function loadAppointments() {
+            try {
+                const snapshot = await db.collection('termine')
+                    .orderBy('datetime', 'asc')
+                    .get();
+
+                if (snapshot.empty) {
+                    appointmentsList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📅</div>
+                            <p>Noch keine Termine vorhanden</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                snapshot.forEach(doc => {
+                    const appointment = doc.data();
+                    const date = new Date(appointment.datetime);
+                    const now = new Date();
+                    const isPast = date < now;
+
+                    html += `
+                        <div class="appointment-item ${isPast ? 'past' : ''}">
+                            <div class="appointment-header">
+                                <div>
+                                    <div class="appointment-title">${appointment.title}</div>
+                                    <div class="appointment-date">
+                                        📅 ${formatDate(appointment.date)} • ⏰ ${formatTime(appointment.time)}
+                                    </div>
+                                </div>
+                                ${getPriorityBadge(appointment.priority)}
+                            </div>
+                            
+                            ${appointment.description ? `
+                                <div class="appointment-description">
+                                    ${appointment.description}
+                                </div>
+                            ` : ''}
+                            
+                            ${appointment.location ? `
+                                <div class="appointment-location">
+                                    📍 ${appointment.location}
+                                </div>
+                            ` : ''}
+                            
+                            <div class="appointment-meta">
+                                <div class="appointment-author">
+                                    👤 ${appointment.author}
+                                </div>
+                                <div class="appointment-actions">
+                                    <button class="btn btn-danger" onclick="deleteAppointment('${doc.id}')">
+                                        🗑️ Löschen
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                appointmentsList.innerHTML = html;
+            } catch (error) {
+                console.error('Fehler beim Laden der Termine:', error);
+                showNotification('Fehler beim Laden der Termine', 'error');
+            }
+        }
+
+        // Termin erstellen
+        appointmentForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Loading-Zustand anzeigen
+            submitText.style.display = 'none';
+            submitLoader.style.display = 'inline-block';
+
+            try {
+                const formData = new FormData(appointmentForm);
+                
+                const appointment = {
+                    title: document.getElementById('title').value,
+                    description: document.getElementById('description').value,
+                    date: document.getElementById('date').value,
+                    time: document.getElementById('time').value,
+                    location: document.getElementById('location').value,
+                    priority: document.getElementById('priority').value,
+                    author: document.getElementById('author').value,
+                    datetime: new Date(document.getElementById('date').value + 'T' + document.getElementById('time').value),
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                await db.collection('termine').add(appointment);
+
+                appointmentForm.reset();
+                showNotification('Termin erfolgreich erstellt!');
+                loadAppointments();
+
+            } catch (error) {
+                console.error('Fehler beim Erstellen des Termins:', error);
+                showNotification('Fehler beim Erstellen des Termins', 'error');
+            } finally {
+                // Loading-Zustand zurücksetzen
+                submitText.style.display = 'inline';
+                submitLoader.style.display = 'none';
+            }
+        });
+
+        // Termin löschen
+        async function deleteAppointment(id) {
+            if (!confirm('Sind Sie sicher, dass Sie diesen Termin löschen möchten?')) {
+                return;
+            }
+
+            try {
+                await db.collection('termine').doc(id).delete();
+                showNotification('Termin gelöscht!');
+                loadAppointments();
+            } catch (error) {
+                console.error('Fehler beim Löschen des Termins:', error);
+                showNotification('Fehler beim Löschen des Termins', 'error');
+            }
+        }
+
+        // Refresh Button
+        refreshBtn.addEventListener('click', loadAppointments);
+
+        // Automatisches Laden beim Start
+        document.addEventListener('DOMContentLoaded', () => {
+            // Aktuelles Datum als Standard setzen
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+
+            // Termine laden
+            loadAppointments();
+
+            // Automatische Aktualisierung alle 30 Sekunden
+            setInterval(loadAppointments, 30000);
+        });
+
+        // Real-time Updates mit Firestore
+        db.collection('termine').onSnapshot((snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === 'added' || change.type === 'modified' || change.type === 'removed') {
+                    loadAppointments();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
