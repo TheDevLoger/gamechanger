@@ -45,6 +45,17 @@
             50% { transform: scale(1.1) rotate(5deg); }
         }
 
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         #playerSelect {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
@@ -75,91 +86,63 @@
         .button-group {
             display: flex;
             flex-direction: column;
-            gap: 1rem;
-            align-items: center;
+            gap: 1.5rem;
         }
 
         .mode-section {
             display: flex;
             gap: 1rem;
-            margin-bottom: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
-        button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 1rem 2.5rem;
+        .mode-section button {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #f0f0f0;
+            padding: 1rem 2rem;
             font-size: 1.1rem;
-            font-weight: 500;
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-            position: relative;
-            overflow: hidden;
-            min-width: 200px;
+            min-width: 160px;
+            font-weight: 500;
         }
 
-        button.bot-mode {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
-            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
-        }
-
-        button.strong-bot-mode {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
-        }
-
-        button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        button:hover::before {
-            left: 100%;
-        }
-
-        button:hover {
+        .mode-section button:hover {
+            background: rgba(255, 255, 255, 0.2);
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
         }
 
-        button.bot-mode:hover {
-            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+        .bot-mode {
+            background: rgba(255, 193, 7, 0.15) !important;
+            border-color: rgba(255, 193, 7, 0.3) !important;
         }
 
-        button.strong-bot-mode:hover {
-            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.6);
+        .bot-mode:hover {
+            background: rgba(255, 193, 7, 0.25) !important;
         }
 
-        button:active {
-            transform: translateY(0);
+        .strong-bot-mode {
+            background: rgba(231, 76, 60, 0.15) !important;
+            border-color: rgba(231, 76, 60, 0.3) !important;
+        }
+
+        .strong-bot-mode:hover {
+            background: rgba(231, 76, 60, 0.25) !important;
         }
 
         .game-container {
             display: none;
-            animation: fadeIn 0.8s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
+            position: relative;
+            gap: 2rem;
+            align-items: flex-start;
+            animation: slideUp 0.6s ease-out;
         }
 
         #board-wrapper {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 2rem;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
             display: flex;
             gap: 2rem;
@@ -171,8 +154,9 @@
             grid-template-columns: repeat(8, 85px);
             grid-template-rows: repeat(8, 85px);
             border-radius: 12px;
-            overflow: hidden;
+            overflow: visible;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            position: relative;
         }
 
         .square {
@@ -208,44 +192,211 @@
             background: #b58863;
         }
 
-        /* Schatten-Effekte für Figuren */
+        /* Improved piece animations */
+        .piece-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: transform 0.2s ease;
+            position: relative;
+            z-index: 5;
+        }
+
+        .square:hover .piece-img {
+            transform: scale(1.05);
+        }
+
+        /* Enhanced piece shadows */
         .white-piece {
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+            filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.3));
         }
 
         .black-piece {
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+            filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5));
         }
 
         .square.selected {
             animation: pulse 1s ease-in-out infinite;
-            box-shadow: inset 0 0 0 3px #ff6b6b;
+            box-shadow: inset 0 0 0 4px #ff6b6b;
         }
 
         @keyframes pulse {
             0%, 100% {
                 transform: scale(1);
-                box-shadow: inset 0 0 0 3px #ff6b6b, 0 0 20px rgba(255, 107, 107, 0.6);
+                box-shadow: inset 0 0 0 4px #ff6b6b, 0 0 25px rgba(255, 107, 107, 0.6);
             }
             50% {
-                transform: scale(1.05);
-                box-shadow: inset 0 0 0 3px #ff6b6b, 0 0 30px rgba(255, 107, 107, 0.8);
+                transform: scale(1.03);
+                box-shadow: inset 0 0 0 4px #ff6b6b, 0 0 35px rgba(255, 107, 107, 0.8);
             }
         }
 
-        .piece-move {
-            animation: piecePlace 0.3s ease-out;
+        /* Smooth piece movement animations */
+        .piece-moving {
+            position: absolute !important;
+            z-index: 1000 !important;
+            pointer-events: none;
+            transition: all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transform-origin: center;
+            width: 69px !important;
+            height: 69px !important;
         }
 
-        @keyframes piecePlace {
-            from {
-                transform: scale(0.8);
-                opacity: 0.5;
+        .piece-moving.fast-move {
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .piece-arriving {
+            animation: pieceArrive 0.4s ease-out;
+        }
+
+        @keyframes pieceArrive {
+            0% {
+                transform: scale(0.7) rotateY(180deg);
+                opacity: 0.6;
             }
-            to {
-                transform: scale(1);
+            50% {
+                transform: scale(1.1) rotateY(90deg);
+                opacity: 0.9;
+            }
+            100% {
+                transform: scale(1) rotateY(0deg);
                 opacity: 1;
             }
+        }
+
+        .piece-captured {
+            animation: pieceCaptured 0.5s ease-in forwards;
+        }
+
+        @keyframes pieceCaptured {
+            0% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2) rotate(180deg);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(0) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Highlighted squares for possible moves */
+        .possible-move {
+            position: relative;
+        }
+
+        .possible-move::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 25px;
+            height: 25px;
+            background: rgba(76, 217, 100, 0.7);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: possibleMovePulse 2s ease-in-out infinite;
+        }
+
+        .possible-move.capture-move::before {
+            width: 75%;
+            height: 75%;
+            background: rgba(255, 107, 107, 0.4);
+            border: 3px solid rgba(255, 107, 107, 0.8);
+            border-radius: 8px;
+        }
+
+        @keyframes possibleMovePulse {
+            0%, 100% {
+                opacity: 0.6;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+        }
+
+        /* Last move highlighting */
+        .last-move {
+            background: rgba(255, 235, 59, 0.3) !important;
+            animation: lastMoveGlow 1s ease-out;
+        }
+
+        @keyframes lastMoveGlow {
+            0% {
+                background: rgba(255, 235, 59, 0.6) !important;
+                box-shadow: 0 0 20px rgba(255, 235, 59, 0.5);
+            }
+            100% {
+                background: rgba(255, 235, 59, 0.3) !important;
+                box-shadow: none;
+            }
+        }
+
+        /* Evaluation bar */
+        .evaluation-bar {
+            width: 20px;
+            height: 680px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .evaluation-white {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: linear-gradient(to top, #e8eaf6 0%, #c5cae9 100%);
+            transition: height 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border-radius: 0 0 10px 10px;
+        }
+
+        .evaluation-black {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            background: linear-gradient(to bottom, #424242 0%, #212121 100%);
+            transition: height 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border-radius: 10px 10px 0 0;
+        }
+
+        .evaluation-labels {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+            margin-left: 0.5rem;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 500;
+            position: absolute;
+            top: 0;
+            z-index: 11;
+            padding: 0.5rem 0;
+        }
+
+        .evaluation-value {
+            position: absolute;
+            right: -3rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            min-width: 3rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            z-index: 12;
         }
 
         #status {
@@ -352,122 +503,6 @@
             transform: translateX(-50%);
         }
 
-        /* Mobile Responsiveness */
-        @media (max-width: 768px) {
-            
-            #board {
-                grid-template-columns: repeat(8, 55px);
-                grid-template-rows: repeat(8, 55px);
-            }
-            
-            .square {
-                width: 55px;
-                height: 55px;
-                padding: 6px;
-            }
-            
-            .evaluation-bar {
-                width: 30px;
-                height: 440px;
-            }
-            
-            .evaluation-white {
-                border-radius: 0 0 14px 14px;
-            }
-            
-            .evaluation-black {
-                border-radius: 14px 14px 0 0;
-            }
-            
-            .evaluation-value {
-                right: -2.5rem;
-                font-size: 0.75rem;
-                min-width: 2.5rem;
-                padding: 0.3rem;
-            }
-            
-            button {
-                padding: 0.8rem 1.5rem;
-                font-size: 1rem;
-            }
-
-            .mode-section {
-                flex-direction: column;
-            }
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Evaluation Bar */
-        .evaluation-bar {
-            width: 40px;
-            height: 680px;
-            background: #000000;
-            border-radius: 20px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .evaluation-white {
-            position: absolute;
-            width: 100%;
-            background: linear-gradient(to bottom, #e9ecef, #f8f9fa);
-            bottom: 0;
-            transition: height 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 0 0 18px 18px;
-        }
-
-        .evaluation-black {
-            position: absolute;
-            width: 100%;
-            background: linear-gradient(to bottom, #212529, #495057);
-            top: 0;
-            transition: height 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 18px 18px 0 0;
-        }
-
-        .evaluation-labels {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 100%;
-            margin-left: 0.5rem;
-            font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.6);
-            font-weight: 500;
-            position: absolute;
-            top: 0;
-            z-index: 11;
-            padding: 0.5rem 0;
-        }
-
-        .evaluation-value {
-            position: absolute;
-            right: -3rem;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 0.5rem;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.875rem;
-            min-width: 3rem;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            z-index: 12;
-        }
         .loading {
             display: inline-block;
             width: 20px;
@@ -531,6 +566,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
     <script>
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAujeUok4jKYwnr5GEXze_EadszqMdY1y4",
             authDomain: "gamechanger-78fb4.firebaseapp.com",
@@ -542,15 +578,22 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
+        // DOM elements
         const boardEl = document.getElementById('board');
         const statusEl = document.getElementById('status');
         const resetBtn = document.getElementById('resetBtn');
         const soundToggleBtn = document.getElementById('soundToggle');
         const gameContainer = document.querySelector('.game-container');
+
+        // SVG piece mapping
         const pieceSvg = {
-            'r': 'img/bR.svg', 'n': 'img/bN.svg', 'b': 'img/bB.svg', 'q': 'img/bQ.svg', 'k': 'img/bK.svg', 'p': 'img/bP.svg',
-            'R': 'img/R.svg', 'N': 'img/N.svg', 'B': 'img/B.svg', 'Q': 'img/Q.svg', 'K': 'img/K.svg', 'P': 'img/P.svg'
+            'r': 'img/bR.svg', 'n': 'img/bN.svg', 'b': 'img/bB.svg', 
+            'q': 'img/bQ.svg', 'k': 'img/bK.svg', 'p': 'img/bP.svg',
+            'R': 'img/R.svg', 'N': 'img/N.svg', 'B': 'img/B.svg', 
+            'Q': 'img/Q.svg', 'K': 'img/K.svg', 'P': 'img/P.svg'
         };
+
+        // Game state variables
         const startFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
         let board = [];
         let selectedSquare = null;
@@ -562,818 +605,10 @@
         let isPlayingBot = false;
         let botThinking = false;
         let botDifficulty = 'easy';
+        let lastMoveSquares = [];
+        let possibleMoves = [];
 
-        // Enhanced piece values and positioning
-        const PIECE_VALUES = {
-            'p': 100, 'n': 320, 'b': 330, 'r': 500, 'q': 900, 'k': 20000,
-            'P': 100, 'N': 320, 'B': 330, 'R': 500, 'Q': 900, 'K': 20000
-        };
-
-        // Advanced piece-square tables for different game phases
-        const PST = {
-            'p': [
-                [0,   0,   0,   0,   0,   0,   0,   0],
-                [78,  83,  86,  73, 102,  82,  85,  90],
-                [7,   29,  21,  44,  40,  31,  44,   7],
-                [-17,  16,  -2,  15,  14,   0,  15, -13],
-                [-26,   3,  10,   9,   6,   1,   0, -23],
-                [-22,   9,   5, -11, -10,  -2,   3, -19],
-                [-31,   8,  -7, -37, -36, -14,   3, -31],
-                [0,   0,   0,   0,   0,   0,   0,   0]
-            ],
-            'n': [
-                [-66, -53, -75, -75, -10, -55, -58, -70],
-                [-3,  -6, 100, -36,   4,  62,  -4, -14],
-                [10,  67,   1,  74,  73,  27,  62,  -2],
-                [24,  24,  45,  37,  33,  41,  25,  17],
-                [-1,   5,  31,  21,  22,  35,   2,   0],
-                [-18,  10,  13,  22,  18,  15,  11, -14],
-                [-23, -15,   2,   0,   2,   0, -23, -20],
-                [-74, -23, -26, -24, -19, -35, -22, -69]
-            ],
-            'b': [
-                [-59, -78, -82, -76, -23,-107, -37, -50],
-                [-11,  20,  35, -42, -39,  31,   2, -22],
-                [-9,  39, -32,  41,  52, -10,  28, -14],
-                [25,  17,  20,  34,  26,  25,  15,  10],
-                [13,  10,  17,  23,  17,  16,   0,   7],
-                [14,  25,  24,  15,   8,  25,  20,  15],
-                [19,  20,  11,   6,   7,   6,  20,  16],
-                [-7,   2, -15, -12, -14, -15, -10, -10]
-            ],
-            'r': [
-                [35,  29,  33,   4,  37,  33,  56,  50],
-                [55,  29,  56,  67,  55,  62,  34,  60],
-                [19,  35,  28,  33,  45,  27,  25,  15],
-                [0,   5,  16,  13,  18,  -4,  -9,  -6],
-                [-28, -35, -16, -21, -13, -29, -46, -30],
-                [-42, -28, -42, -25, -25, -35, -26, -46],
-                [-53, -38, -31, -26, -29, -43, -44, -53],
-                [-30, -24, -18,   5,  -2, -18, -31, -32]
-            ],
-            'q': [
-                [6,   1,  -8,-104,  69,  24,  88,  26],
-                [14,  32,  60, -10,  20,  76,  57,  24],
-                [-2,  43,  32,  60,  72,  63,  43,   2],
-                [1, -16,  22,  17,  25,  20, -13,  -6],
-                [-14, -15,  -2,  -5,  -1, -10, -20, -22],
-                [-30,  -6, -13, -11, -16, -11, -16, -27],
-                [-36, -18,   0, -19, -15, -15, -21, -38],
-                [-39, -30, -31, -13, -31, -36, -34, -42]
-            ],
-            'k': [
-                [4,  54,  47, -99, -99,  60,  83, -62],
-                [-32,  10,  55,  56,  56,  55,  10,   3],
-                [-62,  12, -57,  44, -67,  28,  37, -31],
-                [-55,  50,  11,  -4, -19,  13,   0, -49],
-                [-55, -43, -52, -28, -51, -47,  -8, -50],
-                [-47, -42, -43, -79, -64, -32, -29, -32],
-                [-4,   3, -14, -50, -57, -18,  13,   4],
-                [17,  30,  -3, -14,   6,  -1,  40,  18]
-            ]
-        };
-
-        // Flip tables for black pieces
-        function flipTable(table) {
-            return table.slice().reverse();
-        }
-
-        // Generate PST for black pieces
-        const BLACK_PST = {};
-        for (const piece in PST) {
-            BLACK_PST[piece] = flipTable(PST[piece]);
-        }
-
-        // Transposition table for memoization
-        let transpositionTable = new Map();
-        const TT_EXACT = 0;
-        const TT_ALPHA = 1;
-        const TT_BETA = 2;
-
-        // Killer moves for move ordering
-        let killerMoves = Array(10).fill().map(() => Array(2).fill(null));
-
-        // History heuristic
-        let historyTable = {};
-
-        function getHistoryKey(from, to) {
-            return `${from[0]},${from[1]}-${to[0]},${to[1]}`;
-        }
-
-        // Enhanced evaluation function
-        function evaluatePosition(testBoard = board, alpha = -Infinity, beta = Infinity) {
-            let material = 0;
-            let positional = 0;
-            let mobility = 0;
-            let kingSafety = 0;
-            let pawnStructure = 0;
-            
-            const gamePhase = getGamePhase(testBoard);
-            let whiteKing = null, blackKing = null;
-            
-            // Material and positional evaluation
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
-                    const piece = testBoard[r][c];
-                    if (!piece) continue;
-                    
-                    const isWhite = piece === piece.toUpperCase();
-                    const pieceType = piece.toLowerCase();
-                    
-                    // Material
-                    const pieceValue = PIECE_VALUES[pieceType];
-                    material += isWhite ? pieceValue : -pieceValue;
-                    
-                    // Positional
-                    const pst = isWhite ? PST[pieceType] : BLACK_PST[pieceType];
-                    if (pst) {
-                        positional += isWhite ? pst[r][c] : -pst[r][c];
-                    }
-                    
-                    // Track kings
-                    if (pieceType === 'k') {
-                        if (isWhite) whiteKing = [r, c];
-                        else blackKing = [r, c];
-                    }
-                    
-                    // Piece-specific bonuses
-                    if (pieceType === 'r') {
-                        // Rook on open/semi-open files
-                        const fileOpen = isFileOpen(testBoard, c);
-                        const fileSemiOpen = isFileSemiOpen(testBoard, c, isWhite);
-                        if (fileOpen) positional += isWhite ? 25 : -25;
-                        else if (fileSemiOpen) positional += isWhite ? 10 : -10;
-                        
-                        // Rook on 7th rank
-                        if ((isWhite && r === 1) || (!isWhite && r === 6)) {
-                            positional += isWhite ? 20 : -20;
-                        }
-                    }
-                    
-                    if (pieceType === 'b') {
-                        // Bishop pair bonus
-                        const bishopCount = countPieces(testBoard, isWhite ? 'B' : 'b');
-                        if (bishopCount >= 2) positional += isWhite ? 30 : -30;
-                    }
-                    
-                    if (pieceType === 'q') {
-                        // Penalize early queen development
-                        if (gamePhase > 0.7 && ((isWhite && r < 6) || (!isWhite && r > 1))) {
-                            positional += isWhite ? -20 : 20;
-                        }
-                    }
-                }
-            }
-            
-            // King safety
-            if (whiteKing) kingSafety += evaluateKingSafety(testBoard, whiteKing, true, gamePhase);
-            if (blackKing) kingSafety -= evaluateKingSafety(testBoard, blackKing, false, gamePhase);
-            
-            // Pawn structure
-            pawnStructure = evaluateAdvancedPawnStructure(testBoard);
-            
-            // Mobility (simplified for performance)
-            if (Math.random() < 0.3) { // Only calculate 30% of the time for speed
-                const whiteMobility = calculateMobility(testBoard, true);
-                const blackMobility = calculateMobility(testBoard, false);
-                mobility = (whiteMobility - blackMobility) * 4;
-            }
-            
-            const totalEval = material + positional + mobility + kingSafety + pawnStructure;
-            
-            // Convert to centipawns and then to UI scale
-            return Math.max(-10, Math.min(10, totalEval / 100));
-        }
-
-        function getGamePhase(testBoard) {
-            let totalMaterial = 0;
-            const maxMaterial = 16 * 100 + 4 * 320 + 4 * 330 + 4 * 500 + 2 * 900; // Starting material minus kings
-            
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
-                    const piece = testBoard[r][c];
-                    if (piece && piece.toLowerCase() !== 'k') {
-                        totalMaterial += PIECE_VALUES[piece.toLowerCase()];
-                    }
-                }
-            }
-            
-            return totalMaterial / maxMaterial; // 1.0 = opening, 0.0 = endgame
-        }
-
-        function isFileOpen(testBoard, file) {
-            for (let r = 0; r < 8; r++) {
-                const piece = testBoard[r][file];
-                if (piece && piece.toLowerCase() === 'p') return false;
-            }
-            return true;
-        }
-
-        function isFileSemiOpen(testBoard, file, forWhite) {
-            for (let r = 0; r < 8; r++) {
-                const piece = testBoard[r][file];
-                if (piece && piece.toLowerCase() === 'p' && 
-                    (forWhite ? piece === 'P' : piece === 'p')) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        function countPieces(testBoard, pieceType) {
-            let count = 0;
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
-                    if (testBoard[r][c] === pieceType) count++;
-                }
-            }
-            return count;
-        }
-
-        function evaluateKingSafety(testBoard, kingPos, isWhite, gamePhase) {
-            const [kr, kc] = kingPos;
-            let safety = 0;
-            
-            // Pawn shield (more important in opening/middlegame)
-            const shieldBonus = gamePhase * 30;
-            const direction = isWhite ? -1 : 1;
-            
-            for (let dc = -1; dc <= 1; dc++) {
-                const file = kc + dc;
-                if (file >= 0 && file < 8) {
-                    let pawnFound = false;
-                    for (let dr = 1; dr <= 3; dr++) {
-                        const row = kr + direction * dr;
-                        if (row >= 0 && row < 8) {
-                            const piece = testBoard[row][file];
-                            if (piece && piece.toLowerCase() === 'p' && 
-                                (piece === piece.toUpperCase()) === isWhite) {
-                                safety += shieldBonus * (4 - dr) / 3;
-                                pawnFound = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (!pawnFound) safety -= shieldBonus; // Penalty for missing pawn
-                }
-            }
-            
-            // King tropism (enemy pieces near king)
-            let attackers = 0;
-            for (let r = Math.max(0, kr - 2); r <= Math.min(7, kr + 2); r++) {
-                for (let c = Math.max(0, kc - 2); c <= Math.min(7, kc + 2); c++) {
-                    const piece = testBoard[r][c];
-                    if (piece && (piece === piece.toUpperCase()) !== isWhite) {
-                        attackers++;
-                        safety -= PIECE_VALUES[piece.toLowerCase()] / 20;
-                    }
-                }
-            }
-            
-            // Castling bonus
-            if (!isInCheck(testBoard, isWhite)) {
-                if ((isWhite && kr === 7 && (kc === 6 || kc === 2)) ||
-                    (!isWhite && kr === 0 && (kc === 6 || kc === 2))) {
-                    safety += 60;
-                }
-            }
-            
-            return safety;
-        }
-
-        function evaluateAdvancedPawnStructure(testBoard) {
-            let score = 0;
-            const whitePawns = [];
-            const blackPawns = [];
-            
-            // Collect pawn positions
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
-                    const piece = testBoard[r][c];
-                    if (piece === 'P') whitePawns.push([r, c]);
-                    if (piece === 'p') blackPawns.push([r, c]);
-                }
-            }
-            
-            score += evaluatePawnStructureForSide(whitePawns, blackPawns, true);
-            score -= evaluatePawnStructureForSide(blackPawns, whitePawns, false);
-            
-            return score;
-        }
-
-        function evaluatePawnStructureForSide(ownPawns, enemyPawns, isWhite) {
-            let score = 0;
-            const direction = isWhite ? -1 : 1;
-            
-            for (const [r, c] of ownPawns) {
-                // Passed pawns
-                let isPassed = true;
-                for (const [er, ec] of enemyPawns) {
-                    if (Math.abs(ec - c) <= 1 && (isWhite ? er < r : er > r)) {
-                        isPassed = false;
-                        break;
-                    }
-                }
-                if (isPassed) {
-                    const rank = isWhite ? 7 - r : r;
-                    score += 20 + rank * rank * 10; // Exponential bonus
-                }
-                
-                // Isolated pawns
-                let hasSupport = false;
-                for (const [pr, pc] of ownPawns) {
-                    if (Math.abs(pc - c) === 1) {
-                        hasSupport = true;
-                        break;
-                    }
-                }
-                if (!hasSupport) score -= 20;
-                
-                // Doubled pawns
-                const sameFile = ownPawns.filter(([pr, pc]) => pc === c);
-                if (sameFile.length > 1) score -= 10;
-                
-                // Connected pawns
-                for (const [pr, pc] of ownPawns) {
-                    if (Math.abs(pc - c) === 1 && pr === r + direction) {
-                        score += 15;
-                    }
-                }
-                
-                // Advanced pawns
-                const advancement = isWhite ? (7 - r) : r;
-                if (advancement >= 4) score += advancement * 5;
-            }
-            
-            return score;
-        }
-
-        function calculateMobility(testBoard, isWhite) {
-            let mobility = 0;
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
-                    const piece = testBoard[r][c];
-                    if (piece && (isWhite ? piece === piece.toUpperCase() : piece === piece.toLowerCase())) {
-                        mobility += getPieceMobility(testBoard, [r, c]);
-                    }
-                }
-            }
-            return mobility;
-        }
-
-        function getPieceMobility(testBoard, pos) {
-            const [r, c] = pos;
-            const piece = testBoard[r][c];
-            if (!piece) return 0;
-            
-            let mobility = 0;
-            const isWhite = piece === piece.toUpperCase();
-            
-            // Quick mobility estimation instead of full move generation
-            const pieceType = piece.toLowerCase();
-            const directions = {
-                'r': [[0,1], [0,-1], [1,0], [-1,0]],
-                'b': [[1,1], [1,-1], [-1,1], [-1,-1]],
-                'q': [[0,1], [0,-1], [1,0], [-1,0], [1,1], [1,-1], [-1,1], [-1,-1]],
-                'n': [[2,1], [2,-1], [-2,1], [-2,-1], [1,2], [1,-2], [-1,2], [-1,-2]],
-                'k': [[0,1], [0,-1], [1,0], [-1,0], [1,1], [1,-1], [-1,1], [-1,-1]]
-            };
-            
-            if (directions[pieceType]) {
-                for (const [dr, dc] of directions[pieceType]) {
-                    if (pieceType === 'n' || pieceType === 'k') {
-                        const nr = r + dr, nc = c + dc;
-                        if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
-                            const target = testBoard[nr][nc];
-                            if (!target || (target === target.toUpperCase()) !== isWhite) {
-                                mobility++;
-                            }
-                        }
-                    } else {
-                        let nr = r + dr, nc = c + dc;
-                        while (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
-                            const target = testBoard[nr][nc];
-                            if (!target) {
-                                mobility++;
-                            } else {
-                                if ((target === target.toUpperCase()) !== isWhite) mobility++;
-                                break;
-                            }
-                            nr += dr;
-                            nc += dc;
-                        }
-                    }
-                }
-            }
-            
-            return mobility;
-        }
-
-        // Enhanced minimax with iterative deepening and optimizations
-        function iterativeDeepening(testBoard, maxDepth, timeLimit) {
-            const startTime = Date.now();
-            let bestMove = null;
-            let bestScore = -Infinity;
-            
-            transpositionTable.clear();
-            killerMoves = Array(10).fill().map(() => Array(2).fill(null));
-            historyTable = {};
-            
-            for (let depth = 1; depth <= maxDepth; depth++) {
-                if (Date.now() - startTime > timeLimit) break;
-                
-                const moves = getAllValidMovesOrdered(testBoard, false, depth);
-                if (moves.length === 0) break;
-                
-                let currentBestMove = null;
-                let currentBestScore = -Infinity;
-                
-                for (const move of moves) {
-                    if (Date.now() - startTime > timeLimit) break;
-                    
-                    const newBoard = makeMove(testBoard, move.from, move.to);
-                    const newCastlingRights = updateCastlingRights(castlingRights, move.from, move.to, newBoard);
-                    
-                    const score = -minimax(newBoard, depth - 1, -Infinity, Infinity, true, newCastlingRights, 1);
-                    
-                    if (score > currentBestScore) {
-                        currentBestScore = score;
-                        currentBestMove = move;
-                    }
-                }
-                
-                if (currentBestMove) {
-                    bestMove = currentBestMove;
-                    bestScore = currentBestScore;
-                }
-            }
-            
-            return bestMove;
-        }
-
-        function minimax(testBoard, depth, alpha, beta, maximizingPlayer, testCastlingRights, ply) {
-            // Transposition table lookup
-            const boardKey = getBoardKey(testBoard, maximizingPlayer);
-            const ttEntry = transpositionTable.get(boardKey);
-            if (ttEntry && ttEntry.depth >= depth) {
-                if (ttEntry.flag === TT_EXACT) return ttEntry.score;
-                if (ttEntry.flag === TT_ALPHA && ttEntry.score <= alpha) return alpha;
-                if (ttEntry.flag === TT_BETA && ttEntry.score >= beta) return beta;
-            }
-            
-            if (depth === 0 || ply > 8) {
-                return quiescenceSearch(testBoard, alpha, beta, maximizingPlayer);
-            }
-            
-            const moves = getAllValidMovesOrdered(testBoard, maximizingPlayer, ply);
-            
-            if (moves.length === 0) {
-                if (isInCheck(testBoard, maximizingPlayer)) {
-                    return maximizingPlayer ? -20000 + ply : 20000 - ply;
-                } else {
-                    return 0; // Stalemate
-                }
-            }
-            
-            let bestScore = maximizingPlayer ? -Infinity : Infinity;
-            let bestMove = null;
-            let flag = TT_ALPHA;
-            
-            for (const move of moves) {
-                const newBoard = makeMove(testBoard, move.from, move.to);
-                const newCastlingRights = updateCastlingRights(testCastlingRights, move.from, move.to, newBoard);
-                
-                const score = minimax(newBoard, depth - 1, alpha, beta, !maximizingPlayer, newCastlingRights, ply + 1);
-                
-                if (maximizingPlayer) {
-                    if (score > bestScore) {
-                        bestScore = score;
-                        bestMove = move;
-                    }
-                    alpha = Math.max(alpha, score);
-                    if (beta <= alpha) {
-                        // Update killer moves
-                        if (killerMoves[ply][0] !== move) {
-                            killerMoves[ply][1] = killerMoves[ply][0];
-                            killerMoves[ply][0] = move;
-                        }
-                        // Update history
-                        const histKey = getHistoryKey(move.from, move.to);
-                        historyTable[histKey] = (historyTable[histKey] || 0) + depth * depth;
-                        flag = TT_BETA;
-                        break;
-                    }
-                } else {
-                    if (score < bestScore) {
-                        bestScore = score;
-                        bestMove = move;
-                    }
-                    beta = Math.min(beta, score);
-                    if (beta <= alpha) {
-                        if (killerMoves[ply][0] !== move) {
-                            killerMoves[ply][1] = killerMoves[ply][0];
-                            killerMoves[ply][0] = move;
-                        }
-                        const histKey = getHistoryKey(move.from, move.to);
-                        historyTable[histKey] = (historyTable[histKey] || 0) + depth * depth;
-                        flag = TT_BETA;
-                        break;
-                    }
-                }
-            }
-            
-            if (bestScore > alpha && bestScore < beta) flag = TT_EXACT;
-            
-            // Store in transposition table
-            transpositionTable.set(boardKey, {
-                score: bestScore,
-                depth: depth,
-                flag: flag,
-                move: bestMove
-            });
-            
-            return bestScore;
-        }
-
-        function quiescenceSearch(testBoard, alpha, beta, maximizingPlayer, depth = 4) {
-            const standPat = evaluatePosition(testBoard);
-            
-            if (depth === 0) return standPat;
-            
-            if (maximizingPlayer) {
-                if (standPat >= beta) return beta;
-                alpha = Math.max(alpha, standPat);
-            } else {
-                if (standPat <= alpha) return alpha;
-                beta = Math.min(beta, standPat);
-            }
-            
-            // Only consider captures and checks
-            const captures = getCaptureMoves(testBoard, maximizingPlayer);
-            
-            for (const move of captures) {
-                const newBoard = makeMove(testBoard, move.from, move.to);
-                const score = quiescenceSearch(newBoard, alpha, beta, !maximizingPlayer, depth - 1);
-                
-                if (maximizingPlayer) {
-                    alpha = Math.max(alpha, score);
-                    if (beta <= alpha) break;
-                } else {
-                    beta = Math.min(beta, score);
-                    if (beta <= alpha) break;
-                }
-            }
-            
-            return maximizingPlayer ? alpha : beta;
-        }
-
-        function getCaptureMoves(testBoard, isWhite) {
-            const moves = [];
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
-                    const piece = testBoard[r][c];
-                    if (piece && (isWhite ? piece === piece.toUpperCase() : piece === piece.toLowerCase())) {
-                        for (let tr = 0; tr < 8; tr++) {
-                            for (let tc = 0; tc < 8; tc++) {
-                                if (testBoard[tr][tc] && // There's a piece to capture
-                                    (testBoard[tr][tc] === testBoard[tr][tc].toUpperCase()) !== isWhite && // Enemy piece
-                                    isValidMove([r, c], [tr, tc], isWhite, testBoard, castlingRights)) {
-                                    moves.push({
-                                        from: [r, c],
-                                        to: [tr, tc],
-                                        piece: piece,
-                                        capturedPiece: testBoard[tr][tc]
-                                    });
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            return moves;
-        }
-
-        function getAllValidMovesOrdered(testBoard, isWhite, ply = 0) {
-            const moves = [];
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
-                    const piece = testBoard[r][c];
-                    if (piece && (isWhite ? piece === piece.toUpperCase() : piece === piece.toLowerCase())) {
-                        for (let tr = 0; tr < 8; tr++) {
-                            for (let tc = 0; tc < 8; tc++) {
-                                if (isValidMove([r, c], [tr, tc], isWhite, testBoard, castlingRights)) {
-                                    moves.push({
-                                        from: [r, c],
-                                        to: [tr, tc],
-                                        piece: piece,
-                                        capturedPiece: testBoard[tr][tc]
-                                    });
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            
-            // Order moves for better alpha-beta pruning
-            return moves.sort((a, b) => getMoveScore(b, ply) - getMoveScore(a, ply));
-        }
-
-        function getMoveScore(move, ply) {
-            let score = 0;
-            
-            // 1. Captures (MVV-LVA: Most Valuable Victim - Least Valuable Attacker)
-            if (move.capturedPiece) {
-                score += 1000000 + PIECE_VALUES[move.capturedPiece.toLowerCase()] - PIECE_VALUES[move.piece.toLowerCase()];
-            }
-            
-            // 2. Killer moves
-            if (ply < killerMoves.length) {
-                if (killerMoves[ply][0] && 
-                    killerMoves[ply][0].from[0] === move.from[0] && 
-                    killerMoves[ply][0].from[1] === move.from[1] &&
-                    killerMoves[ply][0].to[0] === move.to[0] && 
-                    killerMoves[ply][0].to[1] === move.to[1]) {
-                    score += 900000;
-                }
-                if (killerMoves[ply][1] && 
-                    killerMoves[ply][1].from[0] === move.from[0] && 
-                    killerMoves[ply][1].from[1] === move.from[1] &&
-                    killerMoves[ply][1].to[0] === move.to[0] && 
-                    killerMoves[ply][1].to[1] === move.to[1]) {
-                    score += 800000;
-                }
-            }
-            
-            // 3. History heuristic
-            const histKey = getHistoryKey(move.from, move.to);
-            score += historyTable[histKey] || 0;
-            
-            // 4. Piece-square table improvements
-            const piece = move.piece.toLowerCase();
-            const isWhite = move.piece === move.piece.toUpperCase();
-            const pst = isWhite ? PST[piece] : BLACK_PST[piece];
-            if (pst) {
-                const fromScore = pst[move.from[0]][move.from[1]];
-                const toScore = pst[move.to[0]][move.to[1]];
-                score += toScore - fromScore;
-            }
-            
-            return score;
-        }
-
-        function getBoardKey(testBoard, isWhiteTurn) {
-            let key = '';
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
-                    key += testBoard[r][c] || '.';
-                }
-            }
-            key += isWhiteTurn ? 'W' : 'B';
-            return key;
-        }
-
-        // Update evaluation bar
-        function updateEvaluationBar() {
-            const evaluation = evaluatePosition();
-            const evalWhite = document.getElementById('evalWhite');
-            const evalBlack = document.getElementById('evalBlack');
-            const evalValue = document.getElementById('evalValue');
-            
-            const displayValue = Math.abs(evaluation).toFixed(1);
-            evalValue.textContent = evaluation >= 0 ? `+${displayValue}` : `-${displayValue}`;
-            
-            const normalizedEval = Math.max(-10, Math.min(10, evaluation));
-            const whitePercentage = ((normalizedEval + 10) / 20) * 100;
-            const blackPercentage = 100 - whitePercentage;
-            
-            evalWhite.style.height = `${whitePercentage}%`;
-            evalBlack.style.height = `${blackPercentage}%`;
-            
-            if (evaluation > 0.5) {
-                evalValue.style.background = 'rgba(248, 249, 250, 0.9)';
-                evalValue.style.color = '#212529';
-            } else if (evaluation < -0.5) {
-                evalValue.style.background = 'rgba(33, 37, 41, 0.9)';
-                evalValue.style.color = '#f8f9fa';
-            } else {
-                evalValue.style.background = 'rgba(108, 117, 125, 0.9)';
-                evalValue.style.color = 'white';
-            }
-        }
-
-        // Sound-System mit Web Audio API
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
-        const sounds = {
-            move: () => {
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
-                oscillator.frequency.exponentialRampToValueAtTime(300, audioContext.currentTime + 0.1);
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-                
-                oscillator.start();
-                oscillator.stop(audioContext.currentTime + 0.2);
-            },
-            capture: () => {
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.frequency.setValueAtTime(500, audioContext.currentTime);
-                oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.15);
-                gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-                
-                oscillator.start();
-                oscillator.stop(audioContext.currentTime + 0.3);
-            },
-            check: () => {
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
-                
-                oscillator.start();
-                oscillator.stop(audioContext.currentTime + 0.4);
-            },
-            checkmate: () => {
-                for (let i = 0; i < 3; i++) {
-                    setTimeout(() => {
-                        const oscillator = audioContext.createOscillator();
-                        const gainNode = audioContext.createGain();
-                        oscillator.connect(gainNode);
-                        gainNode.connect(audioContext.destination);
-                        
-                        oscillator.frequency.setValueAtTime(600 - i * 100, audioContext.currentTime);
-                        gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
-                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-                        
-                        oscillator.start();
-                        oscillator.stop(audioContext.currentTime + 0.3);
-                    }, i * 200);
-                }
-            },
-            castle: () => {
-                const oscillator1 = audioContext.createOscillator();
-                const oscillator2 = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator1.connect(gainNode);
-                oscillator2.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator1.frequency.setValueAtTime(300, audioContext.currentTime);
-                oscillator2.frequency.setValueAtTime(450, audioContext.currentTime);
-                
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
-                
-                oscillator1.start();
-                oscillator2.start();
-                oscillator1.stop(audioContext.currentTime + 0.4);
-                oscillator2.stop(audioContext.currentTime + 0.4);
-            },
-            invalid: () => {
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.frequency.setValueAtTime(150, audioContext.currentTime);
-                oscillator.type = 'square';
-                gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-                
-                oscillator.start();
-                oscillator.stop(audioContext.currentTime + 0.1);
-            }
-        };
-
-        function playSound(soundName) {
-            if (soundEnabled && sounds[soundName]) {
-                sounds[soundName]();
-            }
-        }
-
-        soundToggleBtn.addEventListener('click', () => {
-            soundEnabled = !soundEnabled;
-            const icon = soundToggleBtn.querySelector('.sound-icon');
-            icon.textContent = soundEnabled ? '🔊' : '🔇';
-            soundToggleBtn.style.opacity = soundEnabled ? '1' : '0.6';
-        });
-
-        // Für Rochade
+        // Castling rights
         let castlingRights = {
             whiteKingMoved: false,
             whiteRookLeftMoved: false,
@@ -1383,12 +618,38 @@
             blackRookRightMoved: false
         };
 
+        // Enhanced piece values
+        const PIECE_VALUES = {
+            'p': 100, 'n': 320, 'b': 330, 'r': 500, 'q': 900, 'k': 20000,
+            'P': 100, 'N': 320, 'B': 330, 'R': 500, 'Q': 900, 'K': 20000
+        };
+
+        // Bot data structures
+        let transpositionTable = new Map();
+        let killerMoves = Array(10).fill().map(() => Array(2).fill(null));
+        let historyTable = {};
+
+        // Debug flag - set to false for production
+        const DEBUG_ANIMATIONS = true;
+        
+        function debugLog(...args) {
+            if (DEBUG_ANIMATIONS) {
+                console.log(...args);
+            }
+        }
+
+        // Audio context for sounds
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Player selection functions - Make them globally available
         function selectPlayer(color) {
             isPlayingBot = false;
             playerColor = color;
             document.getElementById('playerSelect').style.display = 'none';
             gameContainer.style.display = 'block';
             initGame();
+            // Start listening for Firebase updates
+            loadGame();
         }
 
         function playAgainstBot(difficulty) {
@@ -1400,14 +661,60 @@
             initGame();
         }
 
+        // Make functions globally available
+        window.selectPlayer = selectPlayer;
+        window.playAgainstBot = playAgainstBot;
+
+        // Sound system
+        function playSound(type) {
+            if (!soundEnabled) return;
+            
+            try {
+                const freq = {
+                    'move': 523.25,
+                    'capture': 659.25,
+                    'check': 783.99,
+                    'checkmate': 1046.50,
+                    'castle': 392.00
+                }[type] || 440;
+                
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
+                oscillator.type = type === 'checkmate' ? 'square' : 'sine';
+                
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.3);
+                
+                if (type === 'checkmate') {
+                    setTimeout(() => playSound('move'), 100);
+                    setTimeout(() => playSound('capture'), 200);
+                }
+            } catch (e) {
+                console.log('Audio not supported');
+            }
+        }
+
+        // Board conversion functions
         function fenToBoard(fen) {
             const rows = fen.split('/');
             const b = [];
             for (let r of rows) {
                 const rowArr = [];
                 for (let ch of r) {
-                    if (!isNaN(ch)) for (let i = 0; i < parseInt(ch); i++) rowArr.push(null);
-                    else rowArr.push(ch);
+                    if (!isNaN(ch)) {
+                        for (let i = 0; i < parseInt(ch); i++) rowArr.push(null);
+                    } else {
+                        rowArr.push(ch);
+                    }
                 }
                 b.push(rowArr);
             }
@@ -1418,8 +725,9 @@
             return b.map(row => {
                 let str = '', empty = 0;
                 for (let cell of row) {
-                    if (!cell) empty++;
-                    else {
+                    if (!cell) {
+                        empty++;
+                    } else {
                         if (empty) str += empty;
                         str += cell;
                         empty = 0;
@@ -1429,283 +737,411 @@
             }).join('/');
         }
 
-        let lastMoveTo = null;
+        // Utility functions
+        function getSquareElement(row, col) {
+            return document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+        }
 
-        function drawBoard() {
-            boardEl.innerHTML = '';
-            
-            const boardWrapper = document.getElementById('board-wrapper');
-            boardWrapper.querySelectorAll('.coordinates').forEach(el => el.remove());
-            
-            for (let i = 0; i < 8; i++) {
-                const rank = document.createElement('div');
-                rank.className = 'coordinates rank';
-                rank.textContent = 8 - i;
-                rank.style.top = `${2 + i * 85 + 42.5}px`;
-                boardWrapper.appendChild(rank);
-                
-                const file = document.createElement('div');
-                file.className = 'coordinates file';
-                file.textContent = String.fromCharCode(97 + i);
-                file.style.left = `${2 + i * 85 + 42.5}px`;
-                boardWrapper.appendChild(file);
-            }
+        function clearHighlights() {
+            document.querySelectorAll('.square').forEach(sq => {
+                sq.classList.remove('selected', 'possible-move', 'capture-move', 'last-move');
+            });
+            lastMoveSquares = [];
+            possibleMoves = [];
+        }
+
+        function highlightPossibleMoves(fromRow, fromCol) {
+            possibleMoves = [];
+            const piece = board[fromRow][fromCol];
+            if (!piece) return;
             
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
-                    const square = document.createElement('div');
-                    square.classList.add('square', (r + c) % 2 === 0 ? 'light' : 'dark');
-                    square.dataset.row = r;
-                    square.dataset.col = c;
-                    const piece = board[r][c];
-                    if (piece) {
-                        const pieceImg = document.createElement('img');
-                        pieceImg.src = pieceSvg[piece];
-                        pieceImg.style.width = '100%';
-                        pieceImg.style.height = '100%';
-                        pieceImg.style.objectFit = 'contain';
-                        pieceImg.classList.add(piece === piece.toUpperCase() ? 'white-piece' : 'black-piece');
-                        square.appendChild(pieceImg);
-                        if (lastMoveTo && lastMoveTo[0] === r && lastMoveTo[1] === c) {
-                            square.classList.add('piece-move');
-                            setTimeout(() => { lastMoveTo = null; }, 300);
+                    if (isValidMove([fromRow, fromCol], [r, c], isWhiteTurn)) {
+                        possibleMoves.push([r, c]);
+                        const square = getSquareElement(r, c);
+                        const isCapture = board[r][c] !== null;
+                        square.classList.add('possible-move');
+                        if (isCapture) {
+                            square.classList.add('capture-move');
                         }
                     }
-                    if (selectedSquare && selectedSquare[0] === r && selectedSquare[1] === c) {
-                        square.classList.add('selected');
-                    }
-                    square.addEventListener('click', onSquareClick);
-                    boardEl.appendChild(square);
                 }
             }
         }
 
-        function findKingPosition(testBoard, isWhite) {
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
-                    const p = testBoard[r][c];
-                    if (p && (isWhite ? p === 'K' : p === 'k')) return [r, c];
-                }
+        function highlightLastMove(fromPos, toPos) {
+            if (fromPos && toPos) {
+                const fromSquare = getSquareElement(fromPos[0], fromPos[1]);
+                const toSquare = getSquareElement(toPos[0], toPos[1]);
+                if (fromSquare) fromSquare.classList.add('last-move');
+                if (toSquare) toSquare.classList.add('last-move');
+                lastMoveSquares = [fromPos, toPos];
             }
-            return null;
         }
 
-        function isInCheck(testBoard, isWhite) {
-            const kingPos = findKingPosition(testBoard, isWhite);
-            if (!kingPos) return true;
+        // Animation system - Enhanced version
+        function animatePieceMovement(fromSquare, toSquare, piece, isCapture = false, callback = null) {
+            console.log('animatePieceMovement called:', { piece, isCapture });
             
-            const [kr, kc] = kingPos;
+            // Disable board clicks during animation
+            boardEl.style.pointerEvents = 'none';
+            
+            const fromIndex = Array.from(boardEl.children).indexOf(fromSquare);
+            const toIndex = Array.from(boardEl.children).indexOf(toSquare);
+            
+            if (fromIndex === -1 || toIndex === -1) {
+                console.log('Could not find square indices');
+                boardEl.style.pointerEvents = 'auto';
+                if (callback) callback();
+                return;
+            }
+            
+            const fromRow = Math.floor(fromIndex / 8);
+            const fromCol = fromIndex % 8;
+            const toRow = Math.floor(toIndex / 8);
+            const toCol = toIndex % 8;
+            
+            console.log('Animation from', [fromRow, fromCol], 'to', [toRow, toCol]);
+            
+            const animatedPiece = document.createElement('img');
+            animatedPiece.src = pieceSvg[piece];
+            animatedPiece.className = `piece-img piece-moving ${piece === piece.toUpperCase() ? 'white-piece' : 'black-piece'}`;
+            
+            const startX = fromCol * 85 + 8;
+            const startY = fromRow * 85 + 8;
+            animatedPiece.style.left = startX + 'px';
+            animatedPiece.style.top = startY + 'px';
+            animatedPiece.style.opacity = '1';
+            animatedPiece.style.zIndex = '1000';
+            
+            const originalPiece = fromSquare.querySelector('.piece-img');
+            if (originalPiece) {
+                originalPiece.style.visibility = 'hidden';
+            }
+            
+            if (isCapture) {
+                const capturedPiece = toSquare.querySelector('.piece-img');
+                if (capturedPiece) {
+                    capturedPiece.classList.add('piece-captured');
+                }
+            }
+            
+            boardEl.appendChild(animatedPiece);
+            
+            // Force reflow to ensure start position is set
+            animatedPiece.offsetHeight;
+            
+            const endX = toCol * 85 + 8;
+            const endY = toRow * 85 + 8;
+            
+            console.log('Animating from', [startX, startY], 'to', [endX, endY]);
+            
+            // Start animation
+            animatedPiece.style.left = endX + 'px';
+            animatedPiece.style.top = endY + 'px';
+            animatedPiece.style.transform = 'scale(1.1) rotate(3deg)';
+            
+            // Clean up after animation
+            setTimeout(() => {
+                console.log('Animation cleanup');
+                animatedPiece.remove();
+                
+                if (originalPiece) {
+                    originalPiece.style.visibility = 'visible';
+                }
+                
+                boardEl.style.pointerEvents = 'auto';
+                
+                if (callback) {
+                    console.log('Calling animation callback');
+                    callback();
+                }
+            }, 700);
+        }
 
+        // Move detection for Firebase - Improved version
+        function findMoveFromBoardDiff(oldBoard, newBoard) {
+            let fromPos = null;
+            let toPos = null;
+            let movedPiece = null;
+            let maxDistance = 0;
+            
+            // Find all pieces that disappeared from old board
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
-                    const p = testBoard[r][c];
-                    if (p && (isWhite ? p === p.toLowerCase() : p === p.toUpperCase())) {
-                        if (canAttackSquare(testBoard, [r, c], [kr, kc])) return true;
+                    if (oldBoard[r][c] && !newBoard[r][c]) {
+                        const piece = oldBoard[r][c];
+                        
+                        // Look for where this piece appeared in new board
+                        for (let tr = 0; tr < 8; tr++) {
+                            for (let tc = 0; tc < 8; tc++) {
+                                if (newBoard[tr][tc] === piece && oldBoard[tr][tc] !== piece) {
+                                    const distance = Math.abs(r - tr) + Math.abs(c - tc);
+                                    // Prefer longer moves (main piece moves vs castling rook moves)
+                                    if (distance > maxDistance) {
+                                        maxDistance = distance;
+                                        fromPos = [r, c];
+                                        toPos = [tr, tc];
+                                        movedPiece = piece;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            console.log('Move detected:', { fromPos, toPos, movedPiece, maxDistance });
+            return { fromPos, toPos, movedPiece };
+        }
+
+        function animateReceivedMove(oldBoard, newBoard, callback) {
+            console.log('animateReceivedMove called');
+            const moveInfo = findMoveFromBoardDiff(oldBoard, newBoard);
+            
+            if (!moveInfo.fromPos || !moveInfo.toPos) {
+                console.log('No move found, skipping animation');
+                if (callback) callback();
+                return;
+            }
+            
+            console.log('Animating move from', moveInfo.fromPos, 'to', moveInfo.toPos);
+            
+            // Temporarily restore old board for animation
+            board = oldBoard.map(row => row.slice());
+            drawBoard();
+            
+            // Wait a frame to ensure board is drawn
+            requestAnimationFrame(() => {
+                const fromSquare = getSquareElement(moveInfo.fromPos[0], moveInfo.fromPos[1]);
+                const toSquare = getSquareElement(moveInfo.toPos[0], moveInfo.toPos[1]);
+                
+                if (!fromSquare || !toSquare) {
+                    console.log('Could not find squares for animation');
+                    board = newBoard.map(row => row.slice());
+                    if (callback) callback();
+                    return;
+                }
+                
+                const isCapture = oldBoard[moveInfo.toPos[0]][moveInfo.toPos[1]] !== null;
+                
+                console.log('Starting piece animation');
+                animatePieceMovement(fromSquare, toSquare, moveInfo.movedPiece, isCapture, () => {
+                    console.log('Animation completed, updating board');
+                    board = newBoard.map(row => row.slice());
+                    if (callback) callback();
+                });
+            });
+        }
+
+        // Chess game logic
+        function isValidMove(from, to, currentIsWhite) {
+            const [fromRow, fromCol] = from;
+            const [toRow, toCol] = to;
+            
+            if (fromRow < 0 || fromRow > 7 || fromCol < 0 || fromCol > 7 ||
+                toRow < 0 || toRow > 7 || toCol < 0 || toCol > 7) return false;
+            
+            const piece = board[fromRow][fromCol];
+            const targetPiece = board[toRow][toCol];
+            
+            if (!piece) return false;
+            if (piece === piece.toUpperCase() !== currentIsWhite) return false;
+            if (targetPiece && (piece === piece.toUpperCase()) === (targetPiece === targetPiece.toUpperCase())) return false;
+            
+            const pieceType = piece.toLowerCase();
+            const rowDiff = toRow - fromRow;
+            const colDiff = toCol - fromCol;
+            const absRowDiff = Math.abs(rowDiff);
+            const absColDiff = Math.abs(colDiff);
+            
+            switch (pieceType) {
+                case 'p':
+                    const direction = currentIsWhite ? -1 : 1;
+                    const startRow = currentIsWhite ? 6 : 1;
+                    
+                    if (colDiff === 0) {
+                        if (rowDiff === direction && !targetPiece) return testMoveForCheck(from, to, currentIsWhite);
+                        if (fromRow === startRow && rowDiff === 2 * direction && !targetPiece) return testMoveForCheck(from, to, currentIsWhite);
+                    } else if (absColDiff === 1 && rowDiff === direction && targetPiece) {
+                        return testMoveForCheck(from, to, currentIsWhite);
+                    }
+                    return false;
+                    
+                case 'r':
+                    if (rowDiff === 0 || colDiff === 0) {
+                        return isPathClear(from, to) && testMoveForCheck(from, to, currentIsWhite);
+                    }
+                    return false;
+                    
+                case 'n':
+                    if ((absRowDiff === 2 && absColDiff === 1) || (absRowDiff === 1 && absColDiff === 2)) {
+                        return testMoveForCheck(from, to, currentIsWhite);
+                    }
+                    return false;
+                    
+                case 'b':
+                    if (absRowDiff === absColDiff) {
+                        return isPathClear(from, to) && testMoveForCheck(from, to, currentIsWhite);
+                    }
+                    return false;
+                    
+                case 'q':
+                    if (rowDiff === 0 || colDiff === 0 || absRowDiff === absColDiff) {
+                        return isPathClear(from, to) && testMoveForCheck(from, to, currentIsWhite);
+                    }
+                    return false;
+                    
+                case 'k':
+                    if (absRowDiff <= 1 && absColDiff <= 1) {
+                        return testMoveForCheck(from, to, currentIsWhite);
+                    }
+                    
+                    if (absRowDiff === 0 && absColDiff === 2) {
+                        return canCastle(from, to, currentIsWhite);
+                    }
+                    return false;
+            }
+            
+            return false;
+        }
+
+        function isPathClear(from, to) {
+            const [fromRow, fromCol] = from;
+            const [toRow, toCol] = to;
+            
+            const rowStep = toRow > fromRow ? 1 : (toRow < fromRow ? -1 : 0);
+            const colStep = toCol > fromCol ? 1 : (toCol < fromCol ? -1 : 0);
+            
+            let currentRow = fromRow + rowStep;
+            let currentCol = fromCol + colStep;
+            
+            while (currentRow !== toRow || currentCol !== toCol) {
+                if (board[currentRow][currentCol]) return false;
+                currentRow += rowStep;
+                currentCol += colStep;
+            }
+            
+            return true;
+        }
+
+        function canCastle(from, to, currentIsWhite) {
+            const [fromRow, fromCol] = from;
+            const [toRow, toCol] = to;
+            
+            if (fromRow !== toRow) return false;
+            
+            if (currentIsWhite) {
+                if (castlingRights.whiteKingMoved) return false;
+                if (toCol === 6 && castlingRights.whiteRookRightMoved) return false;
+                if (toCol === 2 && castlingRights.whiteRookLeftMoved) return false;
+            } else {
+                if (castlingRights.blackKingMoved) return false;
+                if (toCol === 6 && castlingRights.blackRookRightMoved) return false;
+                if (toCol === 2 && castlingRights.blackRookLeftMoved) return false;
+            }
+            
+            if (!isPathClear(from, to)) return false;
+            
+            for (let col = Math.min(fromCol, toCol); col <= Math.max(fromCol, toCol); col++) {
+                if (isSquareUnderAttack([fromRow, col], !currentIsWhite)) {
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        function testMoveForCheck(from, to, currentIsWhite) {
+            const [fromRow, fromCol] = from;
+            const [toRow, toCol] = to;
+            
+            const originalPiece = board[toRow][toCol];
+            board[toRow][toCol] = board[fromRow][fromCol];
+            board[fromRow][fromCol] = null;
+            
+            const kingPos = findKingPosition(board, currentIsWhite);
+            const inCheck = kingPos && isSquareUnderAttack(kingPos, !currentIsWhite);
+            
+            board[fromRow][fromCol] = board[toRow][toCol];
+            board[toRow][toCol] = originalPiece;
+            
+            return !inCheck;
+        }
+
+        function isSquareUnderAttack(square, byWhite) {
+            const [targetRow, targetCol] = square;
+            
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const piece = board[r][c];
+                    if (!piece) continue;
+                    
+                    const pieceIsWhite = piece === piece.toUpperCase();
+                    if (pieceIsWhite !== byWhite) continue;
+                    
+                    const pieceType = piece.toLowerCase();
+                    const rowDiff = targetRow - r;
+                    const colDiff = targetCol - c;
+                    const absRowDiff = Math.abs(rowDiff);
+                    const absColDiff = Math.abs(colDiff);
+                    
+                    switch (pieceType) {
+                        case 'p':
+                            const direction = byWhite ? -1 : 1;
+                            if (rowDiff === direction && absColDiff === 1) return true;
+                            break;
+                        case 'r':
+                            if ((rowDiff === 0 || colDiff === 0) && isPathClear([r, c], [targetRow, targetCol])) return true;
+                            break;
+                        case 'n':
+                            if ((absRowDiff === 2 && absColDiff === 1) || (absRowDiff === 1 && absColDiff === 2)) return true;
+                            break;
+                        case 'b':
+                            if (absRowDiff === absColDiff && isPathClear([r, c], [targetRow, targetCol])) return true;
+                            break;
+                        case 'q':
+                            if ((rowDiff === 0 || colDiff === 0 || absRowDiff === absColDiff) && 
+                                isPathClear([r, c], [targetRow, targetCol])) return true;
+                            break;
+                        case 'k':
+                            if (absRowDiff <= 1 && absColDiff <= 1) return true;
+                            break;
                     }
                 }
             }
             return false;
         }
 
-        function canAttackSquare(testBoard, from, to) {
-            const [fr, fc] = from;
-            const [tr, tc] = to;
-            const piece = testBoard[fr][fc];
-            if (!piece) return false;
-
-            const dr = tr - fr;
-            const dc = tc - fc;
-            const absDr = Math.abs(dr);
-            const absDc = Math.abs(dc);
-            const isWhite = piece === piece.toUpperCase();
-            const p = piece.toLowerCase();
-
-            function isClearPath() {
-                const steps = Math.max(absDr, absDc);
-                const stepR = dr === 0 ? 0 : dr / absDr;
-                const stepC = dc === 0 ? 0 : dc / absDc;
-                for (let i = 1; i < steps; i++) {
-                    const r = fr + i * stepR;
-                    const c = fc + i * stepC;
-                    if (testBoard[r][c]) return false;
+        function findKingPosition(testBoard, isWhite) {
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const p = testBoard[r][c];
+                    if (p && ((isWhite && p === 'K') || (!isWhite && p === 'k'))) {
+                        return [r, c];
+                    }
                 }
-                return true;
             }
-
-            switch (p) {
-                case 'k':
-                    return absDr <= 1 && absDc <= 1;
-                case 'q':
-                    return (dr === 0 || dc === 0 || absDr === absDc) && isClearPath();
-                case 'r':
-                    return (dr === 0 || dc === 0) && isClearPath();
-                case 'b':
-                    return absDr === absDc && isClearPath();
-                case 'n':
-                    return (absDr === 2 && absDc === 1) || (absDr === 1 && absDc === 2);
-                case 'p':
-                    const dir = isWhite ? -1 : 1;
-                    return dr === dir && absDc === 1;
-                default:
-                    return false;
-            }
+            return null;
         }
 
-        function canCastleShort(isWhite, testBoard = board, testCastlingRights = castlingRights) {
-            if (isWhite) {
-                if (testCastlingRights.whiteKingMoved || testCastlingRights.whiteRookRightMoved) return false;
-                if (testBoard[7][5] || testBoard[7][6]) return false;
-                if (isInCheck(testBoard, true)) return false;
-                let tempBoard = testBoard.map(r => r.slice());
-                tempBoard[7][4] = null; tempBoard[7][5] = 'K'; if (isInCheck(tempBoard, true)) return false;
-                tempBoard[7][5] = null; tempBoard[7][6] = 'K'; if (isInCheck(tempBoard, true)) return false;
-                return true;
-            } else {
-                if (testCastlingRights.blackKingMoved || testCastlingRights.blackRookRightMoved) return false;
-                if (testBoard[0][5] || testBoard[0][6]) return false;
-                if (isInCheck(testBoard, false)) return false;
-                let tempBoard = testBoard.map(r => r.slice());
-                tempBoard[0][4] = null; tempBoard[0][5] = 'k'; if (isInCheck(tempBoard, false)) return false;
-                tempBoard[0][5] = null; tempBoard[0][6] = 'k'; if (isInCheck(tempBoard, false)) return false;
-                return true;
-            }
+        function isInCheck(currentIsWhite) {
+            const kingPos = findKingPosition(board, currentIsWhite);
+            return kingPos && isSquareUnderAttack(kingPos, !currentIsWhite);
         }
 
-        function canCastleLong(isWhite, testBoard = board, testCastlingRights = castlingRights) {
-            if (isWhite) {
-                if (testCastlingRights.whiteKingMoved || testCastlingRights.whiteRookLeftMoved) return false;
-                if (testBoard[7][1] || testBoard[7][2] || testBoard[7][3]) return false;
-                if (isInCheck(testBoard, true)) return false;
-                let tempBoard = testBoard.map(r => r.slice());
-                tempBoard[7][4] = null; tempBoard[7][3] = 'K'; if (isInCheck(tempBoard, true)) return false;
-                tempBoard[7][3] = null; tempBoard[7][2] = 'K'; if (isInCheck(tempBoard, true)) return false;
-                return true;
-            } else {
-                if (testCastlingRights.blackKingMoved || testCastlingRights.blackRookLeftMoved) return false;
-                if (testBoard[0][1] || testBoard[0][2] || testBoard[0][3]) return false;
-                if (isInCheck(testBoard, false)) return false;
-                let tempBoard = testBoard.map(r => r.slice());
-                tempBoard[0][4] = null; tempBoard[0][3] = 'k'; if (isInCheck(tempBoard, false)) return false;
-                tempBoard[0][3] = null; tempBoard[0][2] = 'k'; if (isInCheck(tempBoard, false)) return false;
-                return true;
-            }
-        }
-
-        function isValidMove(from, to, currentIsWhite, testBoard = board, testCastlingRights = castlingRights) {
-            const [fr, fc] = from;
-            const [tr, tc] = to;
-            const piece = testBoard[fr][fc];
-            if (!piece) return false;
-
-            const pieceIsWhite = piece === piece.toUpperCase();
-            if (pieceIsWhite !== currentIsWhite) return false;
-
-            const target = testBoard[tr][tc];
-            if (target && (target === target.toUpperCase()) === (piece === piece.toUpperCase())) return false;
-
-            const dr = tr - fr;
-            const dc = tc - fc;
-            const absDr = Math.abs(dr);
-            const absDc = Math.abs(dc);
-            const p = piece.toLowerCase();
-
-            function isClearPath() {
-                const steps = Math.max(absDr, absDc);
-                const stepR = dr === 0 ? 0 : dr / absDr;
-                const stepC = dc === 0 ? 0 : dc / absDc;
-                for (let i = 1; i < steps; i++) {
-                    const r = fr + i * stepR;
-                    const c = fc + i * stepC;
-                    if (testBoard[r][c]) return false;
-                }
-                return true;
-            }
-
-            let isValidPieceMove = false;
-            
-            switch (p) {
-                case 'k':
-                    if (dc === 2 && fr === tr) {
-                        isValidPieceMove = canCastleShort(pieceIsWhite, testBoard, testCastlingRights);
-                    }
-                    else if (dc === -2 && fr === tr) {
-                        isValidPieceMove = canCastleLong(pieceIsWhite, testBoard, testCastlingRights);
-                    }
-                    else if (absDr <= 1 && absDc <= 1) {
-                        isValidPieceMove = true;
-                    }
-                    break;
-                case 'q':
-                    isValidPieceMove = (dr === 0 || dc === 0 || absDr === absDc) && isClearPath();
-                    break;
-                case 'r':
-                    isValidPieceMove = (dr === 0 || dc === 0) && isClearPath();
-                    break;
-                case 'b':
-                    isValidPieceMove = absDr === absDc && isClearPath();
-                    break;
-                case 'n':
-                    isValidPieceMove = (absDr === 2 && absDc === 1) || (absDr === 1 && absDc === 2);
-                    break;
-                case 'p':
-                    const dir = pieceIsWhite ? -1 : 1;
-                    const startRow = pieceIsWhite ? 6 : 1;
-                    if (dc === 0 && dr === dir && !testBoard[tr][tc]) {
-                        isValidPieceMove = true;
-                    }
-                    else if (dc === 0 && dr === 2 * dir && fr === startRow && !testBoard[tr][tc] && !testBoard[fr + dir][fc]) {
-                        isValidPieceMove = true;
-                    }
-                    else if (Math.abs(dc) === 1 && dr === dir && testBoard[tr][tc] && 
-                             (testBoard[tr][tc] === testBoard[tr][tc].toUpperCase()) !== pieceIsWhite) {
-                        isValidPieceMove = true;
-                    }
-                    break;
-            }
-
-            if (!isValidPieceMove) return false;
-
-            const boardCopy = testBoard.map(row => row.slice());
-            const castlingRightsCopy = { ...testCastlingRights };
-
-            if (p === 'k') {
-                if (dc === 2 && fr === tr) {
-                    boardCopy[tr][tc - 1] = boardCopy[tr][7];
-                    boardCopy[tr][7] = null;
-                    if (pieceIsWhite) castlingRightsCopy.whiteRookRightMoved = true;
-                    else castlingRightsCopy.blackRookRightMoved = true;
-                }
-                else if (dc === -2 && fr === tr) {
-                    boardCopy[tr][tc + 1] = boardCopy[tr][0];
-                    boardCopy[tr][0] = null;
-                    if (pieceIsWhite) castlingRightsCopy.whiteRookLeftMoved = true;
-                    else castlingRightsCopy.blackRookLeftMoved = true;
-                }
-                if (pieceIsWhite) castlingRightsCopy.whiteKingMoved = true;
-                else castlingRightsCopy.blackKingMoved = true;
-            }
-
-            if (p === 'r') {
-                if (pieceIsWhite) {
-                    if (fr === 7 && fc === 0) castlingRightsCopy.whiteRookLeftMoved = true;
-                    if (fr === 7 && fc === 7) castlingRightsCopy.whiteRookRightMoved = true;
-                } else {
-                    if (fr === 0 && fc === 0) castlingRightsCopy.blackRookLeftMoved = true;
-                    if (fr === 0 && fc === 7) castlingRightsCopy.blackRookRightMoved = true;
-                }
-            }
-
-            boardCopy[tr][tc] = piece;
-            boardCopy[fr][fc] = null;
-
-            return !isInCheck(boardCopy, currentIsWhite);
+        function isCheckmate(currentIsWhite) {
+            if (!isInCheck(currentIsWhite)) return false;
+            return !hasAnyValidMove(currentIsWhite);
         }
 
         function hasAnyValidMove(currentIsWhite) {
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
-                    const p = board[r][c];
-                    if (p && (currentIsWhite ? p === p.toUpperCase() : p === p.toLowerCase())) {
+                    const piece = board[r][c];
+                    if (piece && ((currentIsWhite && piece === piece.toUpperCase()) || 
+                                  (!currentIsWhite && piece === piece.toLowerCase()))) {
                         for (let tr = 0; tr < 8; tr++) {
                             for (let tc = 0; tc < 8; tc++) {
                                 if (isValidMove([r, c], [tr, tc], currentIsWhite)) {
@@ -1719,21 +1155,18 @@
             return false;
         }
 
-        // **Enhanced Bot Functions**
+        // Bot functions
         function getAllValidMoves(isWhite) {
             const moves = [];
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
                     const piece = board[r][c];
-                    if (piece && (isWhite ? piece === piece.toUpperCase() : piece === piece.toLowerCase())) {
+                    if (piece && ((isWhite && piece === piece.toUpperCase()) || 
+                                  (!isWhite && piece === piece.toLowerCase()))) {
                         for (let tr = 0; tr < 8; tr++) {
                             for (let tc = 0; tc < 8; tc++) {
                                 if (isValidMove([r, c], [tr, tc], isWhite)) {
-                                    moves.push({
-                                        from: [r, c],
-                                        to: [tr, tc],
-                                        piece: piece
-                                    });
+                                    moves.push([[r, c], [tr, tc]]);
                                 }
                             }
                         }
@@ -1743,57 +1176,21 @@
             return moves;
         }
 
-        // Simple bot evaluation function (for easy bot)
-        function evaluateMove(move, isWhite) {
-            const [fr, fc] = move.from;
-            const [tr, tc] = move.to;
-            const piece = board[fr][fc];
-            const target = board[tr][tc];
-            
+        function evaluateBoard(testBoard, depth = 0) {
             let score = 0;
-            
-            // Capture bonus
-            if (target) {
-                score += PIECE_VALUES[target.toLowerCase()];
-                
-                if (PIECE_VALUES[piece.toLowerCase()] < PIECE_VALUES[target.toLowerCase()]) {
-                    score += 50;
-                }
-            }
-            
-            // Center control bonus
-            if (tr >= 3 && tr <= 4 && tc >= 3 && tc <= 4) {
-                score += 30;
-            }
-            
-            // Development bonus for knights and bishops
-            const pieceType = piece.toLowerCase();
-            if (pieceType === 'n' || pieceType === 'b') {
-                if (!isWhite && tr > fr) score += 20;
-                if (isWhite && tr < fr) score += 20;
-            }
-            
-            if (pieceType === 'p') {
-                if (!isWhite && tr > fr) score += 10;
-                if (isWhite && tr < fr) score += 10;
-            }
-            
-            if (pieceType === 'k' && (tr !== 0 && tr !== 7)) {
-                score -= 30;
-            }
-            
-            const tempBoard = board.map(row => row.slice());
-            tempBoard[tr][tc] = piece;
-            tempBoard[fr][fc] = null;
             
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
-                    const enemyPiece = tempBoard[r][c];
-                    if (enemyPiece && (isWhite ? enemyPiece === enemyPiece.toLowerCase() : enemyPiece === enemyPiece.toUpperCase())) {
-                        if (canAttackSquare(tempBoard, [r, c], [tr, tc])) {
-                            score -= PIECE_VALUES[piece.toLowerCase()] * 50;
-                            break;
-                        }
+                    const piece = testBoard[r][c];
+                    if (!piece) continue;
+                    
+                    const isWhite = piece === piece.toUpperCase();
+                    const pieceValue = PIECE_VALUES[piece];
+                    
+                    if (isWhite) {
+                        score += pieceValue;
+                    } else {
+                        score -= pieceValue;
                     }
                 }
             }
@@ -1801,82 +1198,18 @@
             return score;
         }
 
-        function makeMove(testBoard, from, to) {
-            const newBoard = testBoard.map(row => row.slice());
-            const [fr, fc] = from;
-            const [tr, tc] = to;
-            const piece = newBoard[fr][fc];
-            
-            // Handle castling
-            if (piece && piece.toLowerCase() === 'k' && Math.abs(tc - fc) === 2) {
-                if (tc > fc) { // King-side castling
-                    newBoard[tr][tc - 1] = newBoard[tr][7];
-                    newBoard[tr][7] = null;
-                } else { // Queen-side castling
-                    newBoard[tr][tc + 1] = newBoard[tr][0];
-                    newBoard[tr][0] = null;
-                }
-            }
-            
-            newBoard[tr][tc] = piece;
-            newBoard[fr][fc] = null;
-            
-            // Handle pawn promotion (always promote to queen for simplicity)
-            if (piece && piece.toLowerCase() === 'p') {
-                if ((piece === 'P' && tr === 0) || (piece === 'p' && tr === 7)) {
-                    newBoard[tr][tc] = piece === 'P' ? 'Q' : 'q';
-                }
-            }
-            
-            return newBoard;
-        }
-
-        function updateCastlingRights(rights, from, to, newBoard) {
-            const newRights = { ...rights };
-            const [fr, fc] = from;
-            const [tr, tc] = to;
-            const piece = newBoard[tr][tc];
-            
-            if (piece && piece.toLowerCase() === 'k') {
-                if (piece === 'K') {
-                    newRights.whiteKingMoved = true;
-                } else {
-                    newRights.blackKingMoved = true;
-                }
-            }
-            
-            if (piece && piece.toLowerCase() === 'r') {
-                if (piece === 'R') {
-                    if (fr === 7 && fc === 0) newRights.whiteRookLeftMoved = true;
-                    if (fr === 7 && fc === 7) newRights.whiteRookRightMoved = true;
-                } else {
-                    if (fr === 0 && fc === 0) newRights.blackRookLeftMoved = true;
-                    if (fr === 0 && fc === 7) newRights.blackRookRightMoved = true;
-                }
-            }
-            
-            return newRights;
-        }
-
-        // Make bot move
         function makeBotMove() {
-            if (!isPlayingBot || isWhiteTurn || botThinking) return;
+            if (botThinking || isWhiteTurn) return;
             
             botThinking = true;
-            const statusClass = botDifficulty === 'hard' ? 'strong-bot-thinking' : 'bot-thinking';
-            const botName = botDifficulty === 'hard' ? '🔥 Starker Bot analysiert...' : '🤖 Bot denkt nach...';
-            
-            statusEl.textContent = botName;
-            statusEl.classList.add(statusClass);
-            boardEl.style.pointerEvents = 'none';
-            
-            // Reduced thinking times and better algorithms
-            const thinkTime = botDifficulty === 'hard' ? 800 : 600; // Much faster!
+            statusEl.textContent = botDifficulty === 'hard' ? 
+                "♚ Starker Bot denkt..." : "♚ Bot denkt...";
+            statusEl.classList.add(botDifficulty === 'hard' ? 'strong-bot-thinking' : 'bot-thinking');
+            statusEl.innerHTML = statusEl.textContent + ' <span class="loading"></span>';
             
             setTimeout(() => {
-                const validMoves = getAllValidMoves(false);
-                
-                if (validMoves.length === 0) {
+                const moves = getAllValidMoves(false);
+                if (moves.length === 0) {
                     botThinking = false;
                     updateStatus();
                     return;
@@ -1884,186 +1217,188 @@
                 
                 let bestMove;
                 
-                if (botDifficulty === 'hard') {
-                    // Use advanced algorithm with time limit
-                    bestMove = iterativeDeepening(board, 6, thinkTime - 100); // Depth up to 6, but time-limited
-                    if (!bestMove) {
-                        // Fallback to best move from depth 1
-                        let bestScore = -Infinity;
-                        bestMove = validMoves[0];
-                        
-                        for (const move of validMoves.slice(0, 10)) { // Check top 10 moves only
-                            const newBoard = makeMove(board, move.from, move.to);
-                            const score = -evaluatePosition(newBoard);
-                            if (score > bestScore) {
-                                bestScore = score;
-                                bestMove = move;
-                            }
-                        }
+                if (botDifficulty === 'easy') {
+                    const captures = moves.filter(move => board[move[1][0]][move[1][1]]);
+                    if (captures.length > 0 && Math.random() > 0.3) {
+                        bestMove = captures[Math.floor(Math.random() * captures.length)];
+                    } else {
+                        bestMove = moves[Math.floor(Math.random() * moves.length)];
                     }
                 } else {
-                    // Use simple evaluation for easy bot
-                    let bestScore = -Infinity;
-                    bestMove = validMoves[0];
-                    
-                    for (const move of validMoves) {
-                        const score = evaluateMove(move, false) + Math.random() * 100;
-                        if (score > bestScore) {
+                    let bestScore = Infinity;
+                    for (const move of moves) {
+                        const [from, to] = move;
+                        const capturedPiece = board[to[0]][to[1]];
+                        
+                        board[to[0]][to[1]] = board[from[0]][from[1]];
+                        board[from[0]][from[1]] = null;
+                        
+                        const score = evaluateBoard(board);
+                        
+                        board[from[0]][from[1]] = board[to[0]][to[1]];
+                        board[to[0]][to[1]] = capturedPiece;
+                        
+                        if (score < bestScore) {
                             bestScore = score;
                             bestMove = move;
                         }
                     }
                 }
                 
-                if (executeMove(bestMove.from, bestMove.to)) {
-                    isWhiteTurn = !isWhiteTurn;
-                    botThinking = false;
-                    statusEl.classList.remove(statusClass);
-                    updateStatus();
-                    drawBoard();
-                }
-                
-                if (isWhiteTurn) {
-                    boardEl.style.pointerEvents = 'auto';
-                }
-            }, thinkTime);
-        }
-
-        function checkPromotion() {
-            const promotionRow = isWhiteTurn ? 0 : 7;
-            for (let c = 0; c < 8; c++) {
-                const piece = board[promotionRow][c];
-                if (piece && (isWhiteTurn ? piece === 'P' : piece === 'p')) {
-                    board[promotionRow][c] = isWhiteTurn ? 'Q' : 'q';
-                }
-            }
-        }
-
-        function executeMove(from, to, isFromFirestore = false) {
-            const [fr, fc] = from;
-            const [tr, tc] = to;
-            const piece = board[fr][fc];
-            
-            if (!isValidMove(from, to, piece === piece.toUpperCase())) {
-                return false;
-            }
-
-            const p = piece.toLowerCase();
-            const isWhite = piece === piece.toUpperCase();
-            const capturedPiece = board[tr][tc];
-            let isCastling = false;
-
-            if (p === 'k') {
-                if (isWhite) castlingRights.whiteKingMoved = true;
-                else castlingRights.blackKingMoved = true;
-
-                if (tc - fc === 2) {
-                    board[tr][tc - 1] = board[tr][7];
-                    board[tr][7] = null;
-                    if (isWhite) castlingRights.whiteRookRightMoved = true;
-                    else castlingRights.blackRookRightMoved = true;
-                    isCastling = true;
-                }
-                else if (tc - fc === -2) {
-                    board[tr][tc + 1] = board[tr][0];
-                    board[tr][0] = null;
-                    if (isWhite) castlingRights.whiteRookLeftMoved = true;
-                    else castlingRights.blackRookLeftMoved = true;
-                    isCastling = true;
-                }
-            }
-
-            if (p === 'r') {
-                if (isWhite) {
-                    if (fr === 7 && fc === 0) castlingRights.whiteRookLeftMoved = true;
-                    if (fr === 7 && fc === 7) castlingRights.whiteRookRightMoved = true;
+                if (bestMove) {
+                    const [from, to] = bestMove;
+                    const fromSquare = getSquareElement(from[0], from[1]);
+                    const toSquare = getSquareElement(to[0], to[1]);
+                    const piece = board[from[0]][from[1]];
+                    const isCapture = board[to[0]][to[1]] !== null;
+                    
+                    animatePieceMovement(fromSquare, toSquare, piece, isCapture, () => {
+                        makeMove(from, to);
+                        botThinking = false;
+                        statusEl.classList.remove('bot-thinking', 'strong-bot-thinking');
+                    });
                 } else {
-                    if (fr === 0 && fc === 0) castlingRights.blackRookLeftMoved = true;
-                    if (fr === 0 && fc === 7) castlingRights.blackRookRightMoved = true;
+                    botThinking = false;
+                    updateStatus();
+                }
+            }, botDifficulty === 'hard' ? 1000 : 500);
+        }
+
+        // Game control functions
+        function makeMove(from, to) {
+            const [fromRow, fromCol] = from;
+            const [toRow, toCol] = to;
+            const piece = board[fromRow][fromCol];
+            const capturedPiece = board[toRow][toCol];
+            
+            // Update castling rights
+            if (piece === 'K' || piece === 'k') {
+                if (piece === 'K') {
+                    castlingRights.whiteKingMoved = true;
+                } else {
+                    castlingRights.blackKingMoved = true;
                 }
             }
-
-            board[tr][tc] = piece;
-            board[fr][fc] = null;
             
-            lastMoveTo = [tr, tc];
-
-            checkPromotion();
-
-            if (!isFromFirestore || lastMoveFromFirestore) {
-                if (isCastling) {
-                    playSound('castle');
-                } else if (capturedPiece) {
+            if ((piece === 'R' || piece === 'r') && fromCol === 0) {
+                if (piece === 'R') castlingRights.whiteRookLeftMoved = true;
+                else castlingRights.blackRookLeftMoved = true;
+            }
+            
+            if ((piece === 'R' || piece === 'r') && fromCol === 7) {
+                if (piece === 'R') castlingRights.whiteRookRightMoved = true;
+                else castlingRights.blackRookRightMoved = true;
+            }
+            
+            // Handle castling
+            if ((piece === 'K' || piece === 'k') && Math.abs(toCol - fromCol) === 2) {
+                const rookFromCol = toCol > fromCol ? 7 : 0;
+                const rookToCol = toCol > fromCol ? 5 : 3;
+                const rook = board[fromRow][rookFromCol];
+                
+                board[fromRow][rookToCol] = rook;
+                board[fromRow][rookFromCol] = null;
+                
+                playSound('castle');
+            } else {
+                if (capturedPiece) {
                     playSound('capture');
                 } else {
                     playSound('move');
                 }
             }
-
-            return true;
-        }
-
-        function isOwnPiece(piece) {
-            if (!piece) return false;
-            return (playerColor === 'white') ? (piece === piece.toUpperCase()) : (piece === piece.toLowerCase());
-        }
-
-        function onSquareClick(event) {
-            if (!playerColor) return;
-            if (botThinking) return;
             
-            const r = parseInt(event.currentTarget.dataset.row);
-            const c = parseInt(event.currentTarget.dataset.col);
-
-            if (!selectedSquare) {
-                const piece = board[r][c];
-                if (!piece) return;
-                
-                if (isPlayingBot) {
-                    if (piece !== piece.toUpperCase() || !isWhiteTurn) return;
-                } else {
-                    if ((playerColor === 'white' && piece !== piece.toUpperCase()) ||
-                        (playerColor === 'black' && piece !== piece.toLowerCase())) {
-                        return;
-                    }
-                    if ((playerColor === 'white' && !isWhiteTurn) || (playerColor === 'black' && isWhiteTurn)) return;
-                }
-
-                selectedSquare = [r, c];
-                drawBoard();
-            } else {
-                if (executeMove(selectedSquare, [r, c])) {
-                    isWhiteTurn = !isWhiteTurn;
-                    lastMoveFromFirestore = false;
-                    
-                    if (!isPlayingBot) {
-                        saveGame();
-                    }
-                    
-                    selectedSquare = null;
-                    updateStatus();
-                    drawBoard();
-                    
-                    if (isPlayingBot && !isWhiteTurn) {
-                        setTimeout(makeBotMove, 300); // Faster response
-                    }
-                } else {
-                    playSound('invalid');
-                    selectedSquare = null;
-                    drawBoard();
-                }
+            // Make the move
+            board[toRow][toCol] = piece;
+            board[fromRow][fromCol] = null;
+            
+            // Pawn promotion
+            if ((piece === 'P' && toRow === 0) || (piece === 'p' && toRow === 7)) {
+                board[toRow][toCol] = piece === 'P' ? 'Q' : 'q';
             }
+            
+            isWhiteTurn = !isWhiteTurn;
+            highlightLastMove(from, to);
+            updateStatus();
+            drawBoard();
+            
+            if (!isPlayingBot) {
+                saveGame();
+            }
+        }
+
+        function onSquareClick(e) {
+            if (botThinking) return;
+            if (!isPlayingBot && playerColor !== (isWhiteTurn ? 'white' : 'black')) return;
+            
+            const row = parseInt(e.currentTarget.dataset.row);
+            const col = parseInt(e.currentTarget.dataset.col);
+            const piece = board[row][col];
+            
+            if (selectedSquare) {
+                const [selRow, selCol] = selectedSquare;
+                const selectedPiece = board[selRow][selCol];
+                
+                if (row === selRow && col === selCol) {
+                    clearHighlights();
+                    selectedSquare = null;
+                    drawBoard();
+                    return;
+                }
+                
+                if (isValidMove([selRow, selCol], [row, col], isWhiteTurn)) {
+                    const fromSquare = getSquareElement(selRow, selCol);
+                    const toSquare = getSquareElement(row, col);
+                    const isCapture = board[row][col] !== null;
+                    
+                    clearHighlights();
+                    selectedSquare = null;
+                    
+                    animatePieceMovement(fromSquare, toSquare, selectedPiece, isCapture, () => {
+                        makeMove([selRow, selCol], [row, col]);
+                        
+                        if (isPlayingBot && !isWhiteTurn) {
+                            setTimeout(() => {
+                                makeBotMove();
+                            }, 500);
+                        }
+                    });
+                    
+                    return;
+                }
+                
+                clearHighlights();
+                selectedSquare = null;
+            }
+            
+            if (piece && (isWhiteTurn ? piece === piece.toUpperCase() : piece === piece.toLowerCase())) {
+                selectedSquare = [row, col];
+                clearHighlights();
+                const square = getSquareElement(row, col);
+                square.classList.add('selected');
+                highlightPossibleMoves(row, col);
+            }
+        }
+
+        function updateEvaluationBar() {
+            const evaluation = evaluateBoard(board);
+            const clampedEval = Math.max(-500, Math.min(500, evaluation));
+            const percentage = ((clampedEval + 500) / 1000) * 100;
+            
+            document.getElementById('evalWhite').style.height = percentage + '%';
+            document.getElementById('evalBlack').style.height = (100 - percentage) + '%';
+            
+            const evalText = evaluation > 0 ? `+${(evaluation/100).toFixed(1)}` : (evaluation/100).toFixed(1);
+            document.getElementById('evalValue').textContent = evalText;
         }
 
         function updateStatus() {
             statusEl.classList.remove('check', 'checkmate', 'bot-thinking', 'strong-bot-thinking');
             
-            if (isInCheck(board, isWhiteTurn)) {
-                if (!hasAnyValidMove(isWhiteTurn)) {
-                    const winner = isWhiteTurn ? 
-                        (isPlayingBot ? (botDifficulty === 'hard' ? '🔥 Starker Bot' : '🤖 Bot') : "Schwarz") : 
-                        (isPlayingBot ? "Du" : "Weiß");
-                    statusEl.textContent = `Schachmatt! ${winner} gewinnt! 🎉`;
+            if (isInCheck(isWhiteTurn)) {
+                if (isCheckmate(isWhiteTurn)) {
+                    const winner = isWhiteTurn ? "Schwarz" : "Weiß";
+                    statusEl.textContent = `${winner} gewinnt! 🎉`;
                     statusEl.classList.add('checkmate');
                     boardEl.style.pointerEvents = 'none';
                     playSound('checkmate');
@@ -2096,11 +1431,69 @@
             updateEvaluationBar();
         }
 
+        function drawBoard() {
+            boardEl.innerHTML = '';
+            
+            const boardWrapper = document.getElementById('board-wrapper');
+            boardWrapper.querySelectorAll('.coordinates').forEach(el => el.remove());
+            
+            for (let i = 0; i < 8; i++) {
+                const rank = document.createElement('div');
+                rank.className = 'coordinates rank';
+                rank.textContent = 8 - i;
+                rank.style.top = `${2 + i * 85 + 42.5}px`;
+                boardWrapper.appendChild(rank);
+                
+                const file = document.createElement('div');
+                file.className = 'coordinates file';
+                file.textContent = String.fromCharCode(97 + i);
+                file.style.left = `${2 + i * 85 + 42.5}px`;
+                boardWrapper.appendChild(file);
+            }
+            
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const square = document.createElement('div');
+                    square.classList.add('square', (r + c) % 2 === 0 ? 'light' : 'dark');
+                    square.dataset.row = r;
+                    square.dataset.col = c;
+                    
+                    if (selectedSquare && selectedSquare[0] === r && selectedSquare[1] === c) {
+                        square.classList.add('selected');
+                    }
+                    
+                    if (lastMoveSquares.some(pos => pos && pos[0] === r && pos[1] === c)) {
+                        square.classList.add('last-move');
+                    }
+                    
+                    if (possibleMoves.some(pos => pos[0] === r && pos[1] === c)) {
+                        square.classList.add('possible-move');
+                        if (board[r][c]) {
+                            square.classList.add('capture-move');
+                        }
+                    }
+                    
+                    const piece = board[r][c];
+                    if (piece) {
+                        const pieceImg = document.createElement('img');
+                        pieceImg.src = pieceSvg[piece];
+                        pieceImg.classList.add('piece-img', piece === piece.toUpperCase() ? 'white-piece' : 'black-piece');
+                        square.appendChild(pieceImg);
+                    }
+                    
+                    square.addEventListener('click', onSquareClick);
+                    boardEl.appendChild(square);
+                }
+            }
+        }
+
         function initGame() {
             board = fenToBoard(startFEN);
             isWhiteTurn = true;
             selectedSquare = null;
             botThinking = false;
+            lastMoveSquares = [];
+            possibleMoves = [];
             castlingRights = {
                 whiteKingMoved: false,
                 whiteRookLeftMoved: false,
@@ -2110,10 +1503,11 @@
                 blackRookRightMoved: false
             };
             
-            // Clear advanced bot data structures
             transpositionTable.clear();
             killerMoves = Array(10).fill().map(() => Array(2).fill(null));
             historyTable = {};
+            
+            clearHighlights();
             
             if (isPlayingBot) {
                 boardEl.style.pointerEvents = 'auto';
@@ -2130,17 +1524,6 @@
             }
         }
 
-        resetBtn.addEventListener('click', () => {
-            if (confirm('Möchtest du wirklich ein neues Spiel starten?')) {
-                initGame();
-                if (isPlayingBot) {
-                    boardEl.style.pointerEvents = 'auto';
-                } else {
-                    boardEl.style.pointerEvents = (playerColor === 'white') ? 'auto' : 'none';
-                }
-            }
-        });
-
         function saveGame() {
             if (isPlayingBot) return;
             
@@ -2154,36 +1537,53 @@
         }
 
         function loadGame() {
-            if (isPlayingBot) return;
+            if (isPlayingBot) {
+                console.log('Bot game, no Firebase sync needed');
+                return;
+            }
             
+            console.log('Starting Firebase listener for online game');
             let lastUpdateTime = 0;
             
             gameDocRef.onSnapshot(doc => {
-                if (!doc.exists) return;
+                console.log('Firebase snapshot received');
+                if (!doc.exists) {
+                    console.log('Document does not exist');
+                    return;
+                }
                 const data = doc.data();
-                if (!data) return;
+                if (!data) {
+                    console.log('No data in document');
+                    return;
+                }
                 
                 const isNewUpdate = data.lastMove && data.lastMove > lastUpdateTime;
+                console.log('Is new update:', isNewUpdate, 'lastMove:', data.lastMove, 'lastUpdateTime:', lastUpdateTime);
+                
                 if (isNewUpdate) {
                     lastUpdateTime = data.lastMove;
                     
                     const oldFen = boardToFen(board);
                     const newFen = data.fen;
                     
+                    console.log('Comparing FENs:', { oldFen, newFen });
+                    
                     if (oldFen !== newFen) {
+                        console.log('Board changed, starting animation');
                         const oldBoard = board.map(row => row.slice());
-                        board = fenToBoard(data.fen);
+                        const newBoard = fenToBoard(data.fen);
                         
                         lastMoveFromFirestore = true;
                         
+                        // Detect move type for sound effects
                         let moveFound = false;
                         let captureFound = false;
                         let castlingFound = false;
                         
                         for (let r = 0; r < 8; r++) {
                             for (let c = 0; c < 8; c++) {
-                                if (oldBoard[r][c] !== board[r][c]) {
-                                    if (oldBoard[r][c] && board[r][c] && oldBoard[r][c] !== board[r][c]) {
+                                if (oldBoard[r][c] !== newBoard[r][c]) {
+                                    if (oldBoard[r][c] && newBoard[r][c] && oldBoard[r][c] !== newBoard[r][c]) {
                                         captureFound = true;
                                     }
                                     moveFound = true;
@@ -2191,44 +1591,73 @@
                             }
                         }
                         
+                        // Check for castling
                         for (let c = 0; c < 8; c++) {
-                            if ((oldBoard[0][c] === 'k' && board[0][c] === null && (board[0][c-2] === 'k' || board[0][c+2] === 'k')) ||
-                                (oldBoard[7][c] === 'K' && board[7][c] === null && (board[7][c-2] === 'K' || board[7][c+2] === 'K'))) {
+                            if ((oldBoard[0][c] === 'k' && newBoard[0][c] === null && (newBoard[0][c-2] === 'k' || newBoard[0][c+2] === 'k')) ||
+                                (oldBoard[7][c] === 'K' && newBoard[7][c] === null && (newBoard[7][c-2] === 'K' || newBoard[7][c+2] === 'K'))) {
                                 castlingFound = true;
                             }
                         }
                         
-                        if (castlingFound) {
-                            playSound('castle');
-                        } else if (captureFound) {
-                            playSound('capture');
-                        } else if (moveFound) {
-                            playSound('move');
-                        }
-                        
-                        for (let r = 0; r < 8; r++) {
-                            for (let c = 0; c < 8; c++) {
-                                if (!oldBoard[r][c] && board[r][c]) {
-                                    lastMoveTo = [r, c];
-                                    break;
-                                }
+                        // Animate the received move
+                        animateReceivedMove(oldBoard, newBoard, () => {
+                            console.log('Animation callback executed');
+                            // Play sound after animation
+                            if (castlingFound) {
+                                playSound('castle');
+                            } else if (captureFound) {
+                                playSound('capture');
+                            } else if (moveFound) {
+                                playSound('move');
                             }
-                        }
+                            
+                            // Update game state
+                            isWhiteTurn = data.isWhiteTurn;
+                            castlingRights = data.castlingRights || castlingRights;
+                            
+                            // Find and highlight the last move
+                            const moveInfo = findMoveFromBoardDiff(oldBoard, newBoard);
+                            if (moveInfo.fromPos && moveInfo.toPos) {
+                                highlightLastMove(moveInfo.fromPos, moveInfo.toPos);
+                            }
+                            
+                            updateStatus();
+                            drawBoard();
+                        });
+                        
+                        return; // Don't update immediately, wait for animation
                     }
                     
+                    // No board change, just update turn and status
+                    console.log('No board change, updating status only');
                     isWhiteTurn = data.isWhiteTurn;
                     castlingRights = data.castlingRights || castlingRights;
                     updateStatus();
                     drawBoard();
                 }
+            }, error => {
+                console.error('Firebase listener error:', error);
             });
         }
 
-        if (!isPlayingBot) {
-            loadGame();
-        }
+        // Event listeners
+        resetBtn.addEventListener('click', () => {
+            if (confirm('Möchtest du wirklich ein neues Spiel starten?')) {
+                initGame();
+                if (isPlayingBot) {
+                    boardEl.style.pointerEvents = 'auto';
+                } else {
+                    boardEl.style.pointerEvents = (playerColor === 'white') ? 'auto' : 'none';
+                }
+            }
+        });
+
+        soundToggleBtn.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            soundToggleBtn.querySelector('.sound-icon').textContent = soundEnabled ? '🔊' : '🔇';
+            soundToggleBtn.style.opacity = soundEnabled ? '1' : '0.6';
+        });
 
     </script>
 </body>
 </html>
-            
