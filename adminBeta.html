@@ -624,6 +624,9 @@
         async function loadDashboardData() {
             try {
                 console.log("Loading dashboard data...");
+                // Small delay to ensure DOM is fully loaded
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
                 await Promise.all([
                     loadUserData('A'),
                     loadUserData('B')
@@ -667,8 +670,8 @@
 
                             // Weekly data (last 7 days)
                             const dateObj = new Date(date);
-                            if (dateObj >= oneWeekAgo) {
-                                const dayOfWeek = dateObj.getDay();
+                            if (dateObj >= oneWeekAgo && dateObj <= today) {
+                                const dayOfWeek = dateObj.getDay(); // 0 = Sunday, 1 = Monday, etc.
                                 weeklyData[dayOfWeek] += hours;
                             }
 
@@ -690,6 +693,15 @@
                 // Update UI
                 const avgDaily = dayCount > 0 ? (totalHours / dayCount).toFixed(1) : "0";
                 
+                console.log(`Calculated values for user ${suffix}:`, {
+                    totalHours: Math.round(totalHours),
+                    avgDaily,
+                    productivity: Math.round(productivity),
+                    streak,
+                    weeklyData,
+                    activityData: activityData.length
+                });
+                
                 document.getElementById(`totalHours${suffix}`).textContent = Math.round(totalHours);
                 document.getElementById(`avgDaily${suffix}`).textContent = avgDaily;
                 document.getElementById(`productivity${suffix}`).textContent = Math.round(productivity) + '%';
@@ -705,8 +717,13 @@
                 });
 
                 // Create charts
-                createWeeklyChart(suffix, weeklyData);
-                createActivityChart(suffix, activityData);
+                try {
+                    createWeeklyChart(suffix, weeklyData);
+                    createActivityChart(suffix, activityData);
+                    console.log(`Charts created successfully for user ${suffix}`);
+                } catch (chartError) {
+                    console.error(`Error creating charts for user ${suffix}:`, chartError);
+                }
 
                 console.log(`Data loaded successfully for user ${suffix}`);
                 
@@ -722,14 +739,19 @@
 
         // Create weekly chart
         function createWeeklyChart(suffix, data) {
-            const ctx = document.getElementById(`weeklyChart${suffix}`).getContext('2d');
+            const ctx = document.getElementById(`weeklyChart${suffix}`);
+            if (!ctx) {
+                console.error(`Canvas element weeklyChart${suffix} not found`);
+                return;
+            }
             
             // Destroy existing chart if it exists
-            if (window[`weeklyChart${suffix}`]) {
-                window[`weeklyChart${suffix}`].destroy();
+            const chartKey = `weeklyChart${suffix}`;
+            if (window[chartKey] && typeof window[chartKey].destroy === 'function') {
+                window[chartKey].destroy();
             }
 
-            window[`weeklyChart${suffix}`] = new Chart(ctx, {
+            window[chartKey] = new Chart(ctx.getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'],
@@ -770,17 +792,22 @@
 
         // Create activity chart
         function createActivityChart(suffix, data) {
-            const ctx = document.getElementById(`activityChart${suffix}`).getContext('2d');
+            const ctx = document.getElementById(`activityChart${suffix}`);
+            if (!ctx) {
+                console.error(`Canvas element activityChart${suffix} not found`);
+                return;
+            }
             
             // Destroy existing chart if it exists
-            if (window[`activityChart${suffix}`]) {
-                window[`activityChart${suffix}`].destroy();
+            const chartKey = `activityChart${suffix}`;
+            if (window[chartKey] && typeof window[chartKey].destroy === 'function') {
+                window[chartKey].destroy();
             }
 
             // Sort and limit data to last 30 days
             const sortedData = data.sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-30);
             
-            window[`activityChart${suffix}`] = new Chart(ctx, {
+            window[chartKey] = new Chart(ctx.getContext('2d'), {
                 type: 'line',
                 data: {
                     labels: sortedData.map(item => {
@@ -831,7 +858,7 @@
                 const weeklyCanvas = document.getElementById(`weeklyChart${suffix}`);
                 const activityCanvas = document.getElementById(`activityChart${suffix}`);
                 
-                if (weeklyCanvas) {
+                if (weeklyCanvas && weeklyCanvas.parentElement) {
                     weeklyCanvas.parentElement.innerHTML = `
                         <div class="empty-state">
                             <div class="empty-state-icon">📊</div>
@@ -840,7 +867,7 @@
                     `;
                 }
                 
-                if (activityCanvas) {
+                if (activityCanvas && activityCanvas.parentElement) {
                     activityCanvas.parentElement.innerHTML = `
                         <div class="empty-state">
                             <div class="empty-state-icon">📈</div>
