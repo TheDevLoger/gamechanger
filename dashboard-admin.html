@@ -393,6 +393,20 @@
                     </div>
                 </div>
             </div>
+
+            <div class="stat-card">
+                <h3>📈 7-Tage Trend</h3>
+                <div class="user-comparison">
+                    <div class="user-stat user-a">
+                        <div>Benutzer A</div>
+                        <div id="trendA">0%</div>
+                    </div>
+                    <div class="user-stat user-b">
+                        <div>Benutzer B</div>
+                        <div id="trendB">0%</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Activities Section -->
@@ -479,6 +493,71 @@
                 }
             }
             return { tradingzeit: 0, sportzeit: 0, gamedevzeit: 0 };
+        }
+
+        async function get7DayTrend(user) {
+            try {
+                const today = new Date();
+                const productivityBaseTime = 3 * 60 * 60 * 1000; // 3 hours in ms
+                let totalProductivity = 0;
+                let validDays = 0;
+                
+                // Get productivity for last 7 days (excluding today)
+                for (let i = 7; i >= 1; i--) {
+                    const date = new Date(today);
+                    date.setDate(today.getDate() - i);
+                    const dateString = date.toISOString().slice(0, 10);
+                    
+                    try {
+                        const ref = doc(db, user, "training", "tage", dateString);
+                        const snapshot = await getDoc(ref);
+                        
+                        if (snapshot.exists()) {
+                            const data = snapshot.data();
+                            let dailyTime = 0;
+                            
+                            if (user === "Benutzer_B") {
+                                dailyTime += data.tradingzeit || 0;
+                                dailyTime += data.sportzeit || 0;
+                                dailyTime += data.pianozeit || 0;
+                            } else {
+                                dailyTime += data.tradingzeit || 0;
+                                dailyTime += data.sportzeit || 0;
+                                dailyTime += data.gamedevzeit || 0;
+                            }
+                            
+                            if (dailyTime > 0) {
+                                const dailyProductivity = (dailyTime / productivityBaseTime) * 100;
+                                totalProductivity += dailyProductivity;
+                                validDays++;
+                            }
+                        }
+                    } catch (error) {
+                        console.log(`Fehler beim Laden von Tag ${dateString} für ${user}:`, error);
+                    }
+                }
+                
+                // Calculate 7-day average
+                const avgProductivity = validDays > 0 ? totalProductivity / validDays : 0;
+                
+                // Get today's productivity
+                const todayData = await getTodayData(user);
+                const todayTime = (todayData.tradingzeit || 0) + (todayData.sportzeit || 0) + (todayData.gamedevzeit || 0);
+                const todayProductivity = (todayTime / productivityBaseTime) * 100;
+                
+                // Calculate trend (difference between today and 7-day average)
+                const trend = todayProductivity - avgProductivity;
+                
+                return {
+                    trend: Math.round(trend),
+                    avgProductivity: Math.round(avgProductivity),
+                    todayProductivity: Math.round(todayProductivity)
+                };
+                
+            } catch (error) {
+                console.log(`Fehler beim Berechnen des 7-Tage-Trends für ${user}:`, error);
+                return { trend: 0, avgProductivity: 0, todayProductivity: 0 };
+            }
         }
 
         async function getAverageData(user) {
@@ -634,6 +713,8 @@
                 const allTimeB = await getAllTimeData("Benutzer_B");
                 const avgDataA = await getAverageData("Benutzer_A");
                 const avgDataB = await getAverageData("Benutzer_B");
+                const trendA = await get7DayTrend("Benutzer_A");
+                const trendB = await get7DayTrend("Benutzer_B");
 
                 // Today's individual activities
                 document.getElementById('tradingA').textContent = formatTime(dataA.tradingzeit || 0);
@@ -661,6 +742,21 @@
                 
                 document.getElementById('productivityA').textContent = productivityA + '%';
                 document.getElementById('productivityB').textContent = productivityB + '%';
+
+                // 7-day productivity trend (difference from 7-day average)
+                const trendAText = trendA.trend > 0 ? `+${trendA.trend}%` : `${trendA.trend}%`;
+                const trendBText = trendB.trend > 0 ? `+${trendB.trend}%` : `${trendB.trend}%`;
+                
+                document.getElementById('trendA').textContent = trendAText;
+                document.getElementById('trendB').textContent = trendBText;
+
+                // Add color coding for trends
+                const trendAElement = document.getElementById('trendA');
+                const trendBElement = document.getElementById('trendB');
+                
+                // Reset classes
+                trendAElement.style.color = trendA.trend > 0 ? '#10b981' : (trendA.trend < 0 ? '#ef4444' : 'var(--text-primary)');
+                trendBElement.style.color = trendB.trend > 0 ? '#10b981' : (trendB.trend < 0 ? '#ef4444' : 'var(--text-primary)');
 
                 // Daily goals (based on today's data)
                 const goalTime = 3 * 60 * 60 * 1000;
