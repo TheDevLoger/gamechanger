@@ -241,11 +241,11 @@
             </div>
 
             <div class="stat-card">
-                <h3>🎮 Game Development</h3>
-                <div class="stat-value" id="gamedevzeit">00:00:00</div>
+                <h3>🎹 Piano Übungszeit</h3>
+                <div class="stat-value" id="pianozeit">00:00:00</div>
                 <div class="timer-controls">
-                    <button class="btn timer-btn" id="gamedevStart">▶️ Start</button>
-                    <button class="btn timer-btn" id="gamedevStop">⏸️ Stop</button>
+                    <button class="btn timer-btn" id="pianoStart">▶️ Start</button>
+                    <button class="btn timer-btn" id="pianoStop">⏸️ Stop</button>
                 </div>
             </div>
 
@@ -313,8 +313,8 @@
         let tradingTimer = null;
         let sportStart = null;
         let sportTimer = null;
-        let gamedevStart = null;
-        let gamedevTimer = null;
+        let pianoStart = null;
+        let pianoTimer = null;
 
         function formatTime(ms) {
             const totalSeconds = Math.floor(ms / 1000);
@@ -431,57 +431,57 @@
             document.getElementById("sportStop").style.opacity = "0.5";
         }
 
-        // Game Development Functions
-        async function startGamedev() {
-            if (gamedevStart) return;
+        // Piano Functions
+        async function startPiano() {
+            if (pianoStart) return;
             
-            gamedevStart = Date.now();
-            const ref = doc(db, "Benutzer_B", "training", "sessions", "gamedev_current");
+            pianoStart = Date.now();
+            const ref = doc(db, "Benutzer_B", "training", "sessions", "piano_current");
             await setDoc(ref, {
                 startZeit: serverTimestamp(),
-                typ: "gamedevelopment",
+                typ: "piano",
                 aktiv: true
             });
 
-            gamedevTimer = setInterval(updateGamedevzeit, 1000);
-            document.getElementById("gamedevStart").style.opacity = "0.5";
-            document.getElementById("gamedevStop").style.opacity = "1";
+            pianoTimer = setInterval(updatePianozeit, 1000);
+            document.getElementById("pianoStart").style.opacity = "0.5";
+            document.getElementById("pianoStop").style.opacity = "1";
         }
 
-        async function stopGamedev() {
-            if (!gamedevStart) return;
+        async function stopPiano() {
+            if (!pianoStart) return;
 
-            const dauer = Date.now() - gamedevStart;
+            const dauer = Date.now() - pianoStart;
             const heute = new Date().toISOString().slice(0, 10);
             
             const tagesRef = doc(db, "Benutzer_B", "training", "tage", heute);
             const snapshot = await getDoc(tagesRef);
-            const alteDauer = snapshot.exists() && snapshot.data().gamedevzeit ? snapshot.data().gamedevzeit : 0;
+            const alteDauer = snapshot.exists() && snapshot.data().pianozeit ? snapshot.data().pianozeit : 0;
 
             await setDoc(tagesRef, {
-                gamedevzeit: alteDauer + dauer,
+                pianozeit: alteDauer + dauer,
                 letzteAktualisierung: serverTimestamp()
             }, { merge: true });
 
-            await addDoc(collection(db, "Benutzer_B", "aktivitaeten", "gamedevelopment"), {
-                startZeit: new Date(gamedevStart),
+            await addDoc(collection(db, "Benutzer_B", "aktivitaeten", "piano"), {
+                startZeit: new Date(pianoStart),
                 endZeit: new Date(),
                 dauer: dauer,
-                typ: "gamedevelopment",
+                typ: "piano",
                 erstellt: serverTimestamp()
             });
 
-            const sessionRef = doc(db, "Benutzer_B", "training", "sessions", "gamedev_current");
+            const sessionRef = doc(db, "Benutzer_B", "training", "sessions", "piano_current");
             await setDoc(sessionRef, {
                 aktiv: false,
                 endZeit: serverTimestamp(),
                 dauer: dauer
             }, { merge: true });
 
-            gamedevStart = null;
-            clearInterval(gamedevTimer);
-            document.getElementById("gamedevStart").style.opacity = "1";
-            document.getElementById("gamedevStop").style.opacity = "0.5";
+            pianoStart = null;
+            clearInterval(pianoTimer);
+            document.getElementById("pianoStart").style.opacity = "1";
+            document.getElementById("pianoStop").style.opacity = "0.5";
         }
 
         // Update Timer Functions
@@ -499,10 +499,10 @@
             }
         }
 
-        function updateGamedevzeit() {
-            if (gamedevStart) {
-                const dauer = Date.now() - gamedevStart;
-                document.getElementById("gamedevzeit").textContent = formatTime(dauer);
+        function updatePianozeit() {
+            if (pianoStart) {
+                const dauer = Date.now() - pianoStart;
+                document.getElementById("pianozeit").textContent = formatTime(dauer);
             }
         }
 
@@ -519,8 +519,8 @@
                 if (data.sportzeit) {
                     document.getElementById("sportzeit").textContent = formatTime(data.sportzeit);
                 }
-                if (data.gamedevzeit) {
-                    document.getElementById("gamedevzeit").textContent = formatTime(data.gamedevzeit);
+                if (data.pianozeit) {
+                    document.getElementById("pianozeit").textContent = formatTime(data.pianozeit);
                 }
             }
 
@@ -543,13 +543,13 @@
                 document.getElementById("sportStop").style.opacity = "1";
             }
 
-            const gamedevSessionRef = doc(db, "Benutzer_B", "training", "sessions", "gamedev_current");
-            const gamedevSession = await getDoc(gamedevSessionRef);
-            if (gamedevSession.exists() && gamedevSession.data().aktiv) {
-                gamedevStart = gamedevSession.data().startZeit.toMillis();
-                gamedevTimer = setInterval(updateGamedevzeit, 1000);
-                document.getElementById("gamedevStart").style.opacity = "0.5";
-                document.getElementById("gamedevStop").style.opacity = "1";
+            const pianoSessionRef = doc(db, "Benutzer_B", "training", "sessions", "piano_current");
+            const pianoSession = await getDoc(pianoSessionRef);
+            if (pianoSession.exists() && pianoSession.data().aktiv) {
+                pianoStart = pianoSession.data().startZeit.toMillis();
+                pianoTimer = setInterval(updatePianozeit, 1000);
+                document.getElementById("pianoStart").style.opacity = "0.5";
+                document.getElementById("pianoStop").style.opacity = "1";
             }
 
             updateProgress();
@@ -565,13 +565,13 @@
                 const data = snapshot.data();
                 if (data.tradingzeit) gesamtzeit += data.tradingzeit;
                 if (data.sportzeit) gesamtzeit += data.sportzeit;
-                if (data.gamedevzeit) gesamtzeit += data.gamedevzeit;
+                if (data.pianozeit) gesamtzeit += data.pianozeit;
             }
             
             // Add current running timers
             if (tradingStart) gesamtzeit += Date.now() - tradingStart;
             if (sportStart) gesamtzeit += Date.now() - sportStart;
-            if (gamedevStart) gesamtzeit += Date.now() - gamedevStart;
+            if (pianoStart) gesamtzeit += Date.now() - pianoStart;
 
             const zielZeit = 3 * 60 * 60 * 1000; // 3 Stunden in ms
             const prozent = Math.min((gesamtzeit / zielZeit) * 100, 100);
@@ -605,8 +605,8 @@
         document.getElementById("tradingStop").addEventListener("click", stopTrading);
         document.getElementById("sportStart").addEventListener("click", startSport);
         document.getElementById("sportStop").addEventListener("click", stopSport);
-        document.getElementById("gamedevStart").addEventListener("click", startGamedev);
-        document.getElementById("gamedevStop").addEventListener("click", stopGamedev);
+        document.getElementById("pianoStart").addEventListener("click", startPiano);
+        document.getElementById("pianoStop").addEventListener("click", stopPiano);
 
         // Theme aus localStorage laden - Standard ist hell
         if (localStorage.getItem('theme') === 'dark') {
