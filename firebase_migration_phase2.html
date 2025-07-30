@@ -364,27 +364,27 @@
                             <li class="collection-item">
                                 <span class="collection-source">zeitprotokolle/BenutzerA_A</span>
                                 <span>→</span>
-                                <span class="collection-target">time-tracking/protocol-entries</span>
+                                <span class="collection-target">users/BenutzerA/protocol-entries</span>
                             </li>
                             <li class="collection-item">
                                 <span class="collection-source">logins/BenutzerA_A</span>
                                 <span>→</span>
-                                <span class="collection-target">sessions/logins</span>
+                                <span class="collection-target">users/BenutzerA/login-sessions</span>
                             </li>
                             <li class="collection-item">
                                 <span class="collection-source">arbeitszeiten/BenutzerA</span>
                                 <span>→</span>
-                                <span class="collection-target">time-tracking/work-sessions</span>
+                                <span class="collection-target">users/BenutzerA/work-sessions</span>
                             </li>
                             <li class="collection-item">
                                 <span class="collection-source">sportzeiten/BenutzerA</span>
                                 <span>→</span>
-                                <span class="collection-target">time-tracking/sport-sessions</span>
+                                <span class="collection-target">users/BenutzerA/sport-sessions</span>
                             </li>
                             <li class="collection-item">
                                 <span class="collection-source">aufgaben/BenutzerA</span>
                                 <span>→</span>
-                                <span class="collection-target">tasks</span>
+                                <span class="collection-target">users/BenutzerA/tasks</span>
                             </li>
                         </ul>
                     </div>
@@ -395,27 +395,27 @@
                             <li class="collection-item">
                                 <span class="collection-source">zeitprotokolle/BenutzerB_B</span>
                                 <span>→</span>
-                                <span class="collection-target">time-tracking/protocol-entries</span>
+                                <span class="collection-target">users/BenutzerB/protocol-entries</span>
                             </li>
                             <li class="collection-item">
                                 <span class="collection-source">logins/BenutzerB_B</span>
                                 <span>→</span>
-                                <span class="collection-target">sessions/logins</span>
+                                <span class="collection-target">users/BenutzerB/login-sessions</span>
                             </li>
                             <li class="collection-item">
                                 <span class="collection-source">arbeitszeiten/BenutzerB</span>
                                 <span>→</span>
-                                <span class="collection-target">time-tracking/work-sessions</span>
+                                <span class="collection-target">users/BenutzerB/work-sessions</span>
                             </li>
                             <li class="collection-item">
                                 <span class="collection-source">sportzeiten/BenutzerB</span>  
                                 <span>→</span>
-                                <span class="collection-target">time-tracking/sport-sessions</span>
+                                <span class="collection-target">users/BenutzerB/sport-sessions</span>
                             </li>
                             <li class="collection-item">
                                 <span class="collection-source">aufgaben/BenutzerB</span>
                                 <span>→</span>
-                                <span class="collection-target">tasks</span>
+                                <span class="collection-target">users/BenutzerB/tasks</span>
                             </li>
                         </ul>
                     </div>
@@ -423,8 +423,8 @@
 
                 <div class="alert alert-info">
                     <strong>🔄 Gemeinsame Collections:</strong><br>
-                    • <code>termine</code> → <code>shared/appointments</code><br>
-                    • <code>games</code> → <code>shared/games</code>
+                    • <code>termine</code> → <code>appointments</code><br>
+                    • <code>games</code> → <code>chess-games</code>
                 </div>
             </div>
 
@@ -850,7 +850,7 @@
             }
         }
 
-        // Zeitprotokolle migrieren
+        // Zeitprotokolle migrieren (korrekte Firestore Syntax)
         async function migrateZeitprotokolle() {
             log("📅 Migriere Zeitprotokolle...");
             updateProgress(10, "Migriere Zeitprotokolle...");
@@ -865,10 +865,11 @@
                         const data = oldDoc.data();
                         const batch = writeBatch(db);
 
-                        // Jeder Tag wird ein separates Dokument
+                        // Jeder Tag wird ein separates Dokument - korrekte Firestore Syntax!
                         for (const [dateStr, duration] of Object.entries(data)) {
                             if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) { // Nur gültige Datumsformate
-                                const newDoc = doc(db, `users/${userId}/time-tracking/protocol-entries`, dateStr);
+                                // Korrekt: doc(db, collectionPath, docId)
+                                const newDoc = doc(db, `users/${userId}/protocol-entries`, dateStr);
                                 batch.set(newDoc, {
                                     date: dateStr,
                                     duration: duration,
@@ -892,7 +893,7 @@
             updateStats();
         }
 
-        // Login-Daten migrieren
+        // Login-Daten migrieren (korrekte Struktur)
         async function migrateLogins() {
             log("🔐 Migriere Login-Daten...");
             updateProgress(25, "Migriere Login-Daten...");
@@ -905,7 +906,8 @@
                     
                     if (oldDoc.exists()) {
                         const data = oldDoc.data();
-                        const newDoc = doc(db, `users/${userId}/sessions/logins`, 'current');
+                        // Korrekt: users/BenutzerA/login-sessions (3) → current (4)
+                        const newDoc = doc(db, `users/${userId}/login-sessions`, 'current');
                         
                         await setDoc(newDoc, {
                             ...data,
@@ -925,7 +927,7 @@
             updateStats();
         }
 
-        // Arbeitszeiten migrieren
+        // Arbeitszeiten migrieren (korrekte Struktur)
         async function migrateArbeitszeiten() {
             log("💼 Migriere Arbeitszeiten...");
             updateProgress(40, "Migriere Arbeitszeiten...");
@@ -938,7 +940,8 @@
 
                     oldSnapshot.forEach(docSnap => {
                         const data = docSnap.data();
-                        const newDoc = doc(db, `users/${userId}/time-tracking/work-sessions`, docSnap.id);
+                        // Korrekt: users/BenutzerA/work-sessions (3) → docId (4)
+                        const newDoc = doc(db, `users/${userId}/work-sessions`, docSnap.id);
                         
                         batch.set(newDoc, {
                             ...data,
@@ -963,7 +966,7 @@
             updateStats();
         }
 
-        // Sportzeiten migrieren
+        // Sportzeiten migrieren (korrekte Struktur)
         async function migrateSportzeiten() {
             log("🏃 Migriere Sportzeiten...");
             updateProgress(55, "Migriere Sportzeiten...");
@@ -976,7 +979,8 @@
 
                     oldSnapshot.forEach(docSnap => {
                         const data = docSnap.data();
-                        const newDoc = doc(db, `users/${userId}/time-tracking/sport-sessions`, docSnap.id);
+                        // Korrekt: users/BenutzerA/sport-sessions (3) → docId (4)
+                        const newDoc = doc(db, `users/${userId}/sport-sessions`, docSnap.id);
                         
                         batch.set(newDoc, {
                             ...data,
@@ -1001,7 +1005,7 @@
             updateStats();
         }
 
-        // Aufgaben migrieren
+        // Aufgaben migrieren (korrekte Struktur)
         async function migrateAufgaben() {
             log("✅ Migriere Aufgaben...");
             updateProgress(70, "Migriere Aufgaben...");
@@ -1029,7 +1033,8 @@
                     }
 
                     if (targetUser && batches[targetUser]) {
-                        const newDoc = doc(db, `users/${targetUser}/tasks/items`, docSnap.id);
+                        // Korrekt: users/BenutzerA/tasks (3) → docId (4)
+                        const newDoc = doc(db, `users/${targetUser}/tasks`, docSnap.id);
                         batches[targetUser].set(newDoc, {
                             ...data,
                             migrated: serverTimestamp(),
@@ -1061,9 +1066,9 @@
             updateStats();
         }
 
-        // Termine migrieren
+        // Termine migrieren (korrekte Struktur)
         async function migrateTermine() {
-            log("📅 Migriere Termine zu shared/appointments...");
+            log("📅 Migriere Termine...");
             updateProgress(85, "Migriere Termine...");
 
             try {
@@ -1073,7 +1078,8 @@
 
                 oldSnapshot.forEach(docSnap => {
                     const data = docSnap.data();
-                    const newDoc = doc(db, 'shared/appointments', docSnap.id);
+                    // Korrekt: appointments (1) → docId (2)
+                    const newDoc = doc(db, 'appointments', docSnap.id);
                     
                     batch.set(newDoc, {
                         ...data,
@@ -1097,9 +1103,9 @@
             updateStats();
         }
 
-        // Games migrieren
+        // Games migrieren (korrekte Struktur)
         async function migrateGames() {
-            log("♟️ Migriere Games zu shared/games...");
+            log("♟️ Migriere Games...");
             updateProgress(95, "Migriere Games...");
 
             try {
@@ -1109,7 +1115,8 @@
 
                 oldSnapshot.forEach(docSnap => {
                     const data = docSnap.data();
-                    const newDoc = doc(db, 'shared/games', docSnap.id);
+                    // Korrekt: chess-games (1) → docId (2)
+                    const newDoc = doc(db, 'chess-games', docSnap.id);
                     
                     batch.set(newDoc, {
                         ...data,
@@ -1133,29 +1140,30 @@
             updateStats();
         }
 
-        // Migration validieren
+        // Migration validieren (korrekte Struktur)
         async function validateMigration() {
             log("🔍 Validiere Migration...");
 
             try {
                 for (const userId of Object.keys(users)) {
                     // Prüfe ob Benutzer-Strukturen existieren
-                    const profileDoc = await getDoc(doc(db, `users/${userId}/profile/info`));
+                    const profileDoc = await getDoc(doc(db, `users/${userId}`, 'profile', 'info'));
                     if (!profileDoc.exists()) {
                         throw new Error(`Profil für ${userId} nicht gefunden`);
                     }
 
-                    // Prüfe time-tracking Collections
-                    const protocolSnapshot = await getDocs(collection(db, `users/${userId}/time-tracking/protocol-entries`));
-                    const workSnapshot = await getDocs(collection(db, `users/${userId}/time-tracking/work-sessions`));
-                    const sportSnapshot = await getDocs(collection(db, `users/${userId}/time-tracking/sport-sessions`));
+                    // Prüfe Collections (korrekte Pfade!)
+                    const protocolSnapshot = await getDocs(collection(db, `users/${userId}/protocol-entries`));
+                    const workSnapshot = await getDocs(collection(db, `users/${userId}/work-sessions`));
+                    const sportSnapshot = await getDocs(collection(db, `users/${userId}/sport-sessions`));
+                    const tasksSnapshot = await getDocs(collection(db, `users/${userId}/tasks`));
 
-                    log(`✅ ${userId}: ${protocolSnapshot.size} Protokolle, ${workSnapshot.size} Arbeit, ${sportSnapshot.size} Sport`);
+                    log(`✅ ${userId}: ${protocolSnapshot.size} Protokolle, ${workSnapshot.size} Arbeit, ${sportSnapshot.size} Sport, ${tasksSnapshot.size} Tasks`);
                 }
 
-                // Prüfe shared Collections
-                const appointmentsSnapshot = await getDocs(collection(db, 'shared/appointments'));
-                const gamesSnapshot = await getDocs(collection(db, 'shared/games'));
+                // Prüfe shared Collections (korrekte Pfade!)
+                const appointmentsSnapshot = await getDocs(collection(db, 'appointments'));
+                const gamesSnapshot = await getDocs(collection(db, 'chess-games'));
 
                 log(`✅ Shared: ${appointmentsSnapshot.size} Termine, ${gamesSnapshot.size} Games`);
                 log("✅ Migration-Validierung erfolgreich", 'success');
