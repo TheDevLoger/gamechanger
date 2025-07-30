@@ -746,14 +746,15 @@
                     }
                 }
 
-                // Backup-Metadaten
-                const backupMetaDoc = doc(db, `backups/${backupId}/meta`);
+                // Backup-Metadaten (korrigierter Pfad)
+                const backupMetaDoc = doc(db, `backups/${backupId}`);
                 batch.set(backupMetaDoc, {
                     created: serverTimestamp(),
                     docCount: backedUpCount,
                     phase: 2,
                     users: users,
-                    description: "Vollständiges Backup vor Phase 2 Migration"
+                    description: "Vollständiges Backup vor Phase 2 Migration",
+                    type: "metadata"
                 });
 
                 await batch.commit();
@@ -1028,7 +1029,7 @@
                     }
 
                     if (targetUser && batches[targetUser]) {
-                        const newDoc = doc(db, `users/${targetUser}/tasks`, docSnap.id);
+                        const newDoc = doc(db, `users/${targetUser}/tasks/items`, docSnap.id);
                         batches[targetUser].set(newDoc, {
                             ...data,
                             migrated: serverTimestamp(),
