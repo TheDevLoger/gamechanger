@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trading Journal - Erik Lähner</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+    
+    <style>
+        /* === Oldschool Windows 95/98 Style === */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'MS Sans Serif', sans-serif;
+            font-size: 11px;
+            background-color: #c0c0c0;
+            color: #000000;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* === Window Container === */
+        .window {
+            background-color: #c0c0c0;
+            border: 2px outset #c0c0c0;
+            margin: 4px;
+            height: calc(100vh - 8px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* === Title Bar === */
+        .title-bar {
+            background: linear-gradient(90deg, #0080ff 0%, #0040c0 100%);
+            color: white;
+            padding: 4px 8px;
+            font-weight: bold;
+            border-bottom: 1px solid #000080;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 20px;
+        }
+
+        .title-text {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 2px;
+        }
+
+        .control-btn {
+            width: 16px;
+            height: 14px;
+            background-color: #c0c0c0;
+            border: 1px outset #c0c0c0;
+            font-size: 8px;
+            line-height: 12px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .control-btn:active {
+            border: 1px inset #c0c0c0;
+        }
+
+        /* === Main Content Area === */
+        .content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* === Left Panel - Trade Entry === */
+        .left-panel {
+            width: 300px;
+            border-right: 2px inset #c0c0c0;
+            padding: 8px;
+            overflow-y: auto;
+        }
+
+        /* === Right Panel === */
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* === Stats Panel === */
+        .stats-panel {
+            height: 140px;
+            border-bottom: 2px inset #c0c0c0;
+            padding: 8px;
+            background-color: #c0c0c0;
+        }
+
+        /* === Trades Table Panel === */
+        .trades-panel {
+            flex: 1;
+            padding: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* === Fieldset Groups === */
+        fieldset {
+            border: 2px inset #c0c0c0;
+            margin-bottom: 8px;
+            padding: 8px;
+            background-color: #c0c0c0;
+        }
+
+        legend {
+            font-weight: bold;
+            padding: 0 4px;
+            background-color: #c0c0c0;
+        }
+
+        /* === Form Elements === */
+        .form-row {
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+        }
+
+        label {
+            width: 80px;
+            text-align: right;
+            margin-right: 8px;
+            font-size: 11px;
+        }
+
+        input, select, textarea {
+            border: 2px inset #c0c0c0;
+            padding: 2px 4px;
+            font-family: 'MS Sans Serif', sans-serif;
+            font-size: 11px;
+            background-color: white;
+            flex: 1;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: 1px dotted #000000;
+            outline-offset: -1px;
+        }
+
+        /* === Buttons === */
+        .btn {
+            border: 2px outset #c0c0c0;
+            background-color: #c0c0c0;
+            padding: 4px 12px;
+            font-family: 'MS Sans Serif', sans-serif;
+            font-size: 11px;
+            cursor: pointer;
+            min-width: 75px;
+            margin: 2px;
+        }
+
+        .btn:hover {
+            background-color: #d0d0d0;
+        }
+
+        .btn:active {
+            border: 2px inset #c0c0c0;
+        }
+
+        .btn-primary {
+            background-color: #c0c0c0;
+            font-weight: bold;
+        }
+
+        .btn-small {
+            padding: 2px 6px;
+            min-width: 50px;
+            font-size: 10px;
+        }
+
+        /* === Table === */
+        .table-container {
+            flex: 1;
+            overflow: auto;
+            border: 2px inset #c0c0c0;
+            background-color: white;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        th {
+            background-color: #c0c0c0;
+            border: 1px outset #c0c0c0;
+            padding: 4px;
+            text-align: center;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            border: 1px solid #808080;
+            padding: 3px 4px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f0f0f0;
+        }
+
+        tr:hover {
+            background-color: #0080ff;
+            color: white;
+        }
+
+        /* === Status Indicators === */
+        .status-tp {
+            background-color: #008000;
+            color: white;
+            padding: 1px 4px;
+            font-size: 10px;
+            border: 1px solid #004000;
+        }
+
+        .status-be {
+            background-color: #808080;
+            color: white;
+            padding: 1px 4px;
+            font-size: 10px;
+            border: 1px solid #404040;
+        }
+
+        .status-sl {
+            background-color: #ff0000;
+            color: white;
+            padding: 1px 4px;
+            font-size: 10px;
+            border: 1px solid #800000;
+        }
+
+        .direction-buy {
+            color: #008000;
+            font-weight: bold;
+        }
+
+        .direction-sell {
+            color: #ff0000;
+            font-weight: bold;
+        }
+
+        .pnl-positive {
+            color: #008000;
+            font-weight: bold;
+        }
+
+        .pnl-negative {
+            color: #ff0000;
+            font-weight: bold;
+        }
+
+        /* === Stats Layout === */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            height: 100%;
+        }
+
+        .stat-box {
+            border: 2px inset #c0c0c0;
+            padding: 6px;
+            text-align: center;
+            background-color: white;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            margin-bottom: 2px;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        /* === Edit Mode === */
+        .edit-mode input,
+        .edit-mode select {
+            background-color: #ffffcc;
+        }
+
+        .edit-indicator {
+            background-color: #ffff00;
+            border: 1px solid #808080;
+            padding: 4px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: none;
+        }
+
+        /* === Modal === */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: #c0c0c0;
+            border: 2px outset #c0c0c0;
+            width: 400px;
+            max-width: 90%;
+        }
+
+        .modal-title-bar {
+            background-color: #0080ff;
+            color: white;
+            padding: 4px 8px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 12px;
+        }
+
+        .modal-body textarea {
+            width: 100%;
+            height: 80px;
+            resize: vertical;
+        }
+
+        /* === Action Buttons in Table === */
+        .action-buttons {
+            white-space: nowrap;
+        }
+
+        .action-buttons .btn {
+            margin: 1px;
+            padding: 1px 4px;
+            font-size: 10px;
+            min-width: 30px;
+        }
+
+        /* === Scrollbars === */
+        ::-webkit-scrollbar {
+            width: 16px;
+            height: 16px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background-color: #c0c0c0;
+            border: 1px inset #c0c0c0;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background-color: #c0c0c0;
+            border: 2px outset #c0c0c0;
+        }
+
+        ::-webkit-scrollbar-corner {
+            background-color: #c0c0c0;
+        }
+
+        /* === Links === */
+        a {
+            color: #0000ff;
+            text-decoration: underline;
+        }
+
+        a:visited {
+            color: #800080;
+        }
+
+        a:hover {
+            color: #ff0000;
+        }
+
+        /* === Responsive adjustments === */
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .left-panel {
+                width: 100%;
+                height: 200px;
+                border-right: none;
+                border-bottom: 2px inset #c0c0c0;
+            }
+            
+            .stats-panel {
+                height: 100px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Window -->
+    <div class="window">
+        <!-- Title Bar -->
+        <div class="title-bar">
+            <div class="title-text">
+                <span>📊</span>
+                <span>Trading Journal - Erik Lähner</span>
+            </div>
+            <div class="window-controls">
+                <div class="control-btn">_</div>
+                <div class="control-btn">□</div>
+                <div class="control-btn">×</div>
+            </div>
+        </div>
+
+        <!-- Edit Indicator -->
+        <div class="edit-indicator" id="editIndicator">
+            BEARBEITUNGSMODUS AKTIV - Änderungen speichern oder abbrechen
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+            <!-- Left Panel - Trade Entry -->
+            <div class="left-panel">
+                <fieldset>
+                    <legend>Neuen Trade hinzufügen</legend>
+                    <form id="tradeForm">
+                        <div class="form-row">
+                            <label for="date">Datum:</label>
+                            <input type="date" id="date" required />
+                        </div>
+                        
+                        <div class="form-row">
+                            <label for="symbol">Symbol:</label>
+                            <input type="text" id="symbol" placeholder="z.B. EURUSD" />
+                        </div>
+                        
+                        <div class="form-row">
+                            <label for="direction">Richtung:</label>
+                            <select id="direction">
+                                <option value="">Wählen...</option>
+                                <option value="Buy">Buy</option>
+                                <option value="Sell">Sell</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-row">
+                            <label for="result">Ergebnis:</label>
+                            <select id="result">
+                                <option value="">Wählen...</option>
+                                <option value="TP">TP (Take Profit)</option>
+                                <option value="BE">BE (Break Even)</option>
+                                <option value="SL">SL (Stop Loss)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-row">
+                            <label for="pnl">PnL (%):</label>
+                            <input type="number" step="0.01" id="pnl" placeholder="z.B. 2.50" />
+                        </div>
+                        
+                        <div class="form-row">
+                            <label for="strategy">Strategie:</label>
+                            <input type="text" id="strategy" placeholder="z.B. Breakout" />
+                        </div>
+                        
+                        <div class="form-row">
+                            <label for="entryLink">Entry Link:</label>
+                            <input type="url" id="entryLink" placeholder="Screenshot URL" />
+                        </div>
+                        
+                        <div class="form-row">
+                            <label for="exitLink">Exit Link:</label>
+                            <input type="url" id="exitLink" placeholder="Screenshot URL" />
+                        </div>
+                        
+                        <div class="form-row" style="margin-top: 12px; justify-content: center;">
+                            <button type="submit" class="btn btn-primary">Trade hinzufügen</button>
+                            <button type="button" class="btn" id="cancelEdit" style="display: none;">Abbrechen</button>
+                        </div>
+                    </form>
+                </fieldset>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="right-panel">
+                <!-- Stats Panel -->
+                <div class="stats-panel">
+                    <fieldset style="height: 100%;">
+                        <legend>Statistiken</legend>
+                        <div class="stats-grid">
+                            <div class="stat-box">
+                                <div class="stat-label">Gesamt Trades</div>
+                                <div class="stat-value" id="totalTrades">0</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Erfolgsrate</div>
+                                <div class="stat-value" id="winRate">0%</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Gesamt PnL</div>
+                                <div class="stat-value" id="totalPnL">0.00%</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Avg. Gewinn</div>
+                                <div class="stat-value" id="avgWin">0.00%</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Avg. Verlust</div>
+                                <div class="stat-value" id="avgLoss">0.00%</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Bester Trade</div>
+                                <div class="stat-value" id="bestTrade">0.00%</div>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <!-- Trades Table Panel -->
+                <div class="trades-panel">
+                    <fieldset style="height: 100%; display: flex; flex-direction: column;">
+                        <legend>Trades</legend>
+                        <div class="table-container">
+                            <table id="tradesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Datum</th>
+                                        <th>Symbol</th>
+                                        <th>Richtung</th>
+                                        <th>Ergebnis</th>
+                                        <th>PnL (%)</th>
+                                        <th>Strategie</th>
+                                        <th>Entry</th>
+                                        <th>Exit</th>
+                                        <th>Aktionen</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tradesTableBody">
+                                    <!-- Trades werden hier eingefügt -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </fieldset>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Note Modal -->
+    <div class="modal" id="noteModal">
+        <div class="modal-content">
+            <div class="modal-title-bar">
+                <span>Notiz bearbeiten</span>
+                <span class="control-btn" onclick="closeNoteModal()">×</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <label>Notiz:</label>
+                </div>
+                <div class="form-row">
+                    <textarea id="noteInput" placeholder="Ihre Notiz zum Trade..."></textarea>
+                </div>
+                <div class="form-row" style="justify-content: center; margin-top: 8px;">
+                    <button class="btn btn-primary" onclick="saveNote()">Speichern</button>
+                    <button class="btn" onclick="closeNoteModal()">Abbrechen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Konfiguration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAujeUok4jKYwnr5GEXze_EadszqMdY1y4",
+            authDomain: "gamechanger-78fb4.firebaseapp.com",
+            projectId: "gamechanger-78fb4",
+            storageBucket: "gamechanger-78fb4.firebasestorage.app",
+            messagingSenderId: "510513691722",
+            appId: "1:510513691722:web:c0c1a97141ddfda4377ab3"
+        };
+
+        // Firebase initialisieren
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const tradesRef = db.collection("users").doc("a").collection("trades");
+
+        // DOM Elemente
+        const form = document.getElementById("tradeForm");
+        const tbody = document.getElementById("tradesTableBody");
+        const editIndicator = document.getElementById("editIndicator");
+        const cancelEditBtn = document.getElementById("cancelEdit");
+
+        // Status Variablen
+        let currentNoteId = null;
+        let editingTradeId = null;
+        let allTrades = [];
+
+        // Datum formatieren (DD-MM-YYYY)
+        function formatDate(isoDateStr) {
+            if (!isoDateStr) return '';
+            const [year, month, day] = isoDateStr.split("-");
+            return `${day}-${month}-${year}`;
+        }
+
+        // ISO Datum konvertieren (YYYY-MM-DD)
+        function toISODate(dateStr) {
+            if (!dateStr) return '';
+            const [day, month, year] = dateStr.split("-");
+            return `${year}-${month}-${day}`;
+        }
+
+        // Trades laden
+        async function loadTrades() {
+            try {
+                const snapshot = await tradesRef.get();
+                const trades = [];
+                tbody.innerHTML = "";
+
+                snapshot.forEach(doc => {
+                    const trade = doc.data();
+                    trade.id = doc.id;
+                    trades.push(trade);
+                });
+
+                // Sortiere nach Datum (neueste zuerst)
+                trades.sort((a, b) => {
+                    const [dayA, monthA, yearA] = (a.date || '01-01-1970').split("-").map(Number);
+                    const [dayB, monthB, yearB] = (b.date || '01-01-1970').split("-").map(Number);
+                    const dateA = new Date(yearA, monthA - 1, dayA);
+                    const dateB = new Date(yearB, monthB - 1, dayB);
+                    return dateB - dateA;
+                });
+
+                allTrades = trades;
+
+                // Trades in Tabelle einfügen
+                trades.forEach(trade => {
+                    const row = document.createElement("tr");
+                    
+                    // PnL Klasse bestimmen
+                    const pnlClass = (trade.pnl || 0) >= 0 ? 'pnl-positive' : 'pnl-negative';
+                    const pnlSign = (trade.pnl || 0) >= 0 ? '+' : '';
+                    
+                    // Direction Klasse bestimmen
+                    const directionClass = trade.direction ? `direction-${trade.direction.toLowerCase()}` : '';
+                    
+                    // Ergebnis Klasse bestimmen
+                    const resultClass = trade.result ? `status-${trade.result.toLowerCase()}` : '';
+
+                    row.innerHTML = `
+                        <td>${trade.date || ''}</td>
+                        <td>${trade.symbol || ''}</td>
+                        <td class="${directionClass}">${trade.direction || ''}</td>
+                        <td><span class="${resultClass}">${trade.result || ''}</span></td>
+                        <td class="${pnlClass}">${pnlSign}${trade.pnl || ''}%</td>
+                        <td>${trade.strategy || ''}</td>
+                        <td>${trade.entryScreenshot ? `<a href="${trade.entryScreenshot}" target="_blank">📷</a>` : ''}</td>
+                        <td>${trade.exitScreenshot ? `<a href="${trade.exitScreenshot}" target="_blank">📷</a>` : ''}</td>
+                        <td class="action-buttons">
+                            <button class="btn btn-small" onclick="openNoteModal('${trade.id}', '${(trade.note || '').replace(/'/g, "\\'")}')">📝</button>
+                            <button class="btn btn-small" onclick="editTrade('${trade.id}')">✏️</button>
+                            <button class="btn btn-small" onclick="deleteTrade('${trade.id}')">🗑️</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                updateStatistics(trades);
+            } catch (error) {
+                console.error('Fehler beim Laden der Trades:', error);
+                alert('Fehler beim Laden der Trades');
+            }
+        }
+
+        // Statistiken aktualisieren
+        function updateStatistics(trades) {
+            const totalTrades = trades.length;
+            const winningTrades = trades.filter(t => (t.pnl || 0) > 0);
+            const losingTrades = trades.filter(t => (t.pnl || 0) < 0);
+            
+            const totalPnL = trades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+            const winRate = totalTrades > 0 ? ((winningTrades.length / totalTrades) * 100) : 0;
+            
+            const avgWin = winningTrades.length > 0 ? 
+                (winningTrades.reduce((sum, t) => sum + t.pnl, 0) / winningTrades.length) : 0;
+            const avgLoss = losingTrades.length > 0 ? 
+                (losingTrades.reduce((sum, t) => sum + t.pnl, 0) / losingTrades.length) : 0;
+            
+            const bestTrade = trades.length > 0 ? Math.max(...trades.map(t => t.pnl || 0)) : 0;
+
+            // Werte in UI setzen
+            document.getElementById("totalTrades").textContent = totalTrades;
+            document.getElementById("winRate").textContent = `${winRate.toFixed(1)}%`;
+            document.getElementById("totalPnL").textContent = `${totalPnL >= 0 ? '+' : ''}${totalPnL.toFixed(2)}%`;
+            document.getElementById("avgWin").textContent = `+${avgWin.toFixed(2)}%`;
+            document.getElementById("avgLoss").textContent = `${avgLoss.toFixed(2)}%`;
+            document.getElementById("bestTrade").textContent = `+${bestTrade.toFixed(2)}%`;
+
+            // Farben für PnL setzen
+            const totalPnLElement = document.getElementById("totalPnL");
+            totalPnLElement.className = totalPnL >= 0 ? 'stat-value pnl-positive' : 'stat-value pnl-negative';
+        }
+
+        // Trade löschen
+        async function deleteTrade(id) {
+            if (!confirm('Sind Sie sicher, dass Sie diesen Trade löschen möchten?')) {
+                return;
+            }
+
+            try {
+                await tradesRef.doc(id).delete();
+                await loadTrades();
+            } catch (error) {
+                console.error('Fehler beim Löschen:', error);
+                alert('Fehler beim Löschen des Trades');
+            }
+        }
+
+        // Trade bearbeiten
+        function editTrade(id) {
+            const trade = allTrades.find(t => t.id === id);
+            if (!trade) return;
+
+            // Formular füllen
+            document.getElementById("date").value = toISODate(trade.date || '');
+            document.getElementById("symbol").value = trade.symbol || '';
+            document.getElementById("direction").value = trade.direction || '';
+            document.getElementById("result").value = trade.result || '';
+            document.getElementById("pnl").value = trade.pnl ?? '';
+            document.getElementById("strategy").value = trade.strategy || '';
+            document.getElementById("entryLink").value = trade.entryScreenshot || '';
+            document.getElementById("exitLink").value = trade.exitScreenshot || '';
+
+            // Edit-Modus aktivieren
+            editingTradeId = id;
+            form.classList.add("edit-mode");
+            editIndicator.style.display = "block";
+            cancelEditBtn.style.display = "inline-block";
+            
+            // Button Text ändern
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.textContent = "Änderungen speichern";
+        }
+
+        // Bearbeitung abbrechen
+        function cancelEdit() {
+            editingTradeId = null;
+            form.classList.remove("edit-mode");
+            editIndicator.style.display = "none";
+            cancelEditBtn.style.display = "none";
+            form.reset();
+            
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.textContent = "Trade hinzufügen";
+        }
+
+        // Notiz Modal öffnen
+        function openNoteModal(id, note) {
+            currentNoteId = id;
+            document.getElementById("noteInput").value = note || '';
+            document.getElementById("noteModal").style.display = "flex";
+        }
+
+        // Notiz Modal schließen
+        function closeNoteModal() {
+            document.getElementById("noteModal").style.display = "none";
+            currentNoteId = null;
+        }
+
+        // Notiz speichern
+        async function saveNote() {
+            const note = document.getElementById("noteInput").value;
+            if (currentNoteId) {
+                try {
+                    await tradesRef.doc(currentNoteId).update({ note });
+                    closeNoteModal();
+                    await loadTrades();
+                } catch (error) {
+                    console.error('Fehler beim Speichern der Notiz:', error);
+                    alert('Fehler beim Speichern der Notiz');
+                }
+            }
+        }
+
+        // Formular Submit Handler
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const trade = {
+                date: formatDate(document.getElementById("date").value) || '',
+                symbol: document.getElementById("symbol").value || '',
+                direction: document.getElementById("direction").value || '',
+                result: document.getElementById("result").value || '',
+                pnl: parseFloat(document.getElementById("pnl").value) || 0,
+                strategy: document.getElementById("strategy").value || '',
+                entryScreenshot: document.getElementById("entryLink").value || '',
+                exitScreenshot: document.getElementById("exitLink").value || '',
+                note: ""
+            };
+
+            try {
+                if (editingTradeId) {
+                    // Trade aktualisieren
+                    await tradesRef.doc(editingTradeId).update(trade);
+                    cancelEdit();
+                } else {
+                    // Neuen Trade hinzufügen
+                    await tradesRef.add(trade);
+                    form.reset();
+                }
+
+                await loadTrades();
+            } catch (error) {
+                console.error('Fehler beim Speichern:', error);
+                alert('Fehler beim Speichern des Trades');
+            }
+        });
+
+        // Cancel Edit Button Handler
+        cancelEditBtn.addEventListener("click", cancelEdit);
+
+        // Funktionen global verfügbar machen
+        window.deleteTrade = deleteTrade;
+        window.editTrade = editTrade;
+        window.openNoteModal = openNoteModal;
+        window.closeNoteModal = closeNoteModal;
+        window.saveNote = saveNote;
+
+        // Initialisierung
+        document.addEventListener('DOMContentLoaded', () => {
+            // Heutiges Datum als Standard setzen
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+            
+            // Trades laden
+            loadTrades();
+        });
+    </script>
+</body>
+</html>
