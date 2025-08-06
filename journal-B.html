@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Trading Journal</title>
-    <link rel="stylesheet" href="journal.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 
     <!-- Firebase SDK -->
@@ -12,424 +11,824 @@
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
     
     <style>
-        /* === Symbol Performance Liste === */
-        .symbol-list-container {
-            position: relative;
-            height: 500px;
-            margin: 1rem 0;
-            overflow: hidden;
-            border-radius: 16px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .symbol-performance-list {
-            height: 100%;
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding: 1.5rem 1.5rem 6rem 1.5rem;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 2.5rem 1.5rem;
-            align-content: start;
-            scroll-behavior: smooth;
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
         }
 
-        .symbol-item {
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #1a202c;
+            line-height: 1.4;
+            min-height: 100vh;
+            padding: 15px;
+            font-size: 14px;
+        }
+
+        /* Compact Header */
+        h1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        /* Edit Indicator */
+        #editIndicator {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            color: #92400e;
+            padding: 8px;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+            font-size: 12px;
+        }
+
+        /* Main Container */
+        .main-container {
+            display: grid;
+            grid-template-columns: 160px 1fr 480px;
+            gap: 15px;
+            height: calc(100vh - 120px);
+            overflow: hidden;
+        }
+
+        /* Left Column - Form */
+        .form-section {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
-            padding: 1rem;
-            text-align: center;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-            animation: symbolFadeIn 0.5s ease-out;
-            animation-fill-mode: both;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            height: fit-content;
-            min-height: 120px;
+            padding: 10px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
         }
 
-        .symbol-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
-        }
-
-        .symbol-item:hover::before {
-            transform: scaleX(1);
-        }
-
-        .symbol-item:hover {
-            transform: translateY(-4px) scale(1.02);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-            background: rgba(255, 255, 255, 1);
-        }
-
-        .symbol-name {
-            font-size: 1.1rem;
-            font-weight: 700;
+        .form-section h2 {
+            font-size: 0.9rem;
+            margin-bottom: 10px;
             color: #667eea;
-            margin-bottom: 0.5rem;
-            letter-spacing: 0.5px;
+            font-weight: 600;
+            text-align: center;
         }
 
-        .symbol-stats {
+        #tradeForm {
             display: flex;
             flex-direction: column;
-            gap: 0.3rem;
+            gap: 8px;
         }
 
-        .symbol-stat {
+        #tradeForm input,
+        #tradeForm select {
+            border: 2px solid #e1e8ed;
+            border-radius: 6px;
+            padding: 6px 8px;
+            font-size: 11px;
+            transition: all 0.3s ease;
+            background: white;
+            color: #1a202c;
+        }
+
+        #tradeForm input:focus,
+        #tradeForm select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+            outline: none;
+        }
+
+        #tradeForm button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 11px;
+            margin-top: 5px;
+        }
+
+        #tradeForm button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Middle Column - Table and Stats */
+        .middle-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow: hidden;
+        }
+
+        /* Compact Stats */
+        .stats-compact {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-compact {
+            text-align: center;
+        }
+
+        .stat-compact .label {
+            font-size: 11px;
+            color: #4a5568;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .stat-compact .value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-compact .value.positive {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-compact .value.negative {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Table Section */
+        .table-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .table-section h2 {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .table-container {
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        th {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            font-weight: 600;
+            color: #1a202c;
+            padding: 8px 6px;
+            border: none;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: 6px;
+            border: none;
+            border-bottom: 1px solid #f1f3f4;
+            color: #1a202c;
+            text-align: center;
+            transition: background-color 0.3s ease;
+        }
+
+        tr:hover {
+            background-color: rgba(102, 126, 234, 0.05);
+        }
+
+        /* Result and Direction Styles */
+        .result-tp {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #065f46;
+            font-weight: 600;
+            border-radius: 4px;
+            padding: 2px 4px;
+            font-size: 11px;
+        }
+
+        .result-be {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #1e40af;
+            font-weight: 600;
+            border-radius: 4px;
+            padding: 2px 4px;
+            font-size: 11px;
+        }
+
+        .result-sl {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+            font-weight: 600;
+            border-radius: 4px;
+            padding: 2px 4px;
+            font-size: 11px;
+        }
+
+        .direction.buy {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #065f46;
+            font-weight: 600;
+            border-radius: 4px;
+            padding: 2px 4px;
+            font-size: 11px;
+        }
+
+        .direction.sell {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+            font-weight: 600;
+            border-radius: 4px;
+            padding: 2px 4px;
+            font-size: 11px;
+        }
+
+        .pnl-positive {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+        }
+
+        .pnl-negative {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+        }
+
+        /* Buttons */
+        .delete-btn,
+        .edit-btn,
+        .note-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            padding: 3px 5px;
+            margin: 0 1px;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background: #fee2e2;
+            border-color: #f87171;
+            transform: scale(1.1);
+        }
+
+        .edit-btn:hover {
+            background: #dbeafe;
+            border-color: #60a5fa;
+            transform: scale(1.1);
+        }
+
+        .note-btn:hover {
+            background: #fef3c7;
+            border-color: #fbbf24;
+            transform: scale(1.1);
+        }
+
+        /* Right Column - Charts */
+        .charts-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        .chart-mini {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            height: 200px;
+            transition: all 0.3s ease;
+        }
+
+        .chart-mini:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .chart-mini h3 {
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            color: #1a202c;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .chart-container-mini {
+            position: relative;
+            height: 150px;
+            padding: 5px;
+        }
+
+        /* Symbol Performance Compact */
+        .symbol-list-compact {
+            height: 150px;
+            overflow-y: auto;
+            padding: 5px;
+            margin-top: 5px;
+        }
+
+        .symbol-list-compact::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .symbol-list-compact::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 2px;
+        }
+
+        .symbol-list-compact::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.4);
+            border-radius: 2px;
+        }
+
+        .symbol-list-compact::-webkit-scrollbar-thumb:hover {
+            background: rgba(102, 126, 234, 0.6);
+        }
+
+        /* Comprehensive Analysis Section */
+        .analysis-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            height: 320px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        .analysis-section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .analysis-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.85rem;
-            padding: 0.2rem 0;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.1);
         }
 
-        .symbol-stat-label {
-            color: #666;
-            font-weight: 500;
-        }
-
-        .symbol-stat-value {
-            font-weight: 600;
-            padding: 0.2rem 0.4rem;
-            border-radius: 6px;
-            min-width: 2.5rem;
-            text-align: center;
-        }
-
-        .symbol-pnl {
-            font-weight: 700;
+        .analysis-header h3 {
             font-size: 0.9rem;
-        }
-
-        .symbol-pnl.positive {
-            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-            color: #065f46;
-        }
-
-        .symbol-pnl.negative {
-            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-            color: #991b1b;
-        }
-
-        .symbol-winrate.excellent {
-            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-            color: #065f46;
-        }
-
-        .symbol-winrate.good {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            color: #92400e;
-        }
-
-        .symbol-winrate.poor {
-            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-            color: #991b1b;
-        }
-
-        .symbol-trades {
-            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-            color: #1e40af;
-        }
-
-        /* Scrollbar für Symbol Liste */
-        .symbol-performance-list::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .symbol-performance-list::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-        }
-
-        .symbol-performance-list::-webkit-scrollbar-thumb {
-            background: rgba(102, 126, 234, 0.3);
-            border-radius: 4px;
-        }
-
-        .symbol-performance-list::-webkit-scrollbar-thumb:hover {
-            background: rgba(102, 126, 234, 0.5);
-        }
-
-        @keyframes symbolFadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px) scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        /* === Trading Analysis Styles === */
-        .analysis-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 16px;
-            padding: 2rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            margin-top: 2rem;
-            animation: fadeInUp 0.7s ease-in-out;
-        }
-
-        .analysis-container h2 {
             color: #1a202c;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-            font-size: 1.8rem;
-            text-align: center;
-        }
-
-        .analysis-content {
-            display: none;
-            animation: fadeIn 0.8s ease-in-out;
-        }
-
-        .analysis-section {
-            margin-bottom: 2rem;
-            padding: 1.5rem;
-            background: rgba(255, 255, 255, 0.7);
-            border-radius: 12px;
-            border-left: 4px solid #667eea;
-        }
-
-        .analysis-section h3 {
-            color: #1a202c;
-            font-size: 1.3rem;
             font-weight: 600;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            margin: 0;
         }
 
-        .performance-overview {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .metric-card {
-            background: white;
-            padding: 1rem;
-            border-radius: 8px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e5e7eb;
-        }
-
-        .metric-card .metric-label {
-            font-size: 0.85rem;
-            color: #6b7280;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .metric-card .metric-value {
-            font-size: 1.4rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-        }
-
-        .metric-card .metric-status {
-            font-size: 0.8rem;
-            padding: 0.2rem 0.5rem;
-            border-radius: 12px;
-            font-weight: 500;
-        }
-
-        .status-excellent {
-            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-            color: #065f46;
-        }
-
-        .status-good {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            color: #92400e;
-        }
-
-        .status-average {
-            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-            color: #1e40af;
-        }
-
-        .status-poor {
-            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-            color: #991b1b;
-        }
-
-        .insights-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .insight-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.75rem;
-            padding: 0.75rem;
-            margin-bottom: 0.5rem;
-            background: rgba(255, 255, 255, 0.5);
-            border-radius: 8px;
-            border-left: 3px solid #10b981;
-        }
-
-        .insight-icon {
-            font-size: 1.2rem;
-            margin-top: 0.1rem;
-            flex-shrink: 0;
-        }
-
-        .insight-text {
-            flex-grow: 1;
-            line-height: 1.4;
-        }
-
-        .insight-text strong {
-            color: #1a202c;
-        }
-
-        .recommendations-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1rem;
-        }
-
-        .recommendation-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e5e7eb;
-            border-left: 4px solid #f59e0b;
-        }
-
-        .recommendation-card h4 {
-            color: #1a202c;
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .recommendation-card p {
-            line-height: 1.4;
-            color: #4b5563;
-            margin-bottom: 0.5rem;
-        }
-
-        .recommendation-card ul {
-            margin: 0.5rem 0 0 1rem;
-            color: #6b7280;
-        }
-
-        .recommendation-card ul li {
-            margin-bottom: 0.25rem;
-        }
-
-        .priority-high {
-            border-left-color: #ef4444;
-        }
-
-        .priority-medium {
-            border-left-color: #f59e0b;
-        }
-
-        .priority-low {
-            border-left-color: #10b981;
-        }
-
-        #generateAnalysisBtn {
+        .analysis-btn {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
             border: none;
-            padding: 1rem 2rem;
-            border-radius: 12px;
+            padding: 8px 12px;
+            border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
-            font-size: 1.1rem;
+            font-size: 11px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
-            position: relative;
-            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
         }
 
-        #generateAnalysisBtn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
+        .analysis-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
         }
 
-        #generateAnalysisBtn:hover::before {
-            left: 100%;
-        }
-
-        #generateAnalysisBtn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
-        }
-
-        #generateAnalysisBtn:disabled {
+        .analysis-btn:disabled {
             opacity: 0.7;
             cursor: not-allowed;
             transform: none;
         }
 
-        /* Responsive Anpassungen für Symbol Liste */
-        @media (max-width: 768px) {
-            .symbol-performance-list {
-                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-                gap: 2rem 1.25rem;
-                padding: 1rem 1rem 4.5rem 1rem;
-            }
-            
-            .symbol-item {
-                min-height: 100px;
-                padding: 0.75rem;
-            }
-            
-            .symbol-name {
-                font-size: 1rem;
-            }
-            
-            .symbol-stat {
-                font-size: 0.8rem;
-            }
+        .analysis-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 5px;
+            font-size: 11px;
+            line-height: 1.4;
+        }
 
-            .performance-overview {
-                grid-template-columns: 1fr;
+        .analysis-content::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .analysis-content::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 2px;
+        }
+
+        .analysis-content::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.4);
+            border-radius: 2px;
+        }
+
+        .analysis-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            color: #6b7280;
+        }
+
+        .placeholder-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        .analysis-category {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+
+        .analysis-category.performance { border-left-color: #10b981; }
+        .analysis-category.risk { border-left-color: #ef4444; }
+        .analysis-category.strategy { border-left-color: #3b82f6; }
+        .analysis-category.time { border-left-color: #f59e0b; }
+        .analysis-category.psychology { border-left-color: #8b5cf6; }
+        .analysis-category.recommendations { border-left-color: #06b6d4; }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #1a202c;
+            font-size: 12px;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .metric-item {
+            background: white;
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .metric-label {
+            font-size: 9px;
+            color: #6b7280;
+            margin-bottom: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .metric-value.positive { color: #10b981; }
+        .metric-value.negative { color: #ef4444; }
+        .metric-value.neutral { color: #3b82f6; }
+
+        .insight-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .insight-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            padding: 6px;
+            margin-bottom: 4px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 6px;
+            font-size: 10px;
+        }
+
+        .insight-icon {
+            font-size: 12px;
+            margin-top: 1px;
+            flex-shrink: 0;
+        }
+
+        .insight-text {
+            flex: 1;
+            line-height: 1.3;
+        }
+
+        .progress-bar-container {
+            margin: 6px 0;
+        }
+
+        .progress-bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            margin-bottom: 3px;
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.8s ease;
+        }
+
+        .progress-fill.excellent { background: linear-gradient(90deg, #10b981, #059669); }
+        .progress-fill.good { background: linear-gradient(90deg, #f59e0b, #d97706); }
+        .progress-fill.average { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+        .progress-fill.poor { background: linear-gradient(90deg, #ef4444, #dc2626); }
+
+        .score-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .score-badge.excellent {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #065f46;
+        }
+
+        .score-badge.good {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            color: #92400e;
+        }
+
+        .score-badge.average {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            color: #1e40af;
+        }
+
+        .score-badge.poor {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            color: #991b1b;
+        }
+
+        .mini-chart {
+            width: 100%;
+            height: 60px;
+            margin: 6px 0;
+        }
+
+        .recommendation-item {
+            background: white;
+            padding: 8px;
+            margin-bottom: 6px;
+            border-radius: 6px;
+            border-left: 3px solid;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .recommendation-item.high { border-left-color: #ef4444; }
+        .recommendation-item.medium { border-left-color: #f59e0b; }
+        .recommendation-item.low { border-left-color: #10b981; }
+
+        .recommendation-title {
+            font-weight: 600;
+            margin-bottom: 3px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .recommendation-text {
+            font-size: 9px;
+            color: #4b5563;
+            line-height: 1.3;
+        }
+
+
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.hidden {
+            display: none;
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .modal-content textarea {
+            width: 94%;
+            padding: 10px;
+            margin: 10px 0;
+            resize: vertical;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .modal-content button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .modal-content button:hover {
+            background-color: #218838;
+            transform: scale(1.05);
+        }
+
+        .close-btn {
+            float: right;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.3);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(102, 126, 234, 0.5);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1400px) {
+            .main-container {
+                grid-template-columns: 140px 1fr 400px;
             }
             
-            .recommendations-grid {
-                grid-template-columns: 1fr;
+            .stats-compact {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 120px 1fr 350px;
             }
             
-            .analysis-section {
-                padding: 1rem;
+            .charts-section {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            
+            .chart-mini {
+                height: 180px;
+            }
+            
+            .stats-compact {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 1000px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto 1fr auto;
+                height: auto;
+            }
+            
+            .charts-section {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            
+            .chart-mini {
+                height: 180px;
+            }
+            
+            .stats-compact {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .main-container {
+                gap: 10px;
+            }
+            
+            .stats-compact {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 6px;
+            }
+            
+            .charts-section {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -439,145 +838,137 @@
 
     <div id="editIndicator">✏️ Bearbeitungsmodus – Änderungen speichern oder abbrechen</div>
 
-    <form id="tradeForm">
-        <input type="date" id="date" placeholder="Datum" required />
-        <input type="text" id="symbol" placeholder="Symbol" />
-        <select id="direction">
-            <option value="">Trade-Richtung</option>
-            <option value="Buy">Buy</option>
-            <option value="Sell">Sell</option>
-        </select>
-        <input type="url" id="entryScreenshot" placeholder="Einstieg Link" />
-        <input type="url" id="exitScreenshot" placeholder="Ausstieg Link" />
-        <select id="result">
-            <option value="">Ergebnis</option>
-            <option value="TP">TP</option>
-            <option value="BE">BE</option>
-            <option value="SL">SL</option>
-        </select>
-        <input type="number" step="0.01" id="pnl" placeholder="PnL (%)" />
-        <input type="text" id="strategy" placeholder="Strategie" />
-        <button type="submit">Hinzufügen</button>
-    </form>
-
-    <table id="journal">
-        <thead>
-            <tr>
-                <th>Datum</th>
-                <th>Symbol</th>
-                <th>Richtung</th>
-                <th>Einstieg</th>
-                <th>Ausstieg</th>
-                <th>Ergebnis</th>
-                <th>PnL</th>
-                <th>Strategie</th>
-                <th>Aktion</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-
-    <section id="dashboard">
-        <h2>📊 Zusammenfassung</h2>
-        <div class="stats">
-            <p id="totalPnL"></p>
-        </div>
-        
-        <!-- Erweiterte Statistiken -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h4>Gesamte Trades</h4>
-                <p class="value" id="totalTrades">0</p>
-            </div>
-            <div class="stat-card">
-                <h4>Erfolgsrate</h4>
-                <p class="value" id="winRate">0%</p>
-            </div>
-            <div class="stat-card">
-                <h4>Durchschnittlicher Gewinn</h4>
-                <p class="value" id="avgWin">0%</p>
-            </div>
-            <div class="stat-card">
-                <h4>Durchschnittlicher Verlust</h4>
-                <p class="value" id="avgLoss">0%</p>
-            </div>
-            <div class="stat-card">
-                <h4>Bester Trade</h4>
-                <p class="value" id="bestTrade">0%</p>
-            </div>
-            <div class="stat-card">
-                <h4>Schlechtester Trade</h4>
-                <p class="value" id="worstTrade">0%</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Grafische Auswertung -->
-    <section class="charts-container">
-        <div class="chart-card">
-            <h3>📈 PnL Entwicklung über Zeit</h3>
-            <div class="chart-container">
-                <canvas id="pnlChart"></canvas>
-            </div>
+    <div class="main-container">
+        <!-- Left Column - Form -->
+        <div class="form-section">
+            <h2>➕ Neuer Trade</h2>
+            <form id="tradeForm">
+                <input type="date" id="date" placeholder="Datum" required />
+                <input type="text" id="symbol" placeholder="Symbol" />
+                <select id="direction">
+                    <option value="">Trade-Richtung</option>
+                    <option value="Buy">Buy</option>
+                    <option value="Sell">Sell</option>
+                </select>
+                <input type="url" id="entryScreenshot" placeholder="Einstieg Link" />
+                <input type="url" id="exitScreenshot" placeholder="Ausstieg Link" />
+                <select id="result">
+                    <option value="">Ergebnis</option>
+                    <option value="TP">TP</option>
+                    <option value="BE">BE</option>
+                    <option value="SL">SL</option>
+                </select>
+                <input type="number" step="0.01" id="pnl" placeholder="PnL (%)" />
+                <input type="text" id="strategy" placeholder="Strategie" />
+                <button type="submit">Hinzufügen</button>
+            </form>
         </div>
 
-        <div class="chart-card">
-            <h3>🎯 Ergebnisse Verteilung</h3>
-            <div class="chart-container">
-                <canvas id="resultsChart"></canvas>
+        <!-- Middle Column - Stats and Table -->
+        <div class="middle-section">
+            <!-- Compact Stats -->
+            <div class="stats-compact">
+                <div class="stat-compact">
+                    <div class="label">Trades</div>
+                    <div class="value" id="totalTrades">0</div>
+                </div>
+                <div class="stat-compact">
+                    <div class="label">Winrate</div>
+                    <div class="value" id="winRate">0%</div>
+                </div>
+                <div class="stat-compact">
+                    <div class="label">PnL</div>
+                    <div class="value" id="totalPnL">0%</div>
+                </div>
+                <div class="stat-compact">
+                    <div class="label">Ø Gewinn</div>
+                    <div class="value positive" id="avgWin">0%</div>
+                </div>
+                <div class="stat-compact">
+                    <div class="label">Ø Verlust</div>
+                    <div class="value negative" id="avgLoss">0%</div>
+                </div>
+                <div class="stat-compact">
+                    <div class="label">Bester</div>
+                    <div class="value positive" id="bestTrade">0%</div>
+                </div>
+                <div class="stat-compact">
+                    <div class="label">Größter Verlust</div>
+                    <div class="value negative" id="worstTrade">0%</div>
+                </div>
             </div>
-        </div>
 
-        <div class="chart-card">
-            <h3>📊 Strategien Performance</h3>
-            <div class="chart-container">
-                <canvas id="strategyChart"></canvas>
-            </div>
-        </div>
-
-        <div class="chart-card">
-            <h3>⚖️ Buy vs Sell Performance</h3>
-            <div class="chart-container">
-                <canvas id="directionChart"></canvas>
-            </div>
-        </div>
-
-        <div class="chart-card">
-            <h3>💰 PnL Verteilung</h3>
-            <div class="chart-container">
-                <canvas id="pnlDistributionChart"></canvas>
-            </div>
-        </div>
-
-        <div class="chart-card">
-            <h3>🗓️ Monatliche Performance</h3>
-            <div class="chart-container">
-                <canvas id="monthlyChart"></canvas>
-            </div>
-        </div>
-
-        <div class="chart-card" style="grid-column: span 2;">
-            <h3>💹 Symbol Performance</h3>
-            <div class="symbol-list-container">
-                <div id="symbolPerformanceList" class="symbol-performance-list">
-                    <!-- Symbol items will be inserted here -->
+            <!-- Table Section -->
+            <div class="table-section">
+                <h2>📊 Trading History</h2>
+                <div class="table-container">
+                    <table id="journal">
+                        <thead>
+                            <tr>
+                                <th>Datum</th>
+                                <th>Symbol</th>
+                                <th>Richtung</th>
+                                <th>Entry</th>
+                                <th>Exit</th>
+                                <th>Result</th>
+                                <th>PnL</th>
+                                <th>Strategie</th>
+                                <th>Aktion</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
             </div>
         </div>
-    </section>
 
-    <!-- Trading Analysis Section -->
-    <section id="tradingAnalysis" class="analysis-container">
-        <h2>🎯 Trading Performance Analyse</h2>
-        <div id="analysisContent" class="analysis-content">
-            <!-- Analysis content will be generated here -->
+        <!-- Right Column - Charts -->
+        <div class="charts-section">
+            <div class="chart-mini">
+                <h3>📈 PnL Chart</h3>
+                <div class="chart-container-mini">
+                    <canvas id="pnlChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-mini">
+                <h3>🎯 Results</h3>
+                <div class="chart-container-mini">
+                    <canvas id="resultsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-mini">
+                <h3>📊 Strategies</h3>
+                <div class="chart-container-mini">
+                    <canvas id="strategyChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-mini">
+                <h3>💹 Symbols</h3>
+                <div class="symbol-list-compact" id="symbolPerformanceList">
+                    <!-- Symbol items will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Comprehensive Analysis Section -->
+            <div class="analysis-section">
+                <div class="analysis-header">
+                    <h3>🎯 Umfassende Trading-Analyse</h3>
+                    <button id="generateAnalysisBtn" class="analysis-btn">
+                        📊 Vollanalyse generieren
+                    </button>
+                </div>
+                <div id="analysisContent" class="analysis-content">
+                    <div class="analysis-placeholder">
+                        <div class="placeholder-icon">🚀</div>
+                        <p>Klicke auf "Vollanalyse generieren" für eine detaillierte Auswertung deiner Trading-Performance</p>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div style="text-align: center; margin-top: 2rem;">
-            <button id="generateAnalysisBtn">
-                📊 Analyse generieren
-            </button>
-        </div>
-    </section>
+    </div>
 
     <div id="noteModal" class="modal hidden">
         <div class="modal-content">
@@ -609,31 +1000,71 @@
         let allTrades = [];
 
         // Chart Instanzen
-        let pnlChart, resultsChart, strategyChart, directionChart, pnlDistributionChart, monthlyChart;
+        let pnlChart, resultsChart, strategyChart;
 
-        // === Trading Analysis Functions ===
-        function generateTradingAnalysis(trades) {
+        // === Comprehensive Trading Analysis Functions ===
+        function generateComprehensiveAnalysis(trades) {
             if (trades.length === 0) {
                 document.getElementById('analysisContent').innerHTML = `
-                    <div style="text-align: center; padding: 3rem; color: #6b7280;">
-                        <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">📊</div>
-                        <h3>Keine Daten für Analyse verfügbar</h3>
-                        <p>Führe mindestens 5 Trades aus, um eine detaillierte Analyse zu erhalten.</p>
+                    <div class="analysis-placeholder">
+                        <div class="placeholder-icon">📊</div>
+                        <p>Keine Trades vorhanden für die Analyse</p>
                     </div>
                 `;
-                document.getElementById('analysisContent').style.display = 'block';
                 return;
             }
 
-            const analysis = performDetailedAnalysis(trades);
-            const analysisHTML = generateAnalysisHTML(analysis);
+            const analysis = performComprehensiveAnalysis(trades);
+            const analysisHTML = generateComprehensiveAnalysisHTML(analysis);
             
             document.getElementById('analysisContent').innerHTML = analysisHTML;
-            document.getElementById('analysisContent').style.display = 'block';
         }
 
-        function performDetailedAnalysis(trades) {
-            // Basic Statistics
+        function performComprehensiveAnalysis(trades) {
+            // Sort trades chronologically
+            const sortedTrades = [...trades].sort((a, b) => {
+                const [dayA, monthA, yearA] = (a.date || '01-01-1970').split("-").map(Number);
+                const [dayB, monthB, yearB] = (b.date || '01-01-1970').split("-").map(Number);
+                const dateA = new Date(yearA, monthA - 1, dayA);
+                const dateB = new Date(yearB, monthB - 1, dayB);
+                return dateA - dateB;
+            });
+
+            // Basic Performance Metrics
+            const performance = analyzePerformance(sortedTrades);
+            
+            // Risk Management Analysis
+            const risk = analyzeRiskManagement(sortedTrades);
+            
+            // Strategy Analysis
+            const strategies = analyzeStrategies(sortedTrades);
+            
+            // Symbol Analysis
+            const symbols = analyzeSymbols(sortedTrades);
+            
+            // Time Analysis
+            const timeAnalysis = analyzeTimePatterns(sortedTrades);
+            
+            // Psychology Analysis
+            const psychology = analyzePsychology(sortedTrades);
+            
+            // Generate Recommendations
+            const recommendations = generateRecommendations({
+                performance, risk, strategies, symbols, timeAnalysis, psychology, trades: sortedTrades
+            });
+
+            return {
+                performance,
+                risk,
+                strategies,
+                symbols,
+                timeAnalysis,
+                psychology,
+                recommendations
+            };
+        }
+
+        function analyzePerformance(trades) {
             const totalTrades = trades.length;
             const winningTrades = trades.filter(t => (t.pnl || 0) > 0);
             const losingTrades = trades.filter(t => (t.pnl || 0) < 0);
@@ -647,39 +1078,87 @@
             const avgLoss = losingTrades.length > 0 ? 
                 Math.abs(losingTrades.reduce((sum, t) => sum + t.pnl, 0) / losingTrades.length) : 0;
             
+            const bestTrade = trades.length > 0 ? Math.max(...trades.map(t => t.pnl || 0)) : 0;
+            const worstTrade = trades.length > 0 ? Math.min(...trades.map(t => t.pnl || 0)) : 0;
+            
             const riskRewardRatio = avgLoss > 0 ? avgWin / avgLoss : 0;
             const profitFactor = losingTrades.length > 0 ? 
                 Math.abs(winningTrades.reduce((sum, t) => sum + t.pnl, 0) / losingTrades.reduce((sum, t) => sum + t.pnl, 0)) : 
                 (winningTrades.length > 0 ? 999 : 0);
 
-            // Strategy Analysis
-            const strategyStats = analyzeStrategies(trades);
-            const symbolStats = analyzeSymbols(trades);
-            const directionStats = analyzeDirections(trades);
-            const timeStats = analyzeTimePatterns(trades);
+            // Calculate cumulative PnL for drawdown analysis
+            let cumulativePnL = 0;
+            let peak = 0;
+            let maxDrawdown = 0;
+            const pnlCurve = [];
 
-            // Performance Rating
-            const performanceRating = calculatePerformanceRating({
-                winRate, riskRewardRatio, totalPnL, profitFactor, totalTrades
+            trades.forEach(trade => {
+                cumulativePnL += trade.pnl || 0;
+                pnlCurve.push(cumulativePnL);
+                peak = Math.max(peak, cumulativePnL);
+                const drawdown = peak - cumulativePnL;
+                maxDrawdown = Math.max(maxDrawdown, drawdown);
             });
 
+            // Calculate consistency score
+            const avgTradePnL = totalPnL / totalTrades;
+            const variance = trades.reduce((sum, t) => sum + Math.pow((t.pnl || 0) - avgTradePnL, 2), 0) / totalTrades;
+            const standardDeviation = Math.sqrt(variance);
+            const consistencyScore = standardDeviation > 0 ? Math.max(0, 100 - (standardDeviation * 10)) : 100;
+
             return {
-                basic: {
-                    totalTrades, winRate, totalPnL, avgWin, avgLoss, 
-                    riskRewardRatio, profitFactor, performanceRating
-                },
-                strategies: strategyStats,
-                symbols: symbolStats,
-                directions: directionStats,
-                timePatterns: timeStats,
-                insights: generateInsights(trades, {
-                    winRate, riskRewardRatio, avgWin, avgLoss, totalPnL, 
-                    strategyStats, symbolStats, directionStats
-                }),
-                recommendations: generateRecommendations({
-                    winRate, riskRewardRatio, avgWin, avgLoss, totalPnL, 
-                    strategyStats, symbolStats, directionStats, totalTrades
-                })
+                totalTrades, winRate, totalPnL, avgWin, avgLoss, bestTrade, worstTrade,
+                riskRewardRatio, profitFactor, maxDrawdown, consistencyScore, pnlCurve,
+                winningTrades: winningTrades.length,
+                losingTrades: losingTrades.length,
+                breakEvenTrades: breakEvenTrades.length
+            };
+        }
+
+        function analyzeRiskManagement(trades) {
+            const losses = trades.filter(t => (t.pnl || 0) < 0).map(t => t.pnl);
+            const gains = trades.filter(t => (t.pnl || 0) > 0).map(t => t.pnl);
+            
+            // Consecutive losses analysis
+            let currentStreak = 0;
+            let maxLossStreak = 0;
+            let maxWinStreak = 0;
+            let currentWinStreak = 0;
+            
+            trades.forEach(trade => {
+                if ((trade.pnl || 0) < 0) {
+                    currentStreak++;
+                    currentWinStreak = 0;
+                    maxLossStreak = Math.max(maxLossStreak, currentStreak);
+                } else if ((trade.pnl || 0) > 0) {
+                    currentWinStreak++;
+                    currentStreak = 0;
+                    maxWinStreak = Math.max(maxWinStreak, currentWinStreak);
+                } else {
+                    currentStreak = 0;
+                    currentWinStreak = 0;
+                }
+            });
+
+            // Risk per trade analysis
+            const avgLoss = losses.length > 0 ? Math.abs(losses.reduce((a, b) => a + b, 0) / losses.length) : 0;
+            const maxLoss = losses.length > 0 ? Math.abs(Math.min(...losses)) : 0;
+            
+            // Risk score (0-100, higher is better)
+            let riskScore = 100;
+            if (maxLoss > 10) riskScore -= 30; // Penalize large single losses
+            if (maxLossStreak > 5) riskScore -= 20; // Penalize long losing streaks
+            if (avgLoss > 3) riskScore -= 20; // Penalize high average losses
+            riskScore = Math.max(0, riskScore);
+
+            return {
+                maxLossStreak,
+                maxWinStreak,
+                avgLoss,
+                maxLoss,
+                riskScore,
+                lossesCount: losses.length,
+                gainsCount: gains.length
             };
         }
 
@@ -699,16 +1178,26 @@
                 if ((trade.pnl || 0) < 0) strategies[strategy].losses++;
             });
 
-            // Convert to array and add calculated fields
-            return Object.entries(strategies).map(([name, stats]) => ({
+            const strategyAnalysis = Object.entries(strategies).map(([name, stats]) => ({
                 name,
                 totalTrades: stats.trades.length,
                 totalPnL: stats.totalPnL,
                 winRate: (stats.wins / stats.trades.length) * 100,
                 avgPnL: stats.totalPnL / stats.trades.length,
                 wins: stats.wins,
-                losses: stats.losses
+                losses: stats.losses,
+                consistency: calculateStrategyConsistency(stats.trades)
             })).sort((a, b) => b.totalPnL - a.totalPnL);
+
+            return strategyAnalysis;
+        }
+
+        function calculateStrategyConsistency(trades) {
+            if (trades.length < 2) return 50;
+            const avgPnL = trades.reduce((sum, t) => sum + (t.pnl || 0), 0) / trades.length;
+            const variance = trades.reduce((sum, t) => sum + Math.pow((t.pnl || 0) - avgPnL, 2), 0) / trades.length;
+            const standardDeviation = Math.sqrt(variance);
+            return Math.max(0, Math.min(100, 100 - (standardDeviation * 8)));
         }
 
         function analyzeSymbols(trades) {
@@ -727,417 +1216,339 @@
                 if ((trade.pnl || 0) < 0) symbols[symbol].losses++;
             });
 
-            return Object.entries(symbols).map(([name, stats]) => ({
+            const symbolAnalysis = Object.entries(symbols).map(([name, stats]) => ({
                 name,
                 totalTrades: stats.trades.length,
                 totalPnL: stats.totalPnL,
                 winRate: (stats.wins / stats.trades.length) * 100,
                 avgPnL: stats.totalPnL / stats.trades.length
             })).sort((a, b) => b.totalPnL - a.totalPnL);
-        }
 
-        function analyzeDirections(trades) {
-            const directions = { Buy: [], Sell: [] };
-            
-            trades.forEach(trade => {
-                const direction = trade.direction || 'Unknown';
-                if (directions[direction]) {
-                    directions[direction].push(trade);
-                }
-            });
+            // Diversification score
+            const totalTrades = trades.length;
+            const symbolCount = symbolAnalysis.length;
+            const diversificationScore = symbolCount > 1 ? Math.min(100, (symbolCount / Math.sqrt(totalTrades)) * 50) : 0;
 
-            return Object.entries(directions).map(([name, tradesArray]) => {
-                const wins = tradesArray.filter(t => (t.pnl || 0) > 0).length;
-                const totalPnL = tradesArray.reduce((sum, t) => sum + (t.pnl || 0), 0);
-                
-                return {
-                    name,
-                    totalTrades: tradesArray.length,
-                    totalPnL,
-                    winRate: tradesArray.length > 0 ? (wins / tradesArray.length) * 100 : 0,
-                    avgPnL: tradesArray.length > 0 ? totalPnL / tradesArray.length : 0
-                };
-            }).filter(d => d.totalTrades > 0);
+            return { symbols: symbolAnalysis, diversificationScore };
         }
 
         function analyzeTimePatterns(trades) {
-            // Analyze by day of week (simplified)
-            const dayStats = {};
-            const monthStats = {};
+            const monthly = {};
+            const weekday = {};
             
             trades.forEach(trade => {
                 if (!trade.date) return;
                 
                 const [day, month, year] = trade.date.split('-');
                 const date = new Date(year, month - 1, day);
-                const dayOfWeek = date.toLocaleDateString('de-DE', { weekday: 'long' });
                 const monthKey = `${month}/${year}`;
+                const dayName = date.toLocaleDateString('de-DE', { weekday: 'long' });
                 
-                if (!dayStats[dayOfWeek]) {
-                    dayStats[dayOfWeek] = { trades: 0, pnl: 0, wins: 0 };
+                // Monthly analysis
+                if (!monthly[monthKey]) {
+                    monthly[monthKey] = { trades: 0, pnl: 0, wins: 0 };
                 }
-                dayStats[dayOfWeek].trades++;
-                dayStats[dayOfWeek].pnl += trade.pnl || 0;
-                if ((trade.pnl || 0) > 0) dayStats[dayOfWeek].wins++;
+                monthly[monthKey].trades++;
+                monthly[monthKey].pnl += trade.pnl || 0;
+                if ((trade.pnl || 0) > 0) monthly[monthKey].wins++;
                 
-                if (!monthStats[monthKey]) {
-                    monthStats[monthKey] = { trades: 0, pnl: 0, wins: 0 };
+                // Weekday analysis
+                if (!weekday[dayName]) {
+                    weekday[dayName] = { trades: 0, pnl: 0, wins: 0 };
                 }
-                monthStats[monthKey].trades++;
-                monthStats[monthKey].pnl += trade.pnl || 0;
-                if ((trade.pnl || 0) > 0) monthStats[monthKey].wins++;
+                weekday[dayName].trades++;
+                weekday[dayName].pnl += trade.pnl || 0;
+                if ((trade.pnl || 0) > 0) weekday[dayName].wins++;
             });
 
-            return { dayStats, monthStats };
+            return { monthly, weekday };
         }
 
-        function calculatePerformanceRating(metrics) {
-            let score = 0;
-            let maxScore = 0;
-
-            // Win Rate (0-30 points)
-            maxScore += 30;
-            if (metrics.winRate >= 70) score += 30;
-            else if (metrics.winRate >= 60) score += 25;
-            else if (metrics.winRate >= 50) score += 20;
-            else if (metrics.winRate >= 40) score += 10;
-
-            // Risk/Reward Ratio (0-25 points)
-            maxScore += 25;
-            if (metrics.riskRewardRatio >= 2) score += 25;
-            else if (metrics.riskRewardRatio >= 1.5) score += 20;
-            else if (metrics.riskRewardRatio >= 1) score += 15;
-            else if (metrics.riskRewardRatio >= 0.5) score += 10;
-
-            // Total PnL (0-25 points)
-            maxScore += 25;
-            if (metrics.totalPnL >= 50) score += 25;
-            else if (metrics.totalPnL >= 20) score += 20;
-            else if (metrics.totalPnL >= 10) score += 15;
-            else if (metrics.totalPnL >= 0) score += 10;
-
-            // Profit Factor (0-20 points)
-            maxScore += 20;
-            if (metrics.profitFactor >= 2) score += 20;
-            else if (metrics.profitFactor >= 1.5) score += 15;
-            else if (metrics.profitFactor >= 1) score += 10;
-            else if (metrics.profitFactor >= 0.8) score += 5;
-
-            const percentage = Math.round((score / maxScore) * 100);
+        function analyzePsychology(trades) {
+            let revengeTrading = 0;
+            let overtrading = 0;
+            let emotionalTrades = 0;
             
-            let rating, color;
-            if (percentage >= 80) {
-                rating = 'Ausgezeichnet';
-                color = '#10b981';
-            } else if (percentage >= 60) {
-                rating = 'Gut';
-                color = '#f59e0b';
-            } else if (percentage >= 40) {
-                rating = 'Durchschnittlich';
-                color = '#3b82f6';
-            } else {
-                rating = 'Verbesserungsbedarf';
-                color = '#ef4444';
+            // Analyze for revenge trading (large trades after losses)
+            for (let i = 1; i < trades.length; i++) {
+                const prevTrade = trades[i-1];
+                const currentTrade = trades[i];
+                
+                if ((prevTrade.pnl || 0) < -5 && Math.abs(currentTrade.pnl || 0) > Math.abs(prevTrade.pnl || 0) * 1.5) {
+                    revengeTrading++;
+                }
             }
-
-            return { percentage, rating, color, score, maxScore };
+            
+            // Analyze for overtrading (more than 5 trades per day)
+            const dailyTrades = {};
+            trades.forEach(trade => {
+                if (trade.date) {
+                    dailyTrades[trade.date] = (dailyTrades[trade.date] || 0) + 1;
+                }
+            });
+            
+            overtrading = Object.values(dailyTrades).filter(count => count > 5).length;
+            
+            // Emotional trades (very large wins/losses compared to average)
+            const avgAbsPnL = trades.reduce((sum, t) => sum + Math.abs(t.pnl || 0), 0) / trades.length;
+            emotionalTrades = trades.filter(t => Math.abs(t.pnl || 0) > avgAbsPnL * 3).length;
+            
+            // Calculate discipline score
+            const totalNegativeIndicators = revengeTrading + overtrading + emotionalTrades;
+            const disciplineScore = Math.max(0, 100 - (totalNegativeIndicators / trades.length * 100));
+            
+            return {
+                revengeTrading,
+                overtrading,
+                emotionalTrades,
+                disciplineScore
+            };
         }
 
-        function generateInsights(trades, metrics) {
-            const insights = [];
-
-            // Win Rate Insights
-            if (metrics.winRate >= 70) {
-                insights.push({
-                    icon: '🎯',
-                    text: `Exzellente <strong>Erfolgsrate von ${metrics.winRate.toFixed(1)}%</strong>. Du identifizierst sehr gut profitable Trading-Gelegenheiten.`
-                });
-            } else if (metrics.winRate < 50) {
-                insights.push({
-                    icon: '⚠️',
-                    text: `Erfolgsrate von ${metrics.winRate.toFixed(1)}% liegt unter 50%. <strong>Überprüfe deine Entry-Kriterien</strong> und Trading-Setup.`
-                });
-            }
-
-            // Risk/Reward Analysis
-            if (metrics.riskRewardRatio >= 2) {
-                insights.push({
-                    icon: '⚖️',
-                    text: `Hervorragendes <strong>Risk/Reward-Verhältnis von 1:${metrics.riskRewardRatio.toFixed(1)}</strong>. Deine Gewinne überkompensieren deutlich die Verluste.`
-                });
-            } else if (metrics.riskRewardRatio < 1) {
-                insights.push({
-                    icon: '📉',
-                    text: `Risk/Reward-Verhältnis von 1:${metrics.riskRewardRatio.toFixed(1)} ist problematisch. <strong>Lass Gewinne länger laufen</strong> oder setze Stop-Loss enger.`
-                });
-            }
-
-            // Best Strategy
-            if (metrics.strategyStats.length > 0) {
-                const bestStrategy = metrics.strategyStats[0];
-                if (bestStrategy.totalPnL > 0) {
-                    insights.push({
-                        icon: '🚀',
-                        text: `<strong>"${bestStrategy.name}"</strong> ist deine erfolgreichste Strategie mit ${bestStrategy.totalPnL.toFixed(1)}% Gesamtgewinn aus ${bestStrategy.totalTrades} Trades.`
-                    });
-                }
-            }
-
-            // Best Symbol
-            if (metrics.symbolStats.length > 0) {
-                const bestSymbol = metrics.symbolStats[0];
-                if (bestSymbol.totalPnL > 0) {
-                    insights.push({
-                        icon: '💎',
-                        text: `<strong>${bestSymbol.name}</strong> ist dein profitabelstes Symbol mit ${bestSymbol.totalPnL.toFixed(1)}% Gesamtgewinn.`
-                    });
-                }
-            }
-
-            // Direction Bias
-            const buyStats = metrics.directionStats.find(d => d.name === 'Buy');
-            const sellStats = metrics.directionStats.find(d => d.name === 'Sell');
-            
-            if (buyStats && sellStats) {
-                if (buyStats.winRate > sellStats.winRate + 10) {
-                    insights.push({
-                        icon: '📈',
-                        text: `Du bist erfolgreicher bei <strong>Buy-Trades (${buyStats.winRate.toFixed(1)}%)</strong> als bei Sell-Trades (${sellStats.winRate.toFixed(1)}%). Konzentriere dich mehr auf Long-Positionen.`
-                    });
-                } else if (sellStats.winRate > buyStats.winRate + 10) {
-                    insights.push({
-                        icon: '📉',
-                        text: `Du bist erfolgreicher bei <strong>Sell-Trades (${sellStats.winRate.toFixed(1)}%)</strong> als bei Buy-Trades (${buyStats.winRate.toFixed(1)}%). Short-Positionen scheinen dir besser zu liegen.`
-                    });
-                }
-            }
-
-            // Consistency
-            const recentTrades = trades.slice(0, Math.min(10, trades.length));
-            const recentWinRate = recentTrades.filter(t => (t.pnl || 0) > 0).length / recentTrades.length * 100;
-            
-            if (Math.abs(recentWinRate - metrics.winRate) > 20) {
-                insights.push({
-                    icon: '📊',
-                    text: `Deine <strong>Performance schwankt stark</strong>. Letzte ${recentTrades.length} Trades: ${recentWinRate.toFixed(1)}% vs. Gesamt: ${metrics.winRate.toFixed(1)}%. Arbeite an der Konsistenz.`
-                });
-            }
-
-            return insights;
-        }
-
-        function generateRecommendations(metrics) {
+        function generateRecommendations(analysis) {
             const recommendations = [];
-
-            // Win Rate Recommendations
-            if (metrics.winRate < 50) {
+            const { performance, risk, strategies, symbols, psychology } = analysis;
+            
+            // Performance recommendations
+            if (performance.winRate < 50) {
                 recommendations.push({
-                    title: 'Verbessere deine Entry-Punkte',
                     priority: 'high',
-                    icon: '🎯',
-                    description: 'Deine Erfolgsrate ist zu niedrig. Warte auf bessere Setups und verwende strengere Entry-Kriterien.',
-                    actions: ['Verwende mehr technische Indikatoren', 'Warte auf Bestätigungen', 'Reduziere die Anzahl der Trades']
+                    title: 'Verbesser deine Erfolgsrate',
+                    text: `Mit ${performance.winRate.toFixed(1)}% Winrate solltest du deine Entry-Kriterien überdenken. Warte auf bessere Setups.`,
+                    icon: '🎯'
                 });
             }
-
-            // Risk/Reward Recommendations  
-            if (metrics.riskRewardRatio < 1.5) {
+            
+            if (performance.riskRewardRatio < 1.5) {
                 recommendations.push({
-                    title: 'Optimiere dein Risk/Reward-Verhältnis',
                     priority: 'high',
-                    icon: '⚖️',
-                    description: 'Lass deine Gewinne länger laufen oder setze engere Stop-Loss.',
-                    actions: ['Verwende Trailing-Stops', 'Setze realistische Profit-Targets', 'Reduziere vorzeitige Gewinnmitnahmen']
+                    title: 'Optimiere Risk/Reward-Verhältnis',
+                    text: `Aktuell 1:${performance.riskRewardRatio.toFixed(1)}. Lass Gewinne länger laufen oder setze engere Stop-Loss.`,
+                    icon: '⚖️'
                 });
             }
-
-            // Strategy Recommendations
-            if (metrics.strategyStats.length > 1) {
-                const bestStrategy = metrics.strategyStats[0];
-                const worstStrategy = metrics.strategyStats[metrics.strategyStats.length - 1];
+            
+            // Risk recommendations
+            if (risk.maxLossStreak > 5) {
+                recommendations.push({
+                    priority: 'high',
+                    title: 'Reduziere Verlustserien',
+                    text: `${risk.maxLossStreak} aufeinanderfolgende Verluste sind zu viel. Pausiere nach 3 Verlusten.`,
+                    icon: '🛑'
+                });
+            }
+            
+            if (risk.maxLoss > 10) {
+                recommendations.push({
+                    priority: 'medium',
+                    title: 'Begrenze Einzelverluste',
+                    text: `${risk.maxLoss.toFixed(1)}% Einzelverlust ist zu hoch. Setze ein Maximum von 5% pro Trade.`,
+                    icon: '🔒'
+                });
+            }
+            
+            // Strategy recommendations
+            if (strategies.length > 1) {
+                const bestStrategy = strategies[0];
+                const worstStrategy = strategies[strategies.length - 1];
                 
                 if (bestStrategy.totalPnL > 0 && worstStrategy.totalPnL < 0) {
                     recommendations.push({
-                        title: 'Konzentriere dich auf erfolgreiche Strategien',
                         priority: 'medium',
-                        icon: '🎪',
-                        description: `"${bestStrategy.name}" funktioniert gut (+${bestStrategy.totalPnL.toFixed(1)}%), während "${worstStrategy.name}" verlustbringend ist (${worstStrategy.totalPnL.toFixed(1)}%).`,
-                        actions: [`Verwende mehr "${bestStrategy.name}"`, `Überarbeite "${worstStrategy.name}"`, 'Analysiere die Unterschiede']
+                        title: 'Fokussiere auf erfolgreiche Strategien',
+                        text: `"${bestStrategy.name}" (+${bestStrategy.totalPnL.toFixed(1)}%) vs "${worstStrategy.name}" (${worstStrategy.totalPnL.toFixed(1)}%)`,
+                        icon: '🎪'
                     });
                 }
             }
-
-            // Symbol Recommendations
-            if (metrics.symbolStats.length > 2) {
-                const profitableSymbols = metrics.symbolStats.filter(s => s.totalPnL > 0);
-                const unprofitableSymbols = metrics.symbolStats.filter(s => s.totalPnL < 0);
-                
-                if (profitableSymbols.length > 0 && unprofitableSymbols.length > 0) {
-                    recommendations.push({
-                        title: 'Fokussiere dich auf profitable Symbole',
-                        priority: 'medium',
-                        icon: '💎',
-                        description: `${profitableSymbols.length} Symbole sind profitabel, ${unprofitableSymbols.length} bringen Verluste.`,
-                        actions: ['Trade mehr profitable Symbole', 'Meide verlustbringende Symbole', 'Analysiere Marktbedingungen pro Symbol']
-                    });
-                }
-            }
-
-            // Volume Recommendations
-            if (metrics.totalTrades < 20) {
-                recommendations.push({
-                    title: 'Erhöhe deine Datenbasis',
-                    priority: 'low',
-                    icon: '📈',
-                    description: 'Mehr Trades helfen bei der statistischen Analyse und Verbesserung.',
-                    actions: ['Führe mindestens 50-100 Trades aus', 'Dokumentiere jeden Trade', 'Führe regelmäßige Reviews durch']
-                });
-            }
-
-            // Consistency Recommendations
-            const avgWin = metrics.avgWin;
-            const avgLoss = Math.abs(metrics.avgLoss);
             
-            if (avgWin > 0 && avgLoss > 0 && avgWin / avgLoss < 2 && metrics.winRate < 60) {
+            // Psychology recommendations
+            if (psychology.disciplineScore < 70) {
                 recommendations.push({
-                    title: 'Verbessere deine Konsistenz',
                     priority: 'medium',
-                    icon: '🎲',
-                    description: 'Mit der aktuellen Win-Rate brauchst du ein besseres Risk/Reward-Verhältnis.',
-                    actions: ['Setze systematische Profit-Targets', 'Verwende feste Stop-Loss-Rules', 'Halte an deinem Trading-Plan fest']
+                    title: 'Arbeite an deiner Disziplin',
+                    text: `Disziplin-Score: ${psychology.disciplineScore.toFixed(0)}%. Vermeide emotionales Trading.`,
+                    icon: '🧠'
                 });
             }
-
+            
+            // Diversification recommendations
+            if (symbols.diversificationScore < 30) {
+                recommendations.push({
+                    priority: 'low',
+                    title: 'Diversifiziere deine Trades',
+                    text: 'Trade verschiedene Symbole um das Risiko zu streuen.',
+                    icon: '🌍'
+                });
+            }
+            
+            // Positive reinforcement
+            if (performance.winRate > 70) {
+                recommendations.push({
+                    priority: 'low',
+                    title: 'Exzellente Erfolgsrate!',
+                    text: `${performance.winRate.toFixed(1)}% Winrate ist hervorragend. Halte deine Strategie bei.`,
+                    icon: '🎉'
+                });
+            }
+            
             return recommendations;
         }
 
-        function generateAnalysisHTML(analysis) {
-            const { basic, insights, recommendations } = analysis;
+        function generateComprehensiveAnalysisHTML(analysis) {
+            const { performance, risk, strategies, symbols, timeAnalysis, psychology, recommendations } = analysis;
             
             return `
-                <!-- Performance Overview -->
-                <div class="analysis-section">
-                    <h3>📊 Performance Übersicht</h3>
-                    <div class="performance-overview">
-                        <div class="metric-card">
-                            <div class="metric-label">Gesamtrating</div>
-                            <div class="metric-value" style="color: ${basic.performanceRating.color};">
-                                ${basic.performanceRating.percentage}%
-                            </div>
-                            <div class="metric-status ${getStatusClass(basic.performanceRating.rating)}">
-                                ${basic.performanceRating.rating}
-                            </div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-label">Erfolgsrate</div>
-                            <div class="metric-value ${basic.winRate >= 60 ? 'positive' : basic.winRate >= 40 ? '' : 'negative'}">
-                                ${basic.winRate.toFixed(1)}%
-                            </div>
-                            <div class="metric-status ${getWinRateStatus(basic.winRate)}">
-                                ${getWinRateLabel(basic.winRate)}
+                <!-- Performance Analysis -->
+                <div class="analysis-category performance">
+                    <div class="category-header">
+                        <span>📈</span>
+                        <span>Performance-Analyse</span>
+                    </div>
+                    <div class="metric-grid">
+                        <div class="metric-item">
+                            <div class="metric-label">Winrate</div>
+                            <div class="metric-value ${performance.winRate >= 60 ? 'positive' : performance.winRate >= 40 ? 'neutral' : 'negative'}">
+                                ${performance.winRate.toFixed(1)}%
                             </div>
                         </div>
-                        <div class="metric-card">
-                            <div class="metric-label">Risk/Reward</div>
-                            <div class="metric-value ${basic.riskRewardRatio >= 1.5 ? 'positive' : basic.riskRewardRatio >= 1 ? '' : 'negative'}">
-                                1:${basic.riskRewardRatio.toFixed(1)}
-                            </div>
-                            <div class="metric-status ${getRRStatus(basic.riskRewardRatio)}">
-                                ${getRRLabel(basic.riskRewardRatio)}
-                            </div>
-                        </div>
-                        <div class="metric-card">
+                        <div class="metric-item">
                             <div class="metric-label">Profit Factor</div>
-                            <div class="metric-value ${basic.profitFactor >= 1.5 ? 'positive' : basic.profitFactor >= 1 ? '' : 'negative'}">
-                                ${basic.profitFactor.toFixed(1)}
+                            <div class="metric-value ${performance.profitFactor >= 1.5 ? 'positive' : performance.profitFactor >= 1 ? 'neutral' : 'negative'}">
+                                ${performance.profitFactor.toFixed(1)}
                             </div>
-                            <div class="metric-status ${getPFStatus(basic.profitFactor)}">
-                                ${getPFLabel(basic.profitFactor)}
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">Risk/Reward</div>
+                            <div class="metric-value ${performance.riskRewardRatio >= 1.5 ? 'positive' : performance.riskRewardRatio >= 1 ? 'neutral' : 'negative'}">
+                                1:${performance.riskRewardRatio.toFixed(1)}
                             </div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">Max Drawdown</div>
+                            <div class="metric-value ${performance.maxDrawdown <= 10 ? 'positive' : performance.maxDrawdown <= 20 ? 'neutral' : 'negative'}">
+                                ${performance.maxDrawdown.toFixed(1)}%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-label">
+                            <span>Konsistenz-Score</span>
+                            <span>${performance.consistencyScore.toFixed(0)}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill ${getScoreClass(performance.consistencyScore)}" 
+                                 style="width: ${performance.consistencyScore}%"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Key Insights -->
-                <div class="analysis-section">
-                    <h3>💡 Wichtige Erkenntnisse</h3>
-                    <ul class="insights-list">
-                        ${insights.map(insight => `
-                            <li class="insight-item">
-                                <span class="insight-icon">${insight.icon}</span>
-                                <div class="insight-text">${insight.text}</div>
-                            </li>
-                        `).join('')}
+                <!-- Risk Management -->
+                <div class="analysis-category risk">
+                    <div class="category-header">
+                        <span>🛡️</span>
+                        <span>Risiko-Management</span>
+                    </div>
+                    <ul class="insight-list">
+                        <li class="insight-item">
+                            <span class="insight-icon">📉</span>
+                            <span class="insight-text">Längste Verlustserie: <strong>${risk.maxLossStreak} Trades</strong></span>
+                        </li>
+                        <li class="insight-item">
+                            <span class="insight-icon">📈</span>
+                            <span class="insight-text">Längste Gewinnserie: <strong>${risk.maxWinStreak} Trades</strong></span>
+                        </li>
+                        <li class="insight-item">
+                            <span class="insight-icon">💸</span>
+                            <span class="insight-text">Größter Einzelverlust: <strong>${risk.maxLoss.toFixed(1)}%</strong></span>
+                        </li>
                     </ul>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-label">
+                            <span>Risiko-Score</span>
+                            <span>${risk.riskScore.toFixed(0)}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill ${getScoreClass(risk.riskScore)}" 
+                                 style="width: ${risk.riskScore}%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Strategy Analysis -->
+                <div class="analysis-category strategy">
+                    <div class="category-header">
+                        <span>🎪</span>
+                        <span>Strategie-Analyse</span>
+                    </div>
+                    ${strategies.slice(0, 3).map(strategy => `
+                        <div class="insight-item">
+                            <span class="insight-icon">${strategy.totalPnL >= 0 ? '✅' : '❌'}</span>
+                            <span class="insight-text">
+                                <strong>${strategy.name}</strong>: ${strategy.totalPnL >= 0 ? '+' : ''}${strategy.totalPnL.toFixed(1)}% 
+                                (${strategy.totalTrades} Trades, ${strategy.winRate.toFixed(0)}% Winrate)
+                            </span>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <!-- Psychology Analysis -->
+                <div class="analysis-category psychology">
+                    <div class="category-header">
+                        <span>🧠</span>
+                        <span>Trading-Psychologie</span>
+                    </div>
+                    <ul class="insight-list">
+                        <li class="insight-item">
+                            <span class="insight-icon">${psychology.revengeTrading === 0 ? '✅' : '⚠️'}</span>
+                            <span class="insight-text">Revenge Trading: <strong>${psychology.revengeTrading} Fälle</strong></span>
+                        </li>
+                        <li class="insight-item">
+                            <span class="insight-icon">${psychology.overtrading === 0 ? '✅' : '⚠️'}</span>
+                            <span class="insight-text">Overtrading Tage: <strong>${psychology.overtrading}</strong></span>
+                        </li>
+                        <li class="insight-item">
+                            <span class="insight-icon">${psychology.emotionalTrades <= 2 ? '✅' : '⚠️'}</span>
+                            <span class="insight-text">Emotionale Trades: <strong>${psychology.emotionalTrades}</strong></span>
+                        </li>
+                    </ul>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-label">
+                            <span>Disziplin-Score</span>
+                            <span>${psychology.disciplineScore.toFixed(0)}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill ${getScoreClass(psychology.disciplineScore)}" 
+                                 style="width: ${psychology.disciplineScore}%"></div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Recommendations -->
-                <div class="analysis-section">
-                    <h3>🎯 Handlungsempfehlungen</h3>
-                    <div class="recommendations-grid">
-                        ${recommendations.map(rec => `
-                            <div class="recommendation-card priority-${rec.priority}">
-                                <h4>${rec.icon} ${rec.title}</h4>
-                                <p>${rec.description}</p>
-                                <ul>
-                                    ${rec.actions.map(action => `<li>${action}</li>`).join('')}
-                                </ul>
-                            </div>
-                        `).join('')}
+                <div class="analysis-category recommendations">
+                    <div class="category-header">
+                        <span>💡</span>
+                        <span>Handlungsempfehlungen</span>
                     </div>
+                    ${recommendations.map(rec => `
+                        <div class="recommendation-item ${rec.priority}">
+                            <div class="recommendation-title">
+                                ${rec.icon} ${rec.title}
+                            </div>
+                            <div class="recommendation-text">
+                                ${rec.text}
+                            </div>
+                        </div>
+                    `).join('')}
                 </div>
             `;
         }
 
-        function getStatusClass(rating) {
-            switch(rating) {
-                case 'Ausgezeichnet': return 'status-excellent';
-                case 'Gut': return 'status-good';
-                case 'Durchschnittlich': return 'status-average';
-                default: return 'status-poor';
-            }
-        }
-
-        function getWinRateStatus(winRate) {
-            if (winRate >= 70) return 'status-excellent';
-            if (winRate >= 60) return 'status-good';
-            if (winRate >= 50) return 'status-average';
-            return 'status-poor';
-        }
-
-        function getWinRateLabel(winRate) {
-            if (winRate >= 70) return 'Exzellent';
-            if (winRate >= 60) return 'Gut';
-            if (winRate >= 50) return 'Okay';
-            return 'Schlecht';
-        }
-
-        function getRRStatus(ratio) {
-            if (ratio >= 2) return 'status-excellent';
-            if (ratio >= 1.5) return 'status-good';
-            if (ratio >= 1) return 'status-average';
-            return 'status-poor';
-        }
-
-        function getRRLabel(ratio) {
-            if (ratio >= 2) return 'Exzellent';
-            if (ratio >= 1.5) return 'Gut';
-            if (ratio >= 1) return 'Okay';
-            return 'Schlecht';
-        }
-
-        function getPFStatus(pf) {
-            if (pf >= 2) return 'status-excellent';
-            if (pf >= 1.5) return 'status-good';
-            if (pf >= 1) return 'status-average';
-            return 'status-poor';
-        }
-
-        function getPFLabel(pf) {
-            if (pf >= 2) return 'Exzellent';
-            if (pf >= 1.5) return 'Gut';
-            if (pf >= 1) return 'Profitabel';
-            return 'Verlustbringend';
+        function getScoreClass(score) {
+            if (score >= 80) return 'excellent';
+            if (score >= 60) return 'good';
+            if (score >= 40) return 'average';
+            return 'poor';
         }
 
         async function loadTrades() {
@@ -1170,8 +1581,8 @@
                 <td>${trade.date || ''}</td>
                 <td>${trade.symbol || ''}</td>
                 <td class="direction ${trade.direction?.toLowerCase() || ''}">${trade.direction || ''}</td>
-                <td><a href="${trade.entryScreenshot || '#'}" target="_blank">📸 Einstieg</a></td>
-                <td><a href="${trade.exitScreenshot || '#'}" target="_blank">📸 Ausstieg</a></td>
+                <td><a href="${trade.entryScreenshot || '#'}" target="_blank">📸</a></td>
+                <td><a href="${trade.exitScreenshot || '#'}" target="_blank">📸</a></td>
                 <td class="result result-${trade.result?.toLowerCase() || ''}">${trade.result || ''}</td>
                 <td class="${pnlClass}">${trade.pnl >= 0 ? '+' : ''}${trade.pnl ?? ''}%</td>
                 <td>${trade.strategy || ''}</td>
@@ -1194,7 +1605,6 @@
 
         function updateStatistics(trades) {
             const totalPnL = trades.reduce((sum, t) => sum + (t.pnl || 0), 0).toFixed(2);
-            document.getElementById("totalPnL").textContent = `Gesamter PnL: ${totalPnL}%`;
             
             const totalTrades = trades.length;
             const winningTrades = trades.filter(t => (t.pnl || 0) > 0);
@@ -1211,66 +1621,172 @@
             
             document.getElementById("totalTrades").textContent = totalTrades;
             document.getElementById("winRate").textContent = `${winRate}%`;
+            document.getElementById("totalPnL").textContent = `${totalPnL}%`;
+            document.getElementById("totalPnL").className = totalPnL >= 0 ? 'value positive' : 'value negative';
             document.getElementById("avgWin").textContent = `+${avgWin}%`;
-            document.getElementById("avgWin").className = avgWin > 0 ? 'value positive' : 'value';
             document.getElementById("avgLoss").textContent = `${avgLoss}%`;
-            document.getElementById("avgLoss").className = avgLoss < 0 ? 'value negative' : 'value';
             document.getElementById("bestTrade").textContent = `+${bestTrade}%`;
-            document.getElementById("bestTrade").className = bestTrade > 0 ? 'value positive' : 'value';
             document.getElementById("worstTrade").textContent = `${worstTrade}%`;
-            document.getElementById("worstTrade").className = worstTrade < 0 ? 'value negative' : 'value';
         }
 
         function updateCharts(trades) {
             if (trades.length === 0) return;
             
             // Zerstöre existierende Charts
-            [pnlChart, resultsChart, strategyChart, directionChart, pnlDistributionChart, monthlyChart].forEach(chart => {
+            [pnlChart, resultsChart, strategyChart].forEach(chart => {
                 if (chart) chart.destroy();
             });
             
             updatePnLChart(trades);
             updateResultsChart(trades);
             updateStrategyChart(trades);
-            updateDirectionChart(trades);
-            updatePnLDistributionChart(trades);
-            updateMonthlyChart(trades);
             updateSymbolPerformanceList(trades);
         }
 
         function updatePnLChart(trades) {
-            const sortedTrades = [...trades].reverse(); // Chronologische Reihenfolge
-            let cumulativePnL = 0;
-            const data = sortedTrades.map(trade => {
-                cumulativePnL += trade.pnl || 0;
-                return {
-                    x: trade.date,
-                    y: cumulativePnL
-                };
+            if (trades.length === 0) {
+                const ctx = document.getElementById('pnlChart').getContext('2d');
+                if (pnlChart) pnlChart.destroy();
+                return;
+            }
+
+            // Sortiere Trades chronologisch (älteste zuerst) für kumulativen PnL
+            const sortedTrades = [...trades].sort((a, b) => {
+                const [dayA, monthA, yearA] = (a.date || '01-01-1970').split("-").map(Number);
+                const [dayB, monthB, yearB] = (b.date || '01-01-1970').split("-").map(Number);
+                const dateA = new Date(yearA, monthA - 1, dayA);
+                const dateB = new Date(yearB, monthB - 1, dayB);
+                return dateA - dateB; // Älteste zuerst
             });
+
+            let cumulativePnL = 0;
+            const data = [];
+            const labels = [];
+
+            sortedTrades.forEach((trade, index) => {
+                cumulativePnL += trade.pnl || 0;
+                data.push(cumulativePnL);
+                
+                // Erstelle aussagekräftige Labels
+                const symbol = trade.symbol || 'Trade';
+                const shortDate = trade.date ? trade.date.substring(0, 5) : `#${index + 1}`;
+                labels.push(`${symbol} (${shortDate})`);
+            });
+
+            const finalPnL = data[data.length - 1] || 0;
 
             const ctx = document.getElementById('pnlChart').getContext('2d');
             pnlChart = new Chart(ctx, {
                 type: 'line',
                 data: {
+                    labels: labels,
                     datasets: [{
-                        label: 'Kumulativer PnL (%)',
+                        label: 'Kumulativer PnL',
                         data: data,
-                        borderColor: '#007bff',
-                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                        tension: 0.1,
-                        fill: true
+                        borderColor: finalPnL >= 0 ? '#10b981' : '#ef4444',
+                        backgroundColor: finalPnL >= 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                        tension: 0.3,
+                        fill: true,
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        pointBackgroundColor: data.map(value => value >= 0 ? '#10b981' : '#ef4444'),
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        segment: {
+                            borderColor: function(ctx) {
+                                // Färbe Linien-Segmente basierend auf Richtung
+                                const currentValue = ctx.p1.parsed.y;
+                                const previousValue = ctx.p0.parsed.y;
+                                return currentValue >= previousValue ? '#10b981' : '#ef4444';
+                            }
+                        }
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: { 
+                            display: false 
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: '#667eea',
+                            borderWidth: 1,
+                            cornerRadius: 6,
+                            displayColors: false,
+                            callbacks: {
+                                title: function(context) {
+                                    const index = context[0].dataIndex;
+                                    const trade = sortedTrades[index];
+                                    return `${trade.symbol || 'Trade'} (${trade.date || 'N/A'})`;
+                                },
+                                label: function(context) {
+                                    const index = context.dataIndex;
+                                    const trade = sortedTrades[index];
+                                    const tradePnL = trade.pnl || 0;
+                                    const cumulativePnL = context.parsed.y;
+                                    
+                                    return [
+                                        `Trade PnL: ${tradePnL >= 0 ? '+' : ''}${tradePnL.toFixed(2)}%`,
+                                        `Kumulativ: ${cumulativePnL >= 0 ? '+' : ''}${cumulativePnL.toFixed(2)}%`,
+                                        `Strategie: ${trade.strategy || 'N/A'}`
+                                    ];
+                                }
+                            }
+                        }
+                    },
                     scales: {
                         y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'PnL (%)'
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)',
+                                lineWidth: 1
+                            },
+                            ticks: { 
+                                font: { size: 10 },
+                                color: '#6b7280',
+                                callback: function(value) {
+                                    return (value >= 0 ? '+' : '') + value.toFixed(1) + '%';
+                                }
+                            },
+                            // Zero-Linie hervorheben
+                            beforeDraw: function(chart) {
+                                const ctx = chart.ctx;
+                                const yAxis = chart.scales.y;
+                                const zeroY = yAxis.getPixelForValue(0);
+                                
+                                ctx.save();
+                                ctx.strokeStyle = '#374151';
+                                ctx.lineWidth = 1;
+                                ctx.setLineDash([5, 5]);
+                                ctx.beginPath();
+                                ctx.moveTo(chart.chartArea.left, zeroY);
+                                ctx.lineTo(chart.chartArea.right, zeroY);
+                                ctx.stroke();
+                                ctx.restore();
+                            }
+                        },
+                        x: { 
+                            grid: {
+                                display: false
+                            },
+                            ticks: { 
+                                font: { size: 9 },
+                                color: '#6b7280',
+                                maxTicksLimit: 5,
+                                callback: function(value, index) {
+                                    const trade = sortedTrades[index];
+                                    if (!trade) return '';
+                                    // Zeige nur Symbol für bessere Lesbarkeit
+                                    return trade.symbol || `#${index + 1}`;
+                                }
                             }
                         }
                     }
@@ -1285,19 +1801,61 @@
                 return acc;
             }, {});
 
+            const labels = Object.keys(results);
+            const data = Object.values(results);
+            const colors = {
+                'TP': '#10b981',
+                'BE': '#3b82f6', 
+                'SL': '#ef4444',
+                'Unbekannt': '#6b7280'
+            };
+
             const ctx = document.getElementById('resultsChart').getContext('2d');
             resultsChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: Object.keys(results),
+                    labels: labels,
                     datasets: [{
-                        data: Object.values(results),
-                        backgroundColor: ['#28a745', '#17a2b8', '#dc3545', '#ffc107']
+                        data: data,
+                        backgroundColor: labels.map(label => colors[label] || '#6b7280'),
+                        borderWidth: 2,
+                        borderColor: '#fff',
+                        hoverBorderWidth: 3,
+                        hoverBorderColor: '#fff'
                     }]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: { 
+                            display: true,
+                            position: 'bottom',
+                            labels: { 
+                                font: { size: 9 },
+                                color: '#1a202c',
+                                padding: 8,
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: '#667eea',
+                            borderWidth: 1,
+                            cornerRadius: 6,
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                    return `${context.label}: ${context.parsed} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
                 }
             });
         }
@@ -1313,189 +1871,89 @@
                 return acc;
             }, {});
 
+            // Sortiere Strategien nach PnL
+            const sortedStrategies = Object.entries(strategies)
+                .map(([name, data]) => ({
+                    name: name.length > 12 ? name.substring(0, 12) + '...' : name,
+                    fullName: name,
+                    avgPnL: (data.pnl / data.total),
+                    total: data.total
+                }))
+                .sort((a, b) => b.avgPnL - a.avgPnL)
+                .slice(0, 6); // Nur die besten 6 Strategien anzeigen
+
+            const labels = sortedStrategies.map(s => s.name);
+            const data = sortedStrategies.map(s => s.avgPnL);
+            const colors = data.map(value => value >= 0 ? '#10b981' : '#ef4444');
+
             const ctx = document.getElementById('strategyChart').getContext('2d');
             strategyChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: Object.keys(strategies),
+                    labels: labels,
                     datasets: [{
-                        label: 'Durchschnittlicher PnL (%)',
-                        data: Object.values(strategies).map(s => (s.pnl / s.total).toFixed(2)),
-                        backgroundColor: Object.values(strategies).map(s => 
-                            s.pnl / s.total >= 0 ? '#28a745' : '#dc3545'
-                        )
+                        label: 'Ø PnL pro Trade',
+                        data: data,
+                        backgroundColor: colors,
+                        borderColor: colors,
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        borderSkipped: false
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { 
+                            display: false 
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: '#667eea',
+                            borderWidth: 1,
+                            cornerRadius: 6,
+                            callbacks: {
+                                title: function(context) {
+                                    const index = context[0].dataIndex;
+                                    return sortedStrategies[index].fullName;
+                                },
+                                label: function(context) {
+                                    const index = context.dataIndex;
+                                    const strategy = sortedStrategies[index];
+                                    return [
+                                        `Ø PnL: ${context.parsed.x.toFixed(2)}%`,
+                                        `Trades: ${strategy.total}`
+                                    ];
+                                }
+                            }
+                        }
+                    },
                     scales: {
-                        y: {
+                        x: {
                             beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Durchschnittlicher PnL (%)'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        function updateDirectionChart(trades) {
-            const directions = trades.reduce((acc, trade) => {
-                const direction = trade.direction || 'Unbekannt';
-                if (!acc[direction]) {
-                    acc[direction] = { total: 0, pnl: 0 };
-                }
-                acc[direction].total += 1;
-                acc[direction].pnl += trade.pnl || 0;
-                return acc;
-            }, {});
-
-            const ctx = document.getElementById('directionChart').getContext('2d');
-            directionChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(directions),
-                    datasets: [
-                        {
-                            label: 'Anzahl Trades',
-                            data: Object.values(directions).map(d => d.total),
-                            backgroundColor: '#007bff',
-                            yAxisID: 'y'
-                        },
-                        {
-                            label: 'Gesamter PnL (%)',
-                            data: Object.values(directions).map(d => d.pnl.toFixed(2)),
-                            backgroundColor: '#28a745',
-                            yAxisID: 'y1',
-                            type: 'line'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: {
-                                display: true,
-                                text: 'Anzahl Trades'
-                            }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            title: {
-                                display: true,
-                                text: 'PnL (%)'
-                            },
                             grid: {
-                                drawOnChartArea: false,
+                                color: 'rgba(0, 0, 0, 0.05)',
+                                lineWidth: 1
                             },
-                        }
-                    }
-                }
-            });
-        }
-
-        function updatePnLDistributionChart(trades) {
-            const pnlRanges = {
-                '< -10%': 0,
-                '-10% bis -5%': 0,
-                '-5% bis 0%': 0,
-                '0% bis 5%': 0,
-                '5% bis 10%': 0,
-                '> 10%': 0
-            };
-
-            trades.forEach(trade => {
-                const pnl = trade.pnl || 0;
-                if (pnl < -10) pnlRanges['< -10%']++;
-                else if (pnl < -5) pnlRanges['-10% bis -5%']++;
-                else if (pnl < 0) pnlRanges['-5% bis 0%']++;
-                else if (pnl < 5) pnlRanges['0% bis 5%']++;
-                else if (pnl < 10) pnlRanges['5% bis 10%']++;
-                else pnlRanges['> 10%']++;
-            });
-
-            const ctx = document.getElementById('pnlDistributionChart').getContext('2d');
-            pnlDistributionChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(pnlRanges),
-                    datasets: [{
-                        label: 'Anzahl Trades',
-                        data: Object.values(pnlRanges),
-                        backgroundColor: [
-                            '#dc3545', '#fd7e14', '#ffc107', 
-                            '#28a745', '#20c997', '#17a2b8'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Anzahl Trades'
+                            ticks: { 
+                                font: { size: 9 },
+                                color: '#6b7280',
+                                callback: function(value) {
+                                    return value + '%';
+                                }
                             }
-                        }
-                    }
-                }
-            });
-        }
-
-        function updateMonthlyChart(trades) {
-            const monthlyData = trades.reduce((acc, trade) => {
-                if (!trade.date) return acc;
-                const [day, month, year] = trade.date.split('-');
-                const monthKey = `${month}/${year}`;
-                
-                if (!acc[monthKey]) {
-                    acc[monthKey] = 0;
-                }
-                acc[monthKey] += trade.pnl || 0;
-                return acc;
-            }, {});
-
-            // Sortiere nach Datum
-            const sortedEntries = Object.entries(monthlyData).sort((a, b) => {
-                const [monthA, yearA] = a[0].split('/');
-                const [monthB, yearB] = b[0].split('/');
-                return new Date(yearA, monthA - 1) - new Date(yearB, monthB - 1);
-            });
-
-            const ctx = document.getElementById('monthlyChart').getContext('2d');
-            monthlyChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: sortedEntries.map(([month]) => month),
-                    datasets: [{
-                        label: 'Monatlicher PnL (%)',
-                        data: sortedEntries.map(([, pnl]) => pnl.toFixed(2)),
-                        backgroundColor: sortedEntries.map(([, pnl]) => 
-                            pnl >= 0 ? '#28a745' : '#dc3545'
-                        )
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'PnL (%)'
+                        },
+                        y: { 
+                            grid: {
+                                display: false
+                            },
+                            ticks: { 
+                                font: { size: 9 },
+                                color: '#6b7280'
                             }
                         }
                     }
@@ -1517,69 +1975,107 @@
                 return acc;
             }, {});
 
-            // Sortiere nach Gesamtperformance (PnL)
             const symbolData = Object.entries(symbolStats)
                 .map(([symbol, stats]) => ({
                     symbol,
                     winrate: stats.total > 0 ? (stats.wins / stats.total * 100) : 0,
                     total: stats.total,
-                    totalPnl: stats.totalPnl
+                    totalPnl: stats.totalPnl,
+                    avgPnl: stats.total > 0 ? stats.totalPnl / stats.total : 0
                 }))
-                .filter(s => s.total >= 1) // Mindestens 1 Trade
-                .sort((a, b) => b.totalPnl - a.totalPnl); // Sortiert nach PnL (beste zuerst)
+                .filter(s => s.total >= 1)
+                .sort((a, b) => b.totalPnl - a.totalPnl)
+                .slice(0, 15); // Zeige nur die besten 15 Symbole
 
             const container = document.getElementById('symbolPerformanceList');
             container.innerHTML = '';
 
             if (symbolData.length === 0) {
                 container.innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #666;">
-                        <div style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;">📊</div>
+                    <div style="text-align: center; padding: 2rem; color: #6b7280; font-size: 12px;">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.3;">📊</div>
                         <p>Noch keine Trades vorhanden</p>
                     </div>
                 `;
                 return;
             }
 
+            // Header hinzufügen
+            const header = document.createElement('div');
+            header.style.cssText = `
+                display: grid;
+                grid-template-columns: 1fr 50px 40px 30px;
+                gap: 8px;
+                padding: 8px;
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                border-radius: 6px;
+                margin-bottom: 8px;
+                font-size: 10px;
+                font-weight: 600;
+                color: #374151;
+                text-align: center;
+            `;
+            header.innerHTML = `
+                <div style="text-align: left;">Symbol</div>
+                <div>PnL</div>
+                <div>Win%</div>
+                <div>Qty</div>
+            `;
+            container.appendChild(header);
+
             symbolData.forEach((data, index) => {
                 const item = document.createElement('div');
-                item.className = 'symbol-item';
-                item.style.animationDelay = `${index * 0.1}s`;
+                item.className = 'symbol-item-mini';
+                item.style.cssText = `
+                    display: grid;
+                    grid-template-columns: 1fr 50px 40px 30px;
+                    gap: 8px;
+                    align-items: center;
+                    padding: 6px 8px;
+                    margin-bottom: 3px;
+                    background: rgba(255, 255, 255, 0.7);
+                    border-radius: 6px;
+                    font-size: 11px;
+                    border-left: 3px solid ${data.totalPnl >= 0 ? '#10b981' : '#ef4444'};
+                    transition: all 0.2s ease;
+                `;
 
-                // Bestimme PnL-Klasse
+                // Hover-Effekt
+                item.addEventListener('mouseenter', () => {
+                    item.style.backgroundColor = 'rgba(102, 126, 234, 0.1)';
+                    item.style.transform = 'translateX(2px)';
+                });
+                item.addEventListener('mouseleave', () => {
+                    item.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
+                    item.style.transform = 'translateX(0)';
+                });
+
                 const pnlClass = data.totalPnl >= 0 ? 'positive' : 'negative';
-                
-                // Bestimme Winrate-Klasse
-                let winrateClass = 'poor';
-                if (data.winrate >= 70) winrateClass = 'excellent';
-                else if (data.winrate >= 50) winrateClass = 'good';
+                const winrateColor = data.winrate >= 70 ? '#10b981' : data.winrate >= 50 ? '#f59e0b' : '#ef4444';
 
                 item.innerHTML = `
-                    <div class="symbol-name">${data.symbol}</div>
-                    <div class="symbol-stats">
-                        <div class="symbol-stat">
-                            <span class="symbol-stat-label">PnL:</span>
-                            <span class="symbol-stat-value symbol-pnl ${pnlClass}">
-                                ${data.totalPnl >= 0 ? '+' : ''}${data.totalPnl.toFixed(1)}%
-                            </span>
-                        </div>
-                        <div class="symbol-stat">
-                            <span class="symbol-stat-label">Winrate:</span>
-                            <span class="symbol-stat-value symbol-winrate ${winrateClass}">
-                                ${data.winrate.toFixed(0)}%
-                            </span>
-                        </div>
-                        <div class="symbol-stat">
-                            <span class="symbol-stat-label">Trades:</span>
-                            <span class="symbol-stat-value symbol-trades">
-                                ${data.total}
-                            </span>
-                        </div>
+                    <div style="font-weight: 600; color: #667eea; text-align: left;">
+                        ${data.symbol}
+                    </div>
+                    <div style="font-weight: 600; color: ${data.totalPnl >= 0 ? '#10b981' : '#ef4444'}; text-align: center;">
+                        ${data.totalPnl >= 0 ? '+' : ''}${data.totalPnl.toFixed(1)}%
+                    </div>
+                    <div style="font-weight: 500; color: ${winrateColor}; text-align: center;">
+                        ${data.winrate.toFixed(0)}%
+                    </div>
+                    <div style="font-weight: 500; color: #6b7280; text-align: center;">
+                        ${data.total}
                     </div>
                 `;
 
+                // Tooltip für zusätzliche Info
+                item.title = `${data.symbol}\nGesamter PnL: ${data.totalPnl.toFixed(2)}%\nDurchschnitt pro Trade: ${data.avgPnl.toFixed(2)}%\nWinrate: ${data.winrate.toFixed(1)}%\nAnzahl Trades: ${data.total}`;
+
                 container.appendChild(item);
             });
+
+            // Scrollbar für bessere UX
+            container.style.scrollBehavior = 'smooth';
         }
 
         async function deleteTrade(id) {
@@ -1622,7 +2118,6 @@
         });
 
         function toISODate(dateStr) {
-            // Erwartet "TT-MM-YYYY", gibt "YYYY-MM-DD" zurück
             const [day, month, year] = dateStr.split("-");
             return `${year}-${month}-${day}`;
         }
@@ -1670,14 +2165,14 @@
             button.disabled = true;
             
             setTimeout(() => {
-                generateTradingAnalysis(allTrades);
-                button.innerHTML = '✅ Analyse erstellt!';
+                generateComprehensiveAnalysis(allTrades);
+                button.innerHTML = '✅ Analyse abgeschlossen!';
                 
                 setTimeout(() => {
                     button.innerHTML = originalText;
                     button.disabled = false;
                 }, 2000);
-            }, 1000);
+            }, 1500);
         });
 
         loadTrades();
