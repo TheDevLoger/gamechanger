@@ -29,6 +29,10 @@
             color: var(--text-primary);
             min-height: 100vh;
             padding: 1rem;
+            /* Prevent double-tap zoom on mobile */
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .container {
@@ -148,11 +152,22 @@
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
+            /* Prevent double-tap issues */
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            pointer-events: none;
         }
 
         .btn.danger {
@@ -175,6 +190,29 @@
             flex: 1;
             padding: 0.75rem;
             font-size: 0.9rem;
+        }
+
+        /* Loading spinner for buttons */
+        .btn-loading {
+            opacity: 0.7;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .btn-loading::before {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: rgba(255, 255, 255, 0.8);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         @media (max-width: 768px) {
@@ -316,6 +354,11 @@
         let pianoStart = null;
         let pianoTimer = null;
 
+        // Operation locks to prevent race conditions
+        let tradingLocked = false;
+        let sportLocked = false;
+        let pianoLocked = false;
+
         function formatTime(ms) {
             const totalSeconds = Math.floor(ms / 1000);
             const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
@@ -324,164 +367,330 @@
             return `${hours}:${minutes}:${seconds}`;
         }
 
+        // Debounce function to prevent rapid multiple calls
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Set button loading state
+        function setButtonLoading(buttonId, isLoading) {
+            const button = document.getElementById(buttonId);
+            if (isLoading) {
+                button.classList.add('btn-loading');
+                button.disabled = true;
+            } else {
+                button.classList.remove('btn-loading');
+                button.disabled = false;
+            }
+        }
+
+        // Validate session state in Firebase
+        async function validateSessionState(sessionName) {
+            try {
+                const ref = doc(db, "Benutzer_B", "training", "sessions", sessionName);
+                const snapshot = await getDoc(ref);
+                return snapshot.exists() && snapshot.data().aktiv;
+            } catch (error) {
+                console.error(`Error validating session state for ${sessionName}:`, error);
+                return false;
+            }
+        }
+
         // Trading Functions
         async function startTrading() {
-            if (tradingStart) return;
+            if (tradingStart || tradingLocked) {
+                console.log("Trading already active or locked");
+                return;
+            }
             
-            tradingStart = Date.now();
-            const ref = doc(db, "Benutzer_B", "training", "sessions", "trading_current");
-            await setDoc(ref, {
-                startZeit: serverTimestamp(),
-                typ: "trading",
-                aktiv: true
-            });
+            tradingLocked = true;
+            setButtonLoading('tradingStart', true);
+            
+            try {
+                // Double-check Firebase state
+                const isActive = await validateSessionState("trading_current");
+                if (isActive) {
+                    console.log("Trading session already active in Firebase");
+                    tradingLocked = false;
+                    setButtonLoading('tradingStart', false);
+                    return;
+                }
+                
+                tradingStart = Date.now();
+                const ref = doc(db, "Benutzer_B", "training", "sessions", "trading_current");
+                await setDoc(ref, {
+                    startZeit: serverTimestamp(),
+                    typ: "trading",
+                    aktiv: true
+                });
 
-            tradingTimer = setInterval(updateTradingzeit, 1000);
-            document.getElementById("tradingStart").style.opacity = "0.5";
-            document.getElementById("tradingStop").style.opacity = "1";
+                tradingTimer = setInterval(updateTradingzeit, 1000);
+                document.getElementById("tradingStart").style.opacity = "0.5";
+                document.getElementById("tradingStop").style.opacity = "1";
+                console.log("Trading session started successfully");
+            } catch (error) {
+                console.error("Error starting trading session:", error);
+                tradingStart = null;
+                if (tradingTimer) {
+                    clearInterval(tradingTimer);
+                    tradingTimer = null;
+                }
+            } finally {
+                tradingLocked = false;
+                setButtonLoading('tradingStart', false);
+            }
         }
 
         async function stopTrading() {
-            if (!tradingStart) return;
+            if (!tradingStart || tradingLocked) {
+                console.log("Trading not active or locked");
+                return;
+            }
 
-            const dauer = Date.now() - tradingStart;
-            const heute = new Date().toISOString().slice(0, 10);
-            
-            const tagesRef = doc(db, "Benutzer_B", "training", "tage", heute);
-            const snapshot = await getDoc(tagesRef);
-            const alteDauer = snapshot.exists() && snapshot.data().tradingzeit ? snapshot.data().tradingzeit : 0;
+            tradingLocked = true;
+            setButtonLoading('tradingStop', true);
 
-            await setDoc(tagesRef, {
-                tradingzeit: alteDauer + dauer,
-                letzteAktualisierung: serverTimestamp()
-            }, { merge: true });
+            try {
+                const dauer = Date.now() - tradingStart;
+                const heute = new Date().toISOString().slice(0, 10);
+                
+                const tagesRef = doc(db, "Benutzer_B", "training", "tage", heute);
+                const snapshot = await getDoc(tagesRef);
+                const alteDauer = snapshot.exists() && snapshot.data().tradingzeit ? snapshot.data().tradingzeit : 0;
 
-            await addDoc(collection(db, "Benutzer_B", "aktivitaeten", "trading"), {
-                startZeit: new Date(tradingStart),
-                endZeit: new Date(),
-                dauer: dauer,
-                typ: "trading",
-                erstellt: serverTimestamp()
-            });
+                await setDoc(tagesRef, {
+                    tradingzeit: alteDauer + dauer,
+                    letzteAktualisierung: serverTimestamp()
+                }, { merge: true });
 
-            const sessionRef = doc(db, "Benutzer_B", "training", "sessions", "trading_current");
-            await setDoc(sessionRef, {
-                aktiv: false,
-                endZeit: serverTimestamp(),
-                dauer: dauer
-            }, { merge: true });
+                await addDoc(collection(db, "Benutzer_B", "aktivitaeten", "trading"), {
+                    startZeit: new Date(tradingStart),
+                    endZeit: new Date(),
+                    dauer: dauer,
+                    typ: "trading",
+                    erstellt: serverTimestamp()
+                });
 
-            tradingStart = null;
-            clearInterval(tradingTimer);
-            document.getElementById("tradingStart").style.opacity = "1";
-            document.getElementById("tradingStop").style.opacity = "0.5";
-            updateProgress();
+                const sessionRef = doc(db, "Benutzer_B", "training", "sessions", "trading_current");
+                await setDoc(sessionRef, {
+                    aktiv: false,
+                    endZeit: serverTimestamp(),
+                    dauer: dauer
+                }, { merge: true });
+
+                tradingStart = null;
+                clearInterval(tradingTimer);
+                tradingTimer = null;
+                document.getElementById("tradingStart").style.opacity = "1";
+                document.getElementById("tradingStop").style.opacity = "0.5";
+                updateProgress();
+                console.log("Trading session stopped successfully");
+            } catch (error) {
+                console.error("Error stopping trading session:", error);
+            } finally {
+                tradingLocked = false;
+                setButtonLoading('tradingStop', false);
+            }
         }
 
         // Sport Functions
         async function startSport() {
-            if (sportStart) return;
+            if (sportStart || sportLocked) {
+                console.log("Sport already active or locked");
+                return;
+            }
             
-            sportStart = Date.now();
-            const ref = doc(db, "Benutzer_B", "training", "sessions", "sport_current");
-            await setDoc(ref, {
-                startZeit: serverTimestamp(),
-                typ: "sport",
-                aktiv: true
-            });
+            sportLocked = true;
+            setButtonLoading('sportStart', true);
+            
+            try {
+                // Double-check Firebase state
+                const isActive = await validateSessionState("sport_current");
+                if (isActive) {
+                    console.log("Sport session already active in Firebase");
+                    sportLocked = false;
+                    setButtonLoading('sportStart', false);
+                    return;
+                }
+                
+                sportStart = Date.now();
+                const ref = doc(db, "Benutzer_B", "training", "sessions", "sport_current");
+                await setDoc(ref, {
+                    startZeit: serverTimestamp(),
+                    typ: "sport",
+                    aktiv: true
+                });
 
-            sportTimer = setInterval(updateSportzeit, 1000);
-            document.getElementById("sportStart").style.opacity = "0.5";
-            document.getElementById("sportStop").style.opacity = "1";
+                sportTimer = setInterval(updateSportzeit, 1000);
+                document.getElementById("sportStart").style.opacity = "0.5";
+                document.getElementById("sportStop").style.opacity = "1";
+                console.log("Sport session started successfully");
+            } catch (error) {
+                console.error("Error starting sport session:", error);
+                sportStart = null;
+                if (sportTimer) {
+                    clearInterval(sportTimer);
+                    sportTimer = null;
+                }
+            } finally {
+                sportLocked = false;
+                setButtonLoading('sportStart', false);
+            }
         }
 
         async function stopSport() {
-            if (!sportStart) return;
+            if (!sportStart || sportLocked) {
+                console.log("Sport not active or locked");
+                return;
+            }
 
-            const dauer = Date.now() - sportStart;
-            const heute = new Date().toISOString().slice(0, 10);
-            
-            const tagesRef = doc(db, "Benutzer_B", "training", "tage", heute);
-            const snapshot = await getDoc(tagesRef);
-            const alteDauer = snapshot.exists() && snapshot.data().sportzeit ? snapshot.data().sportzeit : 0;
+            sportLocked = true;
+            setButtonLoading('sportStop', true);
 
-            await setDoc(tagesRef, {
-                sportzeit: alteDauer + dauer,
-                letzteAktualisierung: serverTimestamp()
-            }, { merge: true });
+            try {
+                const dauer = Date.now() - sportStart;
+                const heute = new Date().toISOString().slice(0, 10);
+                
+                const tagesRef = doc(db, "Benutzer_B", "training", "tage", heute);
+                const snapshot = await getDoc(tagesRef);
+                const alteDauer = snapshot.exists() && snapshot.data().sportzeit ? snapshot.data().sportzeit : 0;
 
-            await addDoc(collection(db, "Benutzer_B", "aktivitaeten", "sport"), {
-                startZeit: new Date(sportStart),
-                endZeit: new Date(),
-                dauer: dauer,
-                typ: "sport",
-                erstellt: serverTimestamp()
-            });
+                await setDoc(tagesRef, {
+                    sportzeit: alteDauer + dauer,
+                    letzteAktualisierung: serverTimestamp()
+                }, { merge: true });
 
-            const sessionRef = doc(db, "Benutzer_B", "training", "sessions", "sport_current");
-            await setDoc(sessionRef, {
-                aktiv: false,
-                endZeit: serverTimestamp(),
-                dauer: dauer
-            }, { merge: true });
+                await addDoc(collection(db, "Benutzer_B", "aktivitaeten", "sport"), {
+                    startZeit: new Date(sportStart),
+                    endZeit: new Date(),
+                    dauer: dauer,
+                    typ: "sport",
+                    erstellt: serverTimestamp()
+                });
 
-            sportStart = null;
-            clearInterval(sportTimer);
-            document.getElementById("sportStart").style.opacity = "1";
-            document.getElementById("sportStop").style.opacity = "0.5";
+                const sessionRef = doc(db, "Benutzer_B", "training", "sessions", "sport_current");
+                await setDoc(sessionRef, {
+                    aktiv: false,
+                    endZeit: serverTimestamp(),
+                    dauer: dauer
+                }, { merge: true });
+
+                sportStart = null;
+                clearInterval(sportTimer);
+                sportTimer = null;
+                document.getElementById("sportStart").style.opacity = "1";
+                document.getElementById("sportStop").style.opacity = "0.5";
+                console.log("Sport session stopped successfully");
+            } catch (error) {
+                console.error("Error stopping sport session:", error);
+            } finally {
+                sportLocked = false;
+                setButtonLoading('sportStop', false);
+            }
         }
 
         // Piano Functions
         async function startPiano() {
-            if (pianoStart) return;
+            if (pianoStart || pianoLocked) {
+                console.log("Piano already active or locked");
+                return;
+            }
             
-            pianoStart = Date.now();
-            const ref = doc(db, "Benutzer_B", "training", "sessions", "piano_current");
-            await setDoc(ref, {
-                startZeit: serverTimestamp(),
-                typ: "piano",
-                aktiv: true
-            });
+            pianoLocked = true;
+            setButtonLoading('pianoStart', true);
+            
+            try {
+                // Double-check Firebase state
+                const isActive = await validateSessionState("piano_current");
+                if (isActive) {
+                    console.log("Piano session already active in Firebase");
+                    pianoLocked = false;
+                    setButtonLoading('pianoStart', false);
+                    return;
+                }
+                
+                pianoStart = Date.now();
+                const ref = doc(db, "Benutzer_B", "training", "sessions", "piano_current");
+                await setDoc(ref, {
+                    startZeit: serverTimestamp(),
+                    typ: "piano",
+                    aktiv: true
+                });
 
-            pianoTimer = setInterval(updatePianozeit, 1000);
-            document.getElementById("pianoStart").style.opacity = "0.5";
-            document.getElementById("pianoStop").style.opacity = "1";
+                pianoTimer = setInterval(updatePianozeit, 1000);
+                document.getElementById("pianoStart").style.opacity = "0.5";
+                document.getElementById("pianoStop").style.opacity = "1";
+                console.log("Piano session started successfully");
+            } catch (error) {
+                console.error("Error starting piano session:", error);
+                pianoStart = null;
+                if (pianoTimer) {
+                    clearInterval(pianoTimer);
+                    pianoTimer = null;
+                }
+            } finally {
+                pianoLocked = false;
+                setButtonLoading('pianoStart', false);
+            }
         }
 
         async function stopPiano() {
-            if (!pianoStart) return;
+            if (!pianoStart || pianoLocked) {
+                console.log("Piano not active or locked");
+                return;
+            }
 
-            const dauer = Date.now() - pianoStart;
-            const heute = new Date().toISOString().slice(0, 10);
-            
-            const tagesRef = doc(db, "Benutzer_B", "training", "tage", heute);
-            const snapshot = await getDoc(tagesRef);
-            const alteDauer = snapshot.exists() && snapshot.data().pianozeit ? snapshot.data().pianozeit : 0;
+            pianoLocked = true;
+            setButtonLoading('pianoStop', true);
 
-            await setDoc(tagesRef, {
-                pianozeit: alteDauer + dauer,
-                letzteAktualisierung: serverTimestamp()
-            }, { merge: true });
+            try {
+                const dauer = Date.now() - pianoStart;
+                const heute = new Date().toISOString().slice(0, 10);
+                
+                const tagesRef = doc(db, "Benutzer_B", "training", "tage", heute);
+                const snapshot = await getDoc(tagesRef);
+                const alteDauer = snapshot.exists() && snapshot.data().pianozeit ? snapshot.data().pianozeit : 0;
 
-            await addDoc(collection(db, "Benutzer_B", "aktivitaeten", "piano"), {
-                startZeit: new Date(pianoStart),
-                endZeit: new Date(),
-                dauer: dauer,
-                typ: "piano",
-                erstellt: serverTimestamp()
-            });
+                await setDoc(tagesRef, {
+                    pianozeit: alteDauer + dauer,
+                    letzteAktualisierung: serverTimestamp()
+                }, { merge: true });
 
-            const sessionRef = doc(db, "Benutzer_B", "training", "sessions", "piano_current");
-            await setDoc(sessionRef, {
-                aktiv: false,
-                endZeit: serverTimestamp(),
-                dauer: dauer
-            }, { merge: true });
+                await addDoc(collection(db, "Benutzer_B", "aktivitaeten", "piano"), {
+                    startZeit: new Date(pianoStart),
+                    endZeit: new Date(),
+                    dauer: dauer,
+                    typ: "piano",
+                    erstellt: serverTimestamp()
+                });
 
-            pianoStart = null;
-            clearInterval(pianoTimer);
-            document.getElementById("pianoStart").style.opacity = "1";
-            document.getElementById("pianoStop").style.opacity = "0.5";
+                const sessionRef = doc(db, "Benutzer_B", "training", "sessions", "piano_current");
+                await setDoc(sessionRef, {
+                    aktiv: false,
+                    endZeit: serverTimestamp(),
+                    dauer: dauer
+                }, { merge: true });
+
+                pianoStart = null;
+                clearInterval(pianoTimer);
+                pianoTimer = null;
+                document.getElementById("pianoStart").style.opacity = "1";
+                document.getElementById("pianoStop").style.opacity = "0.5";
+                console.log("Piano session stopped successfully");
+            } catch (error) {
+                console.error("Error stopping piano session:", error);
+            } finally {
+                pianoLocked = false;
+                setButtonLoading('pianoStop', false);
+            }
         }
 
         // Update Timer Functions
@@ -524,32 +733,39 @@
                 }
             }
 
-            // Check for active sessions
-            const tradingSessionRef = doc(db, "Benutzer_B", "training", "sessions", "trading_current");
-            const tradingSession = await getDoc(tradingSessionRef);
-            if (tradingSession.exists() && tradingSession.data().aktiv) {
-                tradingStart = tradingSession.data().startZeit.toMillis();
-                tradingTimer = setInterval(updateTradingzeit, 1000);
-                document.getElementById("tradingStart").style.opacity = "0.5";
-                document.getElementById("tradingStop").style.opacity = "1";
-            }
+            // Check for active sessions and restore state
+            try {
+                const tradingSessionRef = doc(db, "Benutzer_B", "training", "sessions", "trading_current");
+                const tradingSession = await getDoc(tradingSessionRef);
+                if (tradingSession.exists() && tradingSession.data().aktiv && !tradingStart) {
+                    tradingStart = tradingSession.data().startZeit.toMillis();
+                    tradingTimer = setInterval(updateTradingzeit, 1000);
+                    document.getElementById("tradingStart").style.opacity = "0.5";
+                    document.getElementById("tradingStop").style.opacity = "1";
+                    console.log("Restored active trading session");
+                }
 
-            const sportSessionRef = doc(db, "Benutzer_B", "training", "sessions", "sport_current");
-            const sportSession = await getDoc(sportSessionRef);
-            if (sportSession.exists() && sportSession.data().aktiv) {
-                sportStart = sportSession.data().startZeit.toMillis();
-                sportTimer = setInterval(updateSportzeit, 1000);
-                document.getElementById("sportStart").style.opacity = "0.5";
-                document.getElementById("sportStop").style.opacity = "1";
-            }
+                const sportSessionRef = doc(db, "Benutzer_B", "training", "sessions", "sport_current");
+                const sportSession = await getDoc(sportSessionRef);
+                if (sportSession.exists() && sportSession.data().aktiv && !sportStart) {
+                    sportStart = sportSession.data().startZeit.toMillis();
+                    sportTimer = setInterval(updateSportzeit, 1000);
+                    document.getElementById("sportStart").style.opacity = "0.5";
+                    document.getElementById("sportStop").style.opacity = "1";
+                    console.log("Restored active sport session");
+                }
 
-            const pianoSessionRef = doc(db, "Benutzer_B", "training", "sessions", "piano_current");
-            const pianoSession = await getDoc(pianoSessionRef);
-            if (pianoSession.exists() && pianoSession.data().aktiv) {
-                pianoStart = pianoSession.data().startZeit.toMillis();
-                pianoTimer = setInterval(updatePianozeit, 1000);
-                document.getElementById("pianoStart").style.opacity = "0.5";
-                document.getElementById("pianoStop").style.opacity = "1";
+                const pianoSessionRef = doc(db, "Benutzer_B", "training", "sessions", "piano_current");
+                const pianoSession = await getDoc(pianoSessionRef);
+                if (pianoSession.exists() && pianoSession.data().aktiv && !pianoStart) {
+                    pianoStart = pianoSession.data().startZeit.toMillis();
+                    pianoTimer = setInterval(updatePianozeit, 1000);
+                    document.getElementById("pianoStart").style.opacity = "0.5";
+                    document.getElementById("pianoStop").style.opacity = "1";
+                    console.log("Restored active piano session");
+                }
+            } catch (error) {
+                console.error("Error loading active sessions:", error);
             }
 
             updateProgress();
@@ -582,7 +798,6 @@
 
         window.toggleTheme = function() {
             document.body.classList.toggle('theme-light');
-            // Wenn theme-light Klasse vorhanden ist, speichere 'light', sonst 'dark'
             localStorage.setItem('theme', document.body.classList.contains('theme-light') ? 'light' : 'dark');
         }
 
@@ -600,23 +815,45 @@
             console.log("Eingeloggt als:", user.email);
         });
 
-        // Event Listeners
-        document.getElementById("tradingStart").addEventListener("click", startTrading);
-        document.getElementById("tradingStop").addEventListener("click", stopTrading);
-        document.getElementById("sportStart").addEventListener("click", startSport);
-        document.getElementById("sportStop").addEventListener("click", stopSport);
-        document.getElementById("pianoStart").addEventListener("click", startPiano);
-        document.getElementById("pianoStop").addEventListener("click", stopPiano);
+        // Create debounced versions of the functions for mobile
+        const debouncedStartTrading = debounce(startTrading, 300);
+        const debouncedStopTrading = debounce(stopTrading, 300);
+        const debouncedStartSport = debounce(startSport, 300);
+        const debouncedStopSport = debounce(stopSport, 300);
+        const debouncedStartPiano = debounce(startPiano, 300);
+        const debouncedStopPiano = debounce(stopPiano, 300);
 
-        // Theme aus localStorage laden - Standard ist hell
+        // Event Listeners with debouncing
+        document.getElementById("tradingStart").addEventListener("click", debouncedStartTrading);
+        document.getElementById("tradingStop").addEventListener("click", debouncedStopTrading);
+        document.getElementById("sportStart").addEventListener("click", debouncedStartSport);
+        document.getElementById("sportStop").addEventListener("click", debouncedStopSport);
+        document.getElementById("pianoStart").addEventListener("click", debouncedStartPiano);
+        document.getElementById("pianoStop").addEventListener("click", debouncedStopPiano);
+
+        // Prevent double-tap/zoom on mobile for all buttons
+        document.querySelectorAll('.btn').forEach(button => {
+            button.addEventListener('touchend', (e) => {
+                e.preventDefault();
+            });
+        });
+
+        // Theme setup
         if (localStorage.getItem('theme') === 'dark') {
-            // Dunkel ist explizit gewählt, bleibt bei Standard (dunkel)
+            // Keep default dark theme
         } else {
-            // Standard oder explizit hell gewählt
             document.body.classList.add('theme-light');
         }
 
-        // Initialisierung
+        // Handle visibility change (app going to background/foreground)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                console.log("App became visible, reloading session state");
+                loadTageszeiten();
+            }
+        });
+
+        // Initialization
         setInterval(updateProgress, 10000);
         await loadTageszeiten();
     </script>

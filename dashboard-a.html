@@ -29,6 +29,10 @@
             color: var(--text-primary);
             min-height: 100vh;
             padding: 1rem;
+            /* Prevent double-tap zoom on mobile */
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .container {
@@ -148,11 +152,22 @@
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
+            /* Prevent double-tap issues */
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            pointer-events: none;
         }
 
         .btn.danger {
@@ -175,6 +190,29 @@
             flex: 1;
             padding: 0.75rem;
             font-size: 0.9rem;
+        }
+
+        /* Loading spinner for buttons */
+        .btn-loading {
+            opacity: 0.7;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .btn-loading::before {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: rgba(255, 255, 255, 0.8);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         @media (max-width: 768px) {
@@ -316,6 +354,11 @@
         let gamedevStart = null;
         let gamedevTimer = null;
 
+        // Operation locks to prevent race conditions
+        let tradingLocked = false;
+        let sportLocked = false;
+        let gamedevLocked = false;
+
         function formatTime(ms) {
             const totalSeconds = Math.floor(ms / 1000);
             const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
@@ -324,164 +367,330 @@
             return `${hours}:${minutes}:${seconds}`;
         }
 
+        // Debounce function to prevent rapid multiple calls
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Set button loading state
+        function setButtonLoading(buttonId, isLoading) {
+            const button = document.getElementById(buttonId);
+            if (isLoading) {
+                button.classList.add('btn-loading');
+                button.disabled = true;
+            } else {
+                button.classList.remove('btn-loading');
+                button.disabled = false;
+            }
+        }
+
+        // Validate session state in Firebase
+        async function validateSessionState(sessionName) {
+            try {
+                const ref = doc(db, "Benutzer_A", "training", "sessions", sessionName);
+                const snapshot = await getDoc(ref);
+                return snapshot.exists() && snapshot.data().aktiv;
+            } catch (error) {
+                console.error(`Error validating session state for ${sessionName}:`, error);
+                return false;
+            }
+        }
+
         // Trading Functions
         async function startTrading() {
-            if (tradingStart) return;
+            if (tradingStart || tradingLocked) {
+                console.log("Trading already active or locked");
+                return;
+            }
             
-            tradingStart = Date.now();
-            const ref = doc(db, "Benutzer_A", "training", "sessions", "trading_current");
-            await setDoc(ref, {
-                startZeit: serverTimestamp(),
-                typ: "trading",
-                aktiv: true
-            });
+            tradingLocked = true;
+            setButtonLoading('tradingStart', true);
+            
+            try {
+                // Double-check Firebase state
+                const isActive = await validateSessionState("trading_current");
+                if (isActive) {
+                    console.log("Trading session already active in Firebase");
+                    tradingLocked = false;
+                    setButtonLoading('tradingStart', false);
+                    return;
+                }
+                
+                tradingStart = Date.now();
+                const ref = doc(db, "Benutzer_A", "training", "sessions", "trading_current");
+                await setDoc(ref, {
+                    startZeit: serverTimestamp(),
+                    typ: "trading",
+                    aktiv: true
+                });
 
-            tradingTimer = setInterval(updateTradingzeit, 1000);
-            document.getElementById("tradingStart").style.opacity = "0.5";
-            document.getElementById("tradingStop").style.opacity = "1";
+                tradingTimer = setInterval(updateTradingzeit, 1000);
+                document.getElementById("tradingStart").style.opacity = "0.5";
+                document.getElementById("tradingStop").style.opacity = "1";
+                console.log("Trading session started successfully");
+            } catch (error) {
+                console.error("Error starting trading session:", error);
+                tradingStart = null;
+                if (tradingTimer) {
+                    clearInterval(tradingTimer);
+                    tradingTimer = null;
+                }
+            } finally {
+                tradingLocked = false;
+                setButtonLoading('tradingStart', false);
+            }
         }
 
         async function stopTrading() {
-            if (!tradingStart) return;
+            if (!tradingStart || tradingLocked) {
+                console.log("Trading not active or locked");
+                return;
+            }
 
-            const dauer = Date.now() - tradingStart;
-            const heute = new Date().toISOString().slice(0, 10);
-            
-            const tagesRef = doc(db, "Benutzer_A", "training", "tage", heute);
-            const snapshot = await getDoc(tagesRef);
-            const alteDauer = snapshot.exists() && snapshot.data().tradingzeit ? snapshot.data().tradingzeit : 0;
+            tradingLocked = true;
+            setButtonLoading('tradingStop', true);
 
-            await setDoc(tagesRef, {
-                tradingzeit: alteDauer + dauer,
-                letzteAktualisierung: serverTimestamp()
-            }, { merge: true });
+            try {
+                const dauer = Date.now() - tradingStart;
+                const heute = new Date().toISOString().slice(0, 10);
+                
+                const tagesRef = doc(db, "Benutzer_A", "training", "tage", heute);
+                const snapshot = await getDoc(tagesRef);
+                const alteDauer = snapshot.exists() && snapshot.data().tradingzeit ? snapshot.data().tradingzeit : 0;
 
-            await addDoc(collection(db, "Benutzer_A", "aktivitaeten", "trading"), {
-                startZeit: new Date(tradingStart),
-                endZeit: new Date(),
-                dauer: dauer,
-                typ: "trading",
-                erstellt: serverTimestamp()
-            });
+                await setDoc(tagesRef, {
+                    tradingzeit: alteDauer + dauer,
+                    letzteAktualisierung: serverTimestamp()
+                }, { merge: true });
 
-            const sessionRef = doc(db, "Benutzer_A", "training", "sessions", "trading_current");
-            await setDoc(sessionRef, {
-                aktiv: false,
-                endZeit: serverTimestamp(),
-                dauer: dauer
-            }, { merge: true });
+                await addDoc(collection(db, "Benutzer_A", "aktivitaeten", "trading"), {
+                    startZeit: new Date(tradingStart),
+                    endZeit: new Date(),
+                    dauer: dauer,
+                    typ: "trading",
+                    erstellt: serverTimestamp()
+                });
 
-            tradingStart = null;
-            clearInterval(tradingTimer);
-            document.getElementById("tradingStart").style.opacity = "1";
-            document.getElementById("tradingStop").style.opacity = "0.5";
-            updateProgress();
+                const sessionRef = doc(db, "Benutzer_A", "training", "sessions", "trading_current");
+                await setDoc(sessionRef, {
+                    aktiv: false,
+                    endZeit: serverTimestamp(),
+                    dauer: dauer
+                }, { merge: true });
+
+                tradingStart = null;
+                clearInterval(tradingTimer);
+                tradingTimer = null;
+                document.getElementById("tradingStart").style.opacity = "1";
+                document.getElementById("tradingStop").style.opacity = "0.5";
+                updateProgress();
+                console.log("Trading session stopped successfully");
+            } catch (error) {
+                console.error("Error stopping trading session:", error);
+            } finally {
+                tradingLocked = false;
+                setButtonLoading('tradingStop', false);
+            }
         }
 
         // Sport Functions
         async function startSport() {
-            if (sportStart) return;
+            if (sportStart || sportLocked) {
+                console.log("Sport already active or locked");
+                return;
+            }
             
-            sportStart = Date.now();
-            const ref = doc(db, "Benutzer_A", "training", "sessions", "sport_current");
-            await setDoc(ref, {
-                startZeit: serverTimestamp(),
-                typ: "sport",
-                aktiv: true
-            });
+            sportLocked = true;
+            setButtonLoading('sportStart', true);
+            
+            try {
+                // Double-check Firebase state
+                const isActive = await validateSessionState("sport_current");
+                if (isActive) {
+                    console.log("Sport session already active in Firebase");
+                    sportLocked = false;
+                    setButtonLoading('sportStart', false);
+                    return;
+                }
+                
+                sportStart = Date.now();
+                const ref = doc(db, "Benutzer_A", "training", "sessions", "sport_current");
+                await setDoc(ref, {
+                    startZeit: serverTimestamp(),
+                    typ: "sport",
+                    aktiv: true
+                });
 
-            sportTimer = setInterval(updateSportzeit, 1000);
-            document.getElementById("sportStart").style.opacity = "0.5";
-            document.getElementById("sportStop").style.opacity = "1";
+                sportTimer = setInterval(updateSportzeit, 1000);
+                document.getElementById("sportStart").style.opacity = "0.5";
+                document.getElementById("sportStop").style.opacity = "1";
+                console.log("Sport session started successfully");
+            } catch (error) {
+                console.error("Error starting sport session:", error);
+                sportStart = null;
+                if (sportTimer) {
+                    clearInterval(sportTimer);
+                    sportTimer = null;
+                }
+            } finally {
+                sportLocked = false;
+                setButtonLoading('sportStart', false);
+            }
         }
 
         async function stopSport() {
-            if (!sportStart) return;
+            if (!sportStart || sportLocked) {
+                console.log("Sport not active or locked");
+                return;
+            }
 
-            const dauer = Date.now() - sportStart;
-            const heute = new Date().toISOString().slice(0, 10);
-            
-            const tagesRef = doc(db, "Benutzer_A", "training", "tage", heute);
-            const snapshot = await getDoc(tagesRef);
-            const alteDauer = snapshot.exists() && snapshot.data().sportzeit ? snapshot.data().sportzeit : 0;
+            sportLocked = true;
+            setButtonLoading('sportStop', true);
 
-            await setDoc(tagesRef, {
-                sportzeit: alteDauer + dauer,
-                letzteAktualisierung: serverTimestamp()
-            }, { merge: true });
+            try {
+                const dauer = Date.now() - sportStart;
+                const heute = new Date().toISOString().slice(0, 10);
+                
+                const tagesRef = doc(db, "Benutzer_A", "training", "tage", heute);
+                const snapshot = await getDoc(tagesRef);
+                const alteDauer = snapshot.exists() && snapshot.data().sportzeit ? snapshot.data().sportzeit : 0;
 
-            await addDoc(collection(db, "Benutzer_A", "aktivitaeten", "sport"), {
-                startZeit: new Date(sportStart),
-                endZeit: new Date(),
-                dauer: dauer,
-                typ: "sport",
-                erstellt: serverTimestamp()
-            });
+                await setDoc(tagesRef, {
+                    sportzeit: alteDauer + dauer,
+                    letzteAktualisierung: serverTimestamp()
+                }, { merge: true });
 
-            const sessionRef = doc(db, "Benutzer_A", "training", "sessions", "sport_current");
-            await setDoc(sessionRef, {
-                aktiv: false,
-                endZeit: serverTimestamp(),
-                dauer: dauer
-            }, { merge: true });
+                await addDoc(collection(db, "Benutzer_A", "aktivitaeten", "sport"), {
+                    startZeit: new Date(sportStart),
+                    endZeit: new Date(),
+                    dauer: dauer,
+                    typ: "sport",
+                    erstellt: serverTimestamp()
+                });
 
-            sportStart = null;
-            clearInterval(sportTimer);
-            document.getElementById("sportStart").style.opacity = "1";
-            document.getElementById("sportStop").style.opacity = "0.5";
+                const sessionRef = doc(db, "Benutzer_A", "training", "sessions", "sport_current");
+                await setDoc(sessionRef, {
+                    aktiv: false,
+                    endZeit: serverTimestamp(),
+                    dauer: dauer
+                }, { merge: true });
+
+                sportStart = null;
+                clearInterval(sportTimer);
+                sportTimer = null;
+                document.getElementById("sportStart").style.opacity = "1";
+                document.getElementById("sportStop").style.opacity = "0.5";
+                console.log("Sport session stopped successfully");
+            } catch (error) {
+                console.error("Error stopping sport session:", error);
+            } finally {
+                sportLocked = false;
+                setButtonLoading('sportStop', false);
+            }
         }
 
         // Game Development Functions
         async function startGamedev() {
-            if (gamedevStart) return;
+            if (gamedevStart || gamedevLocked) {
+                console.log("GameDev already active or locked");
+                return;
+            }
             
-            gamedevStart = Date.now();
-            const ref = doc(db, "Benutzer_A", "training", "sessions", "gamedev_current");
-            await setDoc(ref, {
-                startZeit: serverTimestamp(),
-                typ: "gamedevelopment",
-                aktiv: true
-            });
+            gamedevLocked = true;
+            setButtonLoading('gamedevStart', true);
+            
+            try {
+                // Double-check Firebase state
+                const isActive = await validateSessionState("gamedev_current");
+                if (isActive) {
+                    console.log("GameDev session already active in Firebase");
+                    gamedevLocked = false;
+                    setButtonLoading('gamedevStart', false);
+                    return;
+                }
+                
+                gamedevStart = Date.now();
+                const ref = doc(db, "Benutzer_A", "training", "sessions", "gamedev_current");
+                await setDoc(ref, {
+                    startZeit: serverTimestamp(),
+                    typ: "gamedevelopment",
+                    aktiv: true
+                });
 
-            gamedevTimer = setInterval(updateGamedevzeit, 1000);
-            document.getElementById("gamedevStart").style.opacity = "0.5";
-            document.getElementById("gamedevStop").style.opacity = "1";
+                gamedevTimer = setInterval(updateGamedevzeit, 1000);
+                document.getElementById("gamedevStart").style.opacity = "0.5";
+                document.getElementById("gamedevStop").style.opacity = "1";
+                console.log("GameDev session started successfully");
+            } catch (error) {
+                console.error("Error starting gamedev session:", error);
+                gamedevStart = null;
+                if (gamedevTimer) {
+                    clearInterval(gamedevTimer);
+                    gamedevTimer = null;
+                }
+            } finally {
+                gamedevLocked = false;
+                setButtonLoading('gamedevStart', false);
+            }
         }
 
         async function stopGamedev() {
-            if (!gamedevStart) return;
+            if (!gamedevStart || gamedevLocked) {
+                console.log("GameDev not active or locked");
+                return;
+            }
 
-            const dauer = Date.now() - gamedevStart;
-            const heute = new Date().toISOString().slice(0, 10);
-            
-            const tagesRef = doc(db, "Benutzer_A", "training", "tage", heute);
-            const snapshot = await getDoc(tagesRef);
-            const alteDauer = snapshot.exists() && snapshot.data().gamedevzeit ? snapshot.data().gamedevzeit : 0;
+            gamedevLocked = true;
+            setButtonLoading('gamedevStop', true);
 
-            await setDoc(tagesRef, {
-                gamedevzeit: alteDauer + dauer,
-                letzteAktualisierung: serverTimestamp()
-            }, { merge: true });
+            try {
+                const dauer = Date.now() - gamedevStart;
+                const heute = new Date().toISOString().slice(0, 10);
+                
+                const tagesRef = doc(db, "Benutzer_A", "training", "tage", heute);
+                const snapshot = await getDoc(tagesRef);
+                const alteDauer = snapshot.exists() && snapshot.data().gamedevzeit ? snapshot.data().gamedevzeit : 0;
 
-            await addDoc(collection(db, "Benutzer_A", "aktivitaeten", "gamedevelopment"), {
-                startZeit: new Date(gamedevStart),
-                endZeit: new Date(),
-                dauer: dauer,
-                typ: "gamedevelopment",
-                erstellt: serverTimestamp()
-            });
+                await setDoc(tagesRef, {
+                    gamedevzeit: alteDauer + dauer,
+                    letzteAktualisierung: serverTimestamp()
+                }, { merge: true });
 
-            const sessionRef = doc(db, "Benutzer_A", "training", "sessions", "gamedev_current");
-            await setDoc(sessionRef, {
-                aktiv: false,
-                endZeit: serverTimestamp(),
-                dauer: dauer
-            }, { merge: true });
+                await addDoc(collection(db, "Benutzer_A", "aktivitaeten", "gamedevelopment"), {
+                    startZeit: new Date(gamedevStart),
+                    endZeit: new Date(),
+                    dauer: dauer,
+                    typ: "gamedevelopment",
+                    erstellt: serverTimestamp()
+                });
 
-            gamedevStart = null;
-            clearInterval(gamedevTimer);
-            document.getElementById("gamedevStart").style.opacity = "1";
-            document.getElementById("gamedevStop").style.opacity = "0.5";
+                const sessionRef = doc(db, "Benutzer_A", "training", "sessions", "gamedev_current");
+                await setDoc(sessionRef, {
+                    aktiv: false,
+                    endZeit: serverTimestamp(),
+                    dauer: dauer
+                }, { merge: true });
+
+                gamedevStart = null;
+                clearInterval(gamedevTimer);
+                gamedevTimer = null;
+                document.getElementById("gamedevStart").style.opacity = "1";
+                document.getElementById("gamedevStop").style.opacity = "0.5";
+                console.log("GameDev session stopped successfully");
+            } catch (error) {
+                console.error("Error stopping gamedev session:", error);
+            } finally {
+                gamedevLocked = false;
+                setButtonLoading('gamedevStop', false);
+            }
         }
 
         // Update Timer Functions
@@ -524,32 +733,39 @@
                 }
             }
 
-            // Check for active sessions
-            const tradingSessionRef = doc(db, "Benutzer_A", "training", "sessions", "trading_current");
-            const tradingSession = await getDoc(tradingSessionRef);
-            if (tradingSession.exists() && tradingSession.data().aktiv) {
-                tradingStart = tradingSession.data().startZeit.toMillis();
-                tradingTimer = setInterval(updateTradingzeit, 1000);
-                document.getElementById("tradingStart").style.opacity = "0.5";
-                document.getElementById("tradingStop").style.opacity = "1";
-            }
+            // Check for active sessions and restore state
+            try {
+                const tradingSessionRef = doc(db, "Benutzer_A", "training", "sessions", "trading_current");
+                const tradingSession = await getDoc(tradingSessionRef);
+                if (tradingSession.exists() && tradingSession.data().aktiv && !tradingStart) {
+                    tradingStart = tradingSession.data().startZeit.toMillis();
+                    tradingTimer = setInterval(updateTradingzeit, 1000);
+                    document.getElementById("tradingStart").style.opacity = "0.5";
+                    document.getElementById("tradingStop").style.opacity = "1";
+                    console.log("Restored active trading session");
+                }
 
-            const sportSessionRef = doc(db, "Benutzer_A", "training", "sessions", "sport_current");
-            const sportSession = await getDoc(sportSessionRef);
-            if (sportSession.exists() && sportSession.data().aktiv) {
-                sportStart = sportSession.data().startZeit.toMillis();
-                sportTimer = setInterval(updateSportzeit, 1000);
-                document.getElementById("sportStart").style.opacity = "0.5";
-                document.getElementById("sportStop").style.opacity = "1";
-            }
+                const sportSessionRef = doc(db, "Benutzer_A", "training", "sessions", "sport_current");
+                const sportSession = await getDoc(sportSessionRef);
+                if (sportSession.exists() && sportSession.data().aktiv && !sportStart) {
+                    sportStart = sportSession.data().startZeit.toMillis();
+                    sportTimer = setInterval(updateSportzeit, 1000);
+                    document.getElementById("sportStart").style.opacity = "0.5";
+                    document.getElementById("sportStop").style.opacity = "1";
+                    console.log("Restored active sport session");
+                }
 
-            const gamedevSessionRef = doc(db, "Benutzer_A", "training", "sessions", "gamedev_current");
-            const gamedevSession = await getDoc(gamedevSessionRef);
-            if (gamedevSession.exists() && gamedevSession.data().aktiv) {
-                gamedevStart = gamedevSession.data().startZeit.toMillis();
-                gamedevTimer = setInterval(updateGamedevzeit, 1000);
-                document.getElementById("gamedevStart").style.opacity = "0.5";
-                document.getElementById("gamedevStop").style.opacity = "1";
+                const gamedevSessionRef = doc(db, "Benutzer_A", "training", "sessions", "gamedev_current");
+                const gamedevSession = await getDoc(gamedevSessionRef);
+                if (gamedevSession.exists() && gamedevSession.data().aktiv && !gamedevStart) {
+                    gamedevStart = gamedevSession.data().startZeit.toMillis();
+                    gamedevTimer = setInterval(updateGamedevzeit, 1000);
+                    document.getElementById("gamedevStart").style.opacity = "0.5";
+                    document.getElementById("gamedevStop").style.opacity = "1";
+                    console.log("Restored active gamedev session");
+                }
+            } catch (error) {
+                console.error("Error loading active sessions:", error);
             }
 
             updateProgress();
@@ -582,7 +798,6 @@
 
         window.toggleTheme = function() {
             document.body.classList.toggle('theme-light');
-            // Wenn theme-light Klasse vorhanden ist, speichere 'light', sonst 'dark'
             localStorage.setItem('theme', document.body.classList.contains('theme-light') ? 'light' : 'dark');
         }
 
@@ -600,23 +815,45 @@
             console.log("Eingeloggt als:", user.email);
         });
 
-        // Event Listeners
-        document.getElementById("tradingStart").addEventListener("click", startTrading);
-        document.getElementById("tradingStop").addEventListener("click", stopTrading);
-        document.getElementById("sportStart").addEventListener("click", startSport);
-        document.getElementById("sportStop").addEventListener("click", stopSport);
-        document.getElementById("gamedevStart").addEventListener("click", startGamedev);
-        document.getElementById("gamedevStop").addEventListener("click", stopGamedev);
+        // Create debounced versions of the functions for mobile
+        const debouncedStartTrading = debounce(startTrading, 300);
+        const debouncedStopTrading = debounce(stopTrading, 300);
+        const debouncedStartSport = debounce(startSport, 300);
+        const debouncedStopSport = debounce(stopSport, 300);
+        const debouncedStartGamedev = debounce(startGamedev, 300);
+        const debouncedStopGamedev = debounce(stopGamedev, 300);
 
-        // Theme aus localStorage laden - Standard ist hell
+        // Event Listeners with debouncing
+        document.getElementById("tradingStart").addEventListener("click", debouncedStartTrading);
+        document.getElementById("tradingStop").addEventListener("click", debouncedStopTrading);
+        document.getElementById("sportStart").addEventListener("click", debouncedStartSport);
+        document.getElementById("sportStop").addEventListener("click", debouncedStopSport);
+        document.getElementById("gamedevStart").addEventListener("click", debouncedStartGamedev);
+        document.getElementById("gamedevStop").addEventListener("click", debouncedStopGamedev);
+
+        // Prevent double-tap/zoom on mobile for all buttons
+        document.querySelectorAll('.btn').forEach(button => {
+            button.addEventListener('touchend', (e) => {
+                e.preventDefault();
+            });
+        });
+
+        // Theme setup
         if (localStorage.getItem('theme') === 'dark') {
-            // Dunkel ist explizit gewählt, bleibt bei Standard (dunkel)
+            // Keep default dark theme
         } else {
-            // Standard oder explizit hell gewählt
             document.body.classList.add('theme-light');
         }
 
-        // Initialisierung
+        // Handle visibility change (app going to background/foreground)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                console.log("App became visible, reloading session state");
+                loadTageszeiten();
+            }
+        });
+
+        // Initialization
         setInterval(updateProgress, 10000);
         await loadTageszeiten();
     </script>
