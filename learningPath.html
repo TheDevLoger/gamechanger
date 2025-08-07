@@ -1,0 +1,3153 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameChanger Learning Path</title>
+    <style>
+        :root {
+            --primary-bg: #0a0a0a;
+            --secondary-bg: #1a1a1a;
+            --accent-color: #00ff88;
+            --text-primary: #ffffff;
+            --text-secondary: #888888;
+            --danger-color: #ff4757;
+            --warning-color: #ffa502;
+            --success-color: #10b981;
+            --card-bg: #1e1e1e;
+            --border-color: #333;
+            --path-line-color: #444;
+            --completed-color: #00ff88;
+            --current-color: #ffa502;
+            --locked-color: #666;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            height: calc(100vh - 2rem);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: var(--card-bg);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-color), #00cc6a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Main Layout */
+        .main-content {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 30% 70%;
+            gap: 2rem;
+            min-height: 0;
+        }
+
+        /* Path Section */
+        .path-section {
+            background: var(--card-bg);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.1);
+            padding: 2rem;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .path-title {
+            color: var(--accent-color);
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .path-container {
+            position: relative;
+            padding: 1rem;
+        }
+
+        /* Path Line */
+        .path-line {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--path-line-color);
+            border-radius: 2px;
+            transform: translateX(-50%);
+            z-index: 1;
+        }
+
+        /* Path Node */
+        .path-node {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 3rem;
+            z-index: 2;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .path-node:hover {
+            transform: scale(1.05);
+        }
+
+        .path-node.locked:hover {
+            transform: none;
+            cursor: not-allowed;
+        }
+
+        /* Node Circle */
+        .node-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            border: 4px solid;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .node-circle::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .path-node:hover .node-circle::before {
+            opacity: 0.2;
+        }
+
+        /* Node States */
+        .path-node.completed .node-circle {
+            background: var(--completed-color);
+            border-color: var(--completed-color);
+            color: #000;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+
+        .path-node.completed .node-circle::before {
+            background: white;
+        }
+
+        .path-node.current .node-circle {
+            background: var(--current-color);
+            border-color: var(--current-color);
+            color: #000;
+            box-shadow: 0 0 20px rgba(255, 165, 2, 0.5);
+            animation: pulse 2s infinite;
+        }
+
+        .path-node.current .node-circle::before {
+            background: white;
+        }
+
+        .path-node.locked .node-circle {
+            background: var(--secondary-bg);
+            border-color: var(--locked-color);
+            color: var(--locked-color);
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 165, 2, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(255, 165, 2, 0.8); }
+        }
+
+        /* Node Label */
+        .node-label {
+            margin-top: 1rem;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            max-width: 120px;
+            line-height: 1.3;
+        }
+
+        .path-node.completed .node-label {
+            color: var(--completed-color);
+        }
+
+        .path-node.current .node-label {
+            color: var(--current-color);
+        }
+
+        .path-node.locked .node-label {
+            color: var(--locked-color);
+        }
+
+        /* Progress Bar */
+        .progress-section {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .progress-label {
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--secondary-bg);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-color), #00cc6a);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        /* Learning Section */
+        .learning-section {
+            background: var(--card-bg);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.1);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: calc(100vh - 160px);
+            min-height: 500px;
+        }
+
+        .learning-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .learning-title {
+            color: var(--accent-color);
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .learning-meta {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .meta-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .difficulty-easy {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success-color);
+            border: 1px solid var(--success-color);
+        }
+
+        .difficulty-medium {
+            background: rgba(255, 165, 2, 0.2);
+            color: var(--warning-color);
+            border: 1px solid var(--warning-color);
+        }
+
+        .difficulty-hard {
+            background: rgba(255, 71, 87, 0.2);
+            color: var(--danger-color);
+            border: 1px solid var(--danger-color);
+        }
+
+        .duration-badge {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--accent-color);
+            border: 1px solid var(--accent-color);
+        }
+
+        /* Learning Content */
+        .learning-content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 1rem;
+            max-height: calc(100vh - 400px);
+            min-height: 300px;
+        }
+
+        .learning-content::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        .learning-content::-webkit-scrollbar-track {
+            background: var(--secondary-bg);
+            border-radius: 6px;
+            margin: 4px 0;
+        }
+
+        .learning-content::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 6px;
+            border: 2px solid var(--card-bg);
+        }
+
+        .learning-content::-webkit-scrollbar-thumb:hover {
+            background: #00cc6a;
+        }
+
+        .learning-content::-webkit-scrollbar-corner {
+            background: var(--card-bg);
+        }
+
+        .content-section {
+            margin-bottom: 2rem;
+        }
+
+        .content-section h3 {
+            color: var(--text-primary);
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .content-section p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .content-section ul {
+            color: var(--text-secondary);
+            padding-left: 1.5rem;
+        }
+
+        .content-section li {
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+
+        .content-section strong {
+            color: var(--text-primary);
+        }
+
+        /* Code Block */
+        .code-block {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--accent-color);
+            overflow-x: auto;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid var(--accent-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .info-box.warning {
+            background: rgba(255, 165, 2, 0.1);
+            border-color: var(--warning-color);
+        }
+
+        .info-box.danger {
+            background: rgba(255, 71, 87, 0.1);
+            border-color: var(--danger-color);
+        }
+
+        /* Quiz Section */
+        .quiz-section {
+            background: var(--secondary-bg);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border: 1px solid var(--border-color);
+        }
+
+        .quiz-question {
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .quiz-option {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quiz-option:hover {
+            border-color: var(--accent-color);
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        .quiz-option.selected {
+            border-color: var(--accent-color);
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        .quiz-option.correct {
+            border-color: var(--success-color);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .quiz-option.incorrect {
+            border-color: var(--danger-color);
+            background: rgba(255, 71, 87, 0.1);
+        }
+
+        .quiz-feedback {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .quiz-feedback.correct {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success-color);
+            color: var(--success-color);
+        }
+
+        .quiz-feedback.incorrect {
+            background: rgba(255, 71, 87, 0.1);
+            border: 1px solid var(--danger-color);
+            color: var(--danger-color);
+        }
+
+        /* Action Buttons */
+        .learning-actions {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            min-height: 80px;
+            background: var(--card-bg);
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-color), #00cc6a);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--secondary-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Welcome Screen */
+        .welcome-screen {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .welcome-screen .icon {
+            font-size: 4rem;
+            margin-bottom: 2rem;
+            opacity: 0.5;
+        }
+
+        .welcome-screen h2 {
+            color: var(--text-primary);
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .welcome-screen p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        /* Completion Screen */
+        .completion-screen {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(16, 185, 129, 0.1));
+            border-radius: 15px;
+            border: 1px solid var(--accent-color);
+        }
+
+        .completion-screen .icon {
+            font-size: 4rem;
+            margin-bottom: 2rem;
+        }
+
+        .completion-screen h2 {
+            color: var(--accent-color);
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Theme Light */
+        .theme-light {
+            --primary-bg: #ffffff;
+            --secondary-bg: #f6f8fa;
+            --card-bg: #ffffff;
+            --text-primary: #24292f;
+            --text-secondary: #656d76;
+            --border-color: #d0d7de;
+            --path-line-color: #d0d7de;
+            --locked-color: #9ca3af;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 35% 65%;
+            }
+        }
+
+        @media (max-width: 968px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
+            }
+
+            .path-section {
+                max-height: 280px;
+                min-height: 250px;
+            }
+
+            .learning-section {
+                height: calc(100vh - 320px);
+                min-height: 450px;
+            }
+
+            .learning-content {
+                max-height: calc(100vh - 520px);
+                min-height: 250px;
+            }
+
+            .path-container {
+                display: flex;
+                gap: 2rem;
+                padding-bottom: 1rem;
+                overflow-x: auto;
+            }
+
+            .path-line {
+                display: none;
+            }
+
+            .path-node {
+                margin-bottom: 0;
+                flex-shrink: 0;
+            }
+
+            .node-circle {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+
+            .node-label {
+                font-size: 0.8rem;
+                max-width: 80px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .learning-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 568px) {
+            .container {
+                padding: 0.5rem;
+                height: calc(100vh - 1rem);
+            }
+
+            .header {
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            .path-section {
+                max-height: 220px;
+                min-height: 200px;
+            }
+
+            .learning-section {
+                height: calc(100vh - 280px);
+                min-height: 400px;
+            }
+
+            .learning-content {
+                max-height: calc(100vh - 450px);
+                min-height: 200px;
+            }
+
+            .learning-actions {
+                flex-direction: column;
+                gap: 1rem;
+                min-height: 120px;
+                padding-top: 1rem;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+
+        /* Animations */
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .path-node.active .node-circle {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.6) !important;
+        }
+
+        /* Lesson Completion Requirements */
+        .completion-requirements {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid var(--accent-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .completion-requirements h4 {
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .completion-checklist {
+            list-style: none;
+            padding: 0;
+        }
+
+        .completion-checklist li {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .completion-checklist li.completed {
+            color: var(--success-color);
+        }
+
+        .quiz-completed {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            text-align: center;
+            color: var(--success-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🚀 GameChanger Learning Path</h1>
+            <p style="color: var(--text-secondary); font-size: 1.1rem;">Dein Weg zum Trading-Profi - Schritt für Schritt</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Path Section -->
+            <div class="path-section">
+                <h2 class="path-title">📚 Lernpfad</h2>
+                
+                <!-- Progress -->
+                <div class="progress-section">
+                    <div class="progress-label">Gesamtfortschritt</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="overallProgress" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">0 von 8 Lektionen abgeschlossen</div>
+                </div>
+
+                <!-- Path Nodes -->
+                <div class="path-container">
+                    <div class="path-line"></div>
+                    
+                    <div class="path-node current" data-lesson="1">
+                        <div class="node-circle">1</div>
+                        <div class="node-label">Trading Grundlagen</div>
+                    </div>
+
+                    <div class="path-node locked" data-lesson="2">
+                        <div class="node-circle">🔒</div>
+                        <div class="node-label">Markt Analyse</div>
+                    </div>
+
+                    <div class="path-node locked" data-lesson="3">
+                        <div class="node-circle">🔒</div>
+                        <div class="node-label">Risk Management</div>
+                    </div>
+
+                    <div class="path-node locked" data-lesson="4">
+                        <div class="node-circle">🔒</div>
+                        <div class="node-label">Chart Patterns</div>
+                    </div>
+
+                    <div class="path-node locked" data-lesson="5">
+                        <div class="node-circle">🔒</div>
+                        <div class="node-label">Technische Indikatoren</div>
+                    </div>
+
+                    <div class="path-node locked" data-lesson="6">
+                        <div class="node-circle">🔒</div>
+                        <div class="node-label">Trading Strategien</div>
+                    </div>
+
+                    <div class="path-node locked" data-lesson="7">
+                        <div class="node-circle">🔒</div>
+                        <div class="node-label">Trading Psychologie</div>
+                    </div>
+
+                    <div class="path-node locked" data-lesson="8">
+                        <div class="node-circle">🔒</div>
+                        <div class="node-label">Portfolio Management</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Learning Section -->
+            <div class="learning-section">
+                <div id="learningContent">
+                    <!-- Welcome Screen -->
+                    <div class="welcome-screen">
+                        <div class="icon">🎓</div>
+                        <h2>Willkommen zum Trading Learning Path!</h2>
+                        <p>Wähle eine Lerneinheit auf der linken Seite aus, um zu beginnen. Arbeite dich Schritt für Schritt durch alle Module und werde zum Trading-Experten.</p>
+                        <p style="margin-top: 1rem; color: var(--accent-color);">Klicke auf "Trading Grundlagen" um zu starten!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Globaler Zustand für Abschlusskriterien
+        let lessonProgress = {
+            1: { quizCompleted: false, readingCompleted: false },
+            2: { quizCompleted: false, readingCompleted: false },
+            3: { quizCompleted: false, readingCompleted: false },
+            4: { quizCompleted: false, readingCompleted: false },
+            5: { quizCompleted: false, readingCompleted: false },
+            6: { quizCompleted: false, readingCompleted: false },
+            7: { quizCompleted: false, readingCompleted: false },
+            8: { quizCompleted: false, readingCompleted: false }
+        };
+
+        // Lerneinheiten Daten
+        const lessons = {
+            1: {
+                title: "Trading Grundlagen",
+                difficulty: "easy",
+                duration: "20 Min",
+                completed: false,
+                current: true,
+                locked: false,
+                sections: [
+                    {
+                        title: "📈 Was ist Trading?",
+                        content: `
+                            <p>Trading ist der Kauf und Verkauf von Finanzinstrumenten mit dem Ziel, von Preisbewegungen zu profitieren. Im Gegensatz zum langfristigen Investieren, werden beim Trading Positionen meist für kürzere Zeiträume gehalten - von Minuten bis zu mehreren Monaten.</p>
+                            
+                            <div class="info-box">
+                                <strong>💡 Wichtiger Unterschied:</strong><br>
+                                <strong>Trading:</strong> Kurzfristige Spekulation auf Preisbewegungen<br>
+                                <strong>Investieren:</strong> Langfristige Vermögensbildung durch Unternehmenswachstum
+                            </div>
+
+                            <p><strong>Wichtige Trading-Begriffe:</strong></p>
+                            <ul>
+                                <li><strong>Long Position:</strong> Kauf eines Assets in der Erwartung steigender Preise</li>
+                                <li><strong>Short Position:</strong> Verkauf eines Assets in der Erwartung fallender Preise</li>
+                                <li><strong>Spread:</strong> Differenz zwischen Kauf- (Ask) und Verkaufspreis (Bid)</li>
+                                <li><strong>Volatilität:</strong> Ausmaß der Preisschwankungen eines Assets</li>
+                                <li><strong>Liquidität:</strong> Wie schnell ein Asset gekauft/verkauft werden kann</li>
+                                <li><strong>Hebel (Leverage):</strong> Vervielfachung der Kaufkraft durch Fremdkapital</li>
+                            </ul>
+                        `
+                    },
+                    {
+                        title: "🏦 Märkte und Instrumente",
+                        content: `
+                            <p>Es gibt verschiedene Märkte und Instrumente, die du traden kannst. Jeder Markt hat seine eigenen Charakteristiken:</p>
+                            
+                            <h4>📊 Hauptmärkte:</h4>
+                            <ul>
+                                <li><strong>Forex (Devisenmarkt):</strong> Währungspaare wie EUR/USD, GBP/JPY
+                                    <ul><li>Größter Markt der Welt (6+ Billionen USD täglich)</li>
+                                    <li>24/5 Handel möglich</li></ul>
+                                </li>
+                                <li><strong>Aktien:</strong> Anteile an Unternehmen
+                                    <ul><li>Abhängig von Unternehmenserfolg</li>
+                                    <li>Dividenden möglich</li></ul>
+                                </li>
+                                <li><strong>Indizes:</strong> Korb verschiedener Aktien (S&P 500, DAX, NASDAQ)
+                                    <ul><li>Diversifikation durch einen Trade</li>
+                                    <li>Markttrends folgen</li></ul>
+                                </li>
+                                <li><strong>Rohstoffe:</strong> Gold, Silber, Öl, Weizen, etc.
+                                    <ul><li>Inflationsschutz</li>
+                                    <li>Angebot/Nachfrage-basiert</li></ul>
+                                </li>
+                                <li><strong>Kryptowährungen:</strong> Bitcoin, Ethereum, etc.
+                                    <ul><li>Hohe Volatilität</li>
+                                    <li>24/7 Handel</li></ul>
+                                </li>
+                            </ul>
+
+                            <div class="info-box warning">
+                                <strong>⚠️ Anfänger-Tipp:</strong> Beginne mit einem Markt und lerne ihn gut kennen, bevor du dich verzweigst. Forex oder große Aktienindizes sind oft ein guter Start.
+                            </div>
+                        `
+                    },
+                    {
+                        title: "💰 Trading-Kosten verstehen",
+                        content: `
+                            <p>Beim Trading entstehen verschiedene Kosten, die deine Gewinne beeinflussen:</p>
+                            
+                            <ul>
+                                <li><strong>Spreads:</strong> Differenz zwischen Kauf- und Verkaufspreis</li>
+                                <li><strong>Kommissionen:</strong> Fixe Gebühren pro Trade</li>
+                                <li><strong>Finanzierungskosten:</strong> Bei Übernacht-Positionen mit Hebel</li>
+                                <li><strong>Slippage:</strong> Preisunterschied zwischen Order und Ausführung</li>
+                            </ul>
+
+                            <div class="code-block">
+Beispiel Kostenberechnung:
+Trade-Volumen: 10.000 EUR
+Spread: 1 Pip = 1 EUR
+Kommission: 7 EUR
+
+Gesamtkosten = 1 EUR + 7 EUR = 8 EUR
+Breakeven = 0.08% Kursbewegung</div>
+
+                            <p><strong>Kostenkontrolle-Strategien:</strong></p>
+                            <ul>
+                                <li>Broker mit niedrigen Spreads wählen</li>
+                                <li>Nicht zu oft traden (Overtrading vermeiden)</li>
+                                <li>Größere Positionen statt viele kleine</li>
+                                <li>Haupthandelszeiten nutzen (bessere Spreads)</li>
+                            </ul>
+                        `
+                    }
+                ],
+                quiz: {
+                    question: "Was ist der Hauptunterschied zwischen Trading und Investieren?",
+                    options: [
+                        "Trading ist nur für Profis, Investieren für Anfänger",
+                        "Trading fokussiert auf kurzfristige Preisbewegungen, Investieren auf langfristiges Wachstum",
+                        "Trading ist riskanter als Investieren",
+                        "Es gibt keinen Unterschied"
+                    ],
+                    correct: 1,
+                    explanation: "Trading konzentriert sich auf kurzfristige Preisbewegungen und Spekulation, während Investieren auf langfristiges Vermögenswachstum durch Unternehmenserfolg abzielt."
+                }
+            },
+            2: {
+                title: "Markt Analyse",
+                difficulty: "easy", 
+                duration: "25 Min",
+                completed: false,
+                current: false,
+                locked: true,
+                sections: [
+                    {
+                        title: "📊 Fundamentale Analyse",
+                        content: `
+                            <p>Die Fundamentalanalyse betrachtet wirtschaftliche, politische und soziale Faktoren, die den wahren Wert eines Assets bestimmen. Sie hilft dabei zu verstehen, <em>warum</em> sich Preise bewegen.</p>
+                            
+                            <h4>🏛️ Makroökonomische Faktoren:</h4>
+                            <ul>
+                                <li><strong>Zinssätze:</strong> Höhere Zinsen stärken meist die Währung</li>
+                                <li><strong>Inflation:</strong> Beeinflusst Kaufkraft und Zentralbankpolitik</li>
+                                <li><strong>BIP-Wachstum:</strong> Indikator für Wirtschaftsstärke</li>
+                                <li><strong>Arbeitslosenquote:</strong> Zeigt Arbeitsmarktgesundheit</li>
+                                <li><strong>Handelsbilanz:</strong> Import vs. Export-Verhältnis</li>
+                            </ul>
+
+                            <div class="info-box">
+                                <strong>📰 Wichtige Wirtschaftsnachrichten:</strong><br>
+                                • NFP (Non-Farm Payrolls) - USA<br>
+                                • EZB Zinsentscheidungen - Europa<br>
+                                • CPI (Verbraucherpreisindex) - Inflation<br>
+                                • FOMC Meetings - Fed-Politik
+                            </div>
+
+                            <h4>🏢 Unternehmensanalyse (bei Aktien):</h4>
+                            <ul>
+                                <li><strong>Umsatz & Gewinn:</strong> Geschäftserfolg messen</li>
+                                <li><strong>KGV (P/E Ratio):</strong> Bewertung vs. Gewinn</li>
+                                <li><strong>Schulden-Eigenkapital:</strong> Finanzielle Stabilität</li>
+                                <li><strong>Marktposition:</strong> Wettbewerbsvorteile</li>
+                            </ul>
+                        `
+                    },
+                    {
+                        title: "📈 Technische Analyse",
+                        content: `
+                            <p>Die technische Analyse basiert auf der Auswertung von Preisbewegungen, Volumen und anderen Marktdaten. Sie hilft dabei zu bestimmen, <em>wann</em> man kaufen oder verkaufen sollte.</p>
+                            
+                            <h4>🔍 Grundprinzipien:</h4>
+                            <ul>
+                                <li><strong>Der Markt diskontiert alles:</strong> Alle Informationen sind bereits im Preis enthalten</li>
+                                <li><strong>Preise bewegen sich in Trends:</strong> Trends setzen sich mit höherer Wahrscheinlichkeit fort</li>
+                                <li><strong>Geschichte wiederholt sich:</strong> Ähnliche Marktpsychologie führt zu ähnlichen Mustern</li>
+                            </ul>
+
+                            <h4>📊 Chart-Typen:</h4>
+                            <ul>
+                                <li><strong>Liniendiagramm:</strong> Einfach, zeigt nur Schlusskurse</li>
+                                <li><strong>Balkendiagramm:</strong> Zeigt Open, High, Low, Close (OHLC)</li>
+                                <li><strong>Candlestick:</strong> Wie Balken, aber visuell klarer</li>
+                            </ul>
+
+                            <div class="code-block">
+Candlestick-Anatomie:
+├─ Körper: Open bis Close
+├─ Docht oben: High des Zeitraums  
+├─ Docht unten: Low des Zeitraums
+├─ Grün/Weiß: Close > Open (Bullish)
+└─ Rot/Schwarz: Close < Open (Bearish)</div>
+
+                            <h4>📏 Zeitrahmen wählen:</h4>
+                            <ul>
+                                <li><strong>M1-M15:</strong> Scalping (sehr kurzfristig)</li>
+                                <li><strong>H1-H4:</strong> Day Trading</li>
+                                <li><strong>D1:</strong> Swing Trading</li>
+                                <li><strong>W1-MN:</strong> Position Trading</li>
+                            </ul>
+
+                            <div class="info-box warning">
+                                <strong>⚠️ Wichtig:</strong> Nutze Multiple Time Frame Analysis - schaue dir mehrere Zeitrahmen an für bessere Entscheidungen!
+                            </div>
+                        `
+                    },
+                    {
+                        title: "⚖️ Fundamental vs. Technisch",
+                        content: `
+                            <p>Beide Analysemethoden haben ihre Berechtigung und ergänzen sich optimal:</p>
+
+                            <h4>🎯 Wann Fundamentalanalyse nutzen:</h4>
+                            <ul>
+                                <li>Längerfristige Trades (Wochen/Monate)</li>
+                                <li>Makroökonomische Events stehen bevor</li>
+                                <li>Unterbewertete Assets finden</li>
+                                <li>Trendrichtung bestimmen</li>
+                            </ul>
+
+                            <h4>🎯 Wann Technische Analyse nutzen:</h4>
+                            <ul>
+                                <li>Kurzfristige Trades (Minuten/Stunden/Tage)</li>
+                                <li>Ein- und Ausstiegspunkte finden</li>
+                                <li>Stop-Loss und Take-Profit setzen</li>
+                                <li>Momentum und Trends erkennen</li>
+                            </ul>
+
+                            <div class="info-box">
+                                <strong>💡 Pro-Tipp:</strong> Die beste Strategie kombiniert beide Ansätze:<br>
+                                1. Fundamental → Richtung bestimmen<br>
+                                2. Technisch → Timing optimieren
+                            </div>
+
+                            <h4>📅 Trading nach Wirtschaftskalender:</h4>
+                            <p>Wichtige Termine im Blick behalten:</p>
+                            <ul>
+                                <li>Zinsentscheidungen der Zentralbanken</li>
+                                <li>Wichtige Wirtschaftsdaten (NFP, CPI, etc.)</li>
+                                <li>Unternehmensberichte (Earnings)</li>
+                                <li>Politische Events (Wahlen, etc.)</li>
+                            </ul>
+                        `
+                    }
+                ],
+                quiz: {
+                    question: "Welche Aussage über Fundamentalanalyse ist korrekt?",
+                    options: [
+                        "Sie ist nur für Forex-Trading geeignet",
+                        "Sie erklärt warum sich Preise bewegen und hilft bei der Richtungsbestimmung",
+                        "Sie ist immer besser als technische Analyse",
+                        "Sie funktioniert nur bei steigenden Märkten"
+                    ],
+                    correct: 1,
+                    explanation: "Fundamentalanalyse untersucht die zugrundeliegenden wirtschaftlichen Faktoren und hilft zu verstehen, warum sich Märkte in bestimmte Richtungen bewegen."
+                }
+            },
+            3: {
+                title: "Risk Management",
+                difficulty: "medium",
+                duration: "30 Min",
+                completed: false,
+                current: false,
+                locked: true,
+                sections: [
+                    {
+                        title: "⚠️ Warum Risk Management?",
+                        content: `
+                            <p>Risk Management ist der wichtigste Aspekt beim Trading - wichtiger als jede Strategie! Es geht nicht darum, wie viel du gewinnst, sondern darum, wie du <strong>Verluste begrenzt</strong> und langfristig profitabel bleibst.</p>
+                            
+                            <div class="info-box danger">
+                                <strong>🚨 Schockierende Statistik:</strong><br>
+                                80-90% aller Trader verlieren langfristig Geld - hauptsächlich wegen schlechtem Risk Management!
+                            </div>
+
+                            <h4>🛡️ Grundregeln des Risk Managements:</h4>
+                            <ul>
+                                <li><strong>Niemals mehr riskieren als du dir leisten kannst zu verlieren</strong></li>
+                                <li><strong>Immer Stop-Loss setzen</strong> - ohne Ausnahme!</li>
+                                <li><strong>Position Size nach Risiko bestimmen</strong>, nicht nach Gefühl</li>
+                                <li><strong>Diversifikation nutzen</strong> - nicht alles auf eine Karte</li>
+                                <li><strong>Emotionen kontrollieren</strong> - bleib diszipliniert</li>
+                            </ul>
+
+                            <h4>💸 Die Mathematik des Verlierens:</h4>
+                            <div class="code-block">
+Verlust → Benötigter Gewinn für Breakeven:
+10% Verlust → 11% Gewinn nötig
+20% Verlust → 25% Gewinn nötig  
+50% Verlust → 100% Gewinn nötig!
+90% Verlust → 900% Gewinn nötig!!!</div>
+
+                            <p><strong>Fazit:</strong> Große Verluste sind mathematisch schwer aufzuholen. Kleine, kontrollierte Verluste sind der Schlüssel zum Erfolg!</p>
+                        `
+                    },
+                    {
+                        title: "📏 Position Sizing - Die 1-2% Regel",
+                        content: `
+                            <p>Position Sizing bestimmt, wie groß deine Position sein soll. Die bewährteste Methode ist die 1-2% Regel:</p>
+                            
+                            <div class="info-box">
+                                <strong>💡 Die 1-2% Regel:</strong><br>
+                                Riskiere niemals mehr als 1-2% deines Kontos pro Trade!
+                            </div>
+
+                            <h4>🧮 Position Size Formel:</h4>
+                            <div class="code-block">
+Position Size = (Kontostand × Risiko%) ÷ (Entry - Stop Loss)
+
+Beispiel:
+Kontostand: 10.000€
+Risiko: 1% = 100€
+Entry Preis: 50€
+Stop Loss: 45€
+Risiko pro Aktie: 50€ - 45€ = 5€
+
+Position Size = 100€ ÷ 5€ = 20 Aktien</div>
+
+                            <h4>📊 Risk/Reward Ratio:</h4>
+                            <p>Das Verhältnis zwischen potenziellem Gewinn und Verlust:</p>
+                            <ul>
+                                <li><strong>1:1</strong> - Gleiches Risiko wie Gewinnchance</li>
+                                <li><strong>1:2</strong> - Doppelter Gewinn bei gleichem Risiko (empfohlen)</li>
+                                <li><strong>1:3</strong> - Dreifacher Gewinn (noch besser)</li>
+                            </ul>
+
+                            <div class="code-block">
+Mit 1:2 Risk/Reward kannst du profitabel sein, 
+auch wenn nur 40% deiner Trades gewinnen!
+
+Beispiel (10 Trades):
+6 Verlierer: 6 × (-100€) = -600€
+4 Gewinner: 4 × (+200€) = +800€
+Nettogewinn: +200€</div>
+                        `
+                    },
+                    {
+                        title: "🛑 Stop Loss Strategien",
+                        content: `
+                            <p>Ein Stop Loss ist ein automatischer Verkaufsauftrag, der ausgeführt wird, wenn der Preis ein bestimmtes Level erreicht. Es ist dein wichtigstes Werkzeug!</p>
+                            
+                            <h4>📍 Stop Loss Arten:</h4>
+                            <ul>
+                                <li><strong>Percentage Stop:</strong> Fester Prozentsatz (z.B. 2% unter Entry)
+                                    <ul><li>✅ Einfach zu berechnen</li>
+                                    <li>❌ Ignoriert Marktstrukturen</li></ul>
+                                </li>
+                                <li><strong>Technical Stop:</strong> Basierend auf Support/Resistance
+                                    <ul><li>✅ Folgt Marktlogik</li>
+                                    <li>❌ Variable Risikogröße</li></ul>
+                                </li>
+                                <li><strong>Trailing Stop:</strong> Folgt dem Preis nach oben
+                                    <ul><li>✅ Sichert Gewinne automatisch</li>
+                                    <li>❌ Kann durch Volatilität gestoppt werden</li></ul>
+                                </li>
+                                <li><strong>Time Stop:</strong> Position nach bestimmter Zeit schließen
+                                    <ul><li>✅ Verhindert "tote" Positionen</li>
+                                    <li>❌ Kann profitable Trades vorzeitig beenden</li></ul>
+                                </li>
+                            </ul>
+
+                            <div class="info-box warning">
+                                <strong>⚠️ Häufige Stop-Loss Fehler:</strong><br>
+                                • Stop zu nah setzen (wird zu oft getroffen)<br>
+                                • Stop zu weit setzen (Verluste zu groß)<br>
+                                • Stop nach Verlusten verschieben<br>
+                                • Gar keinen Stop setzen
+                            </div>
+
+                            <h4>🎯 Stop-Loss Platzierung:</h4>
+                            <ul>
+                                <li><strong>Unter/Über wichtige Support/Resistance Level</strong></li>
+                                <li><strong>Außerhalb der normalen Volatilität (ATR)</strong></li>
+                                <li><strong>Hinter psychologische Level</strong> (runde Zahlen)</li>
+                                <li><strong>Nach Marktstruktur</strong> (Swing Highs/Lows)</li>
+                            </ul>
+                        `
+                    },
+                    {
+                        title: "🔄 Money Management Regeln",
+                        content: `
+                            <p>Money Management geht über Position Sizing hinaus und umfasst alle Aspekte des Kapitalschutzes:</p>
+
+                            <h4>📈 Portfolio-Regeln:</h4>
+                            <ul>
+                                <li><strong>Maximales Risiko pro Trade:</strong> 1-2%</li>
+                                <li><strong>Maximales Risiko gesamt:</strong> 5-10% des Kontos</li>
+                                <li><strong>Korrelation beachten:</strong> Nicht 5x EUR/USD traden</li>
+                                <li><strong>Diversifikation:</strong> Verschiedene Märkte/Strategien</li>
+                            </ul>
+
+                            <h4>🎮 Drawdown Management:</h4>
+                            <div class="code-block">
+Drawdown-Regeln:
+• Bei 5% Drawdown: Risiko halbieren
+• Bei 10% Drawdown: Trading pausieren
+• Bei 15% Drawdown: Strategie überdenken
+• Bei 20% Drawdown: Stop & Analyse</div>
+
+                            <div class="info-box">
+                                <strong>💡 Pro-Tipp:</strong> Führe ein Trading-Tagebuch! Dokumentiere:<br>
+                                • Setup und Grund für Trade<br>
+                                • Risk/Reward Verhältnis<br>
+                                • Emotionen vor/während/nach Trade<br>
+                                • Lessons learned
+                            </div>
+
+                            <h4>🧠 Psychologische Aspekte:</h4>
+                            <ul>
+                                <li><strong>FOMO vermeiden:</strong> Nicht jedem Trade hinterherlaufen</li>
+                                <li><strong>Revenge Trading stoppen:</strong> Nach Verlusten nicht übertreiben</li>
+                                <li><strong>Disziplin bewahren:</strong> An Regeln halten, auch bei Emotionen</li>
+                                <li><strong>Pausen einlegen:</strong> Bei emotional schwierigen Phasen</li>
+                            </ul>
+                        `
+                    }
+                ],
+                quiz: {
+                    question: "Warum ist die 1-2% Regel beim Position Sizing so wichtig?",
+                    options: [
+                        "Weil man damit immer Gewinn macht",
+                        "Weil sie das Risiko pro Trade begrenzt und langfristige Profitabilität ermöglicht",
+                        "Weil alle Broker das empfehlen",
+                        "Weil größere Positionen illegal sind"
+                    ],
+                    correct: 1,
+                    explanation: "Die 1-2% Regel begrenzt das Risiko pro Trade, wodurch selbst eine Serie von Verlusten das Konto nicht zerstören kann. Dies ermöglicht langfristiges, nachhaltiges Trading."
+                }
+            },
+            4: {
+                title: "Chart Patterns",
+                difficulty: "medium",
+                duration: "35 Min", 
+                completed: false,
+                current: false,
+                locked: true,
+                sections: [
+                    {
+                        title: "📊 Grundlagen der Chart Patterns",
+                        content: `
+                            <p>Chart Patterns sind wiederkehrende Formationen in Preischarts, die Hinweise auf zukünftige Preisbewegungen geben können. Sie basieren auf Marktpsychologie und dem Verhalten von Käufern und Verkäufern.</p>
+                            
+                            <div class="info-box">
+                                <strong>💡 Warum funktionieren Chart Patterns?</strong><br>
+                                Sie spiegeln die kollektive Psychologie der Marktteilnehmer wider. Menschen reagieren in ähnlichen Situationen oft ähnlich, was zu wiederholbaren Mustern führt.
+                            </div>
+
+                            <h4>📈 Pattern-Kategorien:</h4>
+                            <ul>
+                                <li><strong>Trendbestätigung:</strong> Zeigen Fortsetzung des aktuellen Trends</li>
+                                <li><strong>Trendumkehr:</strong> Signalisieren mögliche Trendwende</li>
+                                <li><strong>Neutral:</strong> Können in beide Richtungen ausbrechen</li>
+                            </ul>
+
+                            <h4>🔍 Pattern-Analyse Schritte:</h4>
+                            <ol>
+                                <li><strong>Pattern identifizieren:</strong> Welche Formation liegt vor?</li>
+                                <li><strong>Volumen prüfen:</strong> Bestätigt das Volumen das Pattern?</li>
+                                <li><strong>Breakout warten:</strong> Geduld für klaren Ausbruch</li>
+                                <li><strong>Trade eingehen:</strong> Mit definiertem Risk Management</li>
+                                <li><strong>Kursziel berechnen:</strong> Wo ist das Pattern-Ziel?</li>
+                            </ol>
+
+                            <div class="info-box warning">
+                                <strong>⚠️ Wichtig:</strong> Patterns sind Wahrscheinlichkeiten, keine Garantien! Immer mit Stop-Loss arbeiten.
+                            </div>
+                        `
+                    },
+                    {
+                        title: "🔺 Dreiecks-Patterns",
+                        content: `
+                            <p>Dreiecke gehören zu den häufigsten und zuverlässigsten Chart Patterns. Sie entstehen durch konvergierende Trend-Linien.</p>
+
+                            <h4>📐 Symmetrisches Dreieck:</h4>
+                            <ul>
+                                <li><strong>Aufbau:</strong> Höhere Tiefs treffen auf niedrigere Hochs</li>
+                                <li><strong>Bedeutung:</strong> Unentschieden zwischen Käufern und Verkäufern</li>
+                                <li><strong>Ausbruch:</strong> Meist in Trendrichtung (60-70%)</li>
+                                <li><strong>Kursziel:</strong> Höhe des Dreiecks zur Ausbruchsseite addieren</li>
+                            </ul>
+
+                            <h4>📐 Aufsteigendes Dreieck:</h4>
+                            <ul>
+                                <li><strong>Aufbau:</strong> Horizontaler Widerstand + steigende Tiefs</li>
+                                <li><strong>Bedeutung:</strong> Käufer werden stärker</li>
+                                <li><strong>Ausbruch:</strong> Meist nach oben (bullish)</li>
+                                <li><strong>Kursziel:</strong> Dreieckshöhe über Breakout-Level</li>
+                            </ul>
+
+                            <h4>📐 Absteigendes Dreieck:</h4>
+                            <ul>
+                                <li><strong>Aufbau:</strong> Horizontaler Support + fallende Hochs</li>
+                                <li><strong>Bedeutung:</strong> Verkäufer werden stärker</li>
+                                <li><strong>Ausbruch:</strong> Meist nach unten (bearish)</li>
+                                <li><strong>Kursziel:</strong> Dreieckshöhe unter Breakout-Level</li>
+                            </ul>
+
+                            <div class="code-block">
+Trading-Setup Dreiecke:
+1. Pattern vollständig entwickelt warten
+2. Breakout mit Volumen-Anstieg
+3. Entry: Bei Breakout oder Pullback
+4. Stop: Andere Seite des Dreiecks
+5. Target: Pattern-Höhe projizieren</div>
+
+                            <div class="info-box">
+                                <strong>💡 Pro-Tipp:</strong> Dreiecke verlieren an Zuverlässigkeit, wenn der Ausbruch erst am Ende (letztes Viertel) erfolgt. Frühe Ausbrüche sind meist stärker.
+                            </div>
+                        `
+                    },
+                    {
+                        title: "🔄 Rechteck-Patterns",
+                        content: `
+                            <p>Rechtecke (Trading Ranges) entstehen, wenn der Preis zwischen zwei horizontalen Linien (Support und Resistance) oszilliert.</p>
+
+                            <h4>📦 Trading Range / Rechteck:</h4>
+                            <ul>
+                                <li><strong>Aufbau:</strong> Klare Support- und Resistance-Level</li>
+                                <li><strong>Bedeutung:</strong> Gleichgewicht zwischen Angebot und Nachfrage</li>
+                                <li><strong>Trading:</strong> Range-Trading oder Breakout-Trading</li>
+                                <li><strong>Dauer:</strong> Kann Wochen bis Monate dauern</li>
+                            </ul>
+
+                            <h4>🎯 Range-Trading Strategie:</h4>
+                            <div class="code-block">
+Buy-Setup:
+• Entry: Nahe Support-Level
+• Stop: Unter Support
+• Target: Nahe Resistance
+
+Sell-Setup:
+• Entry: Nahe Resistance-Level  
+• Stop: Über Resistance
+• Target: Nahe Support</div>
+
+                            <h4>🚀 Breakout-Trading Strategie:</h4>
+                            <ul>
+                                <li><strong>Bullish Breakout:</strong> Über Resistance mit Volumen</li>
+                                <li><strong>Bearish Breakout:</strong> Unter Support mit Volumen</li>
+                                <li><strong>False Breakout:</strong> Schnelle Rückkehr in Range (Vorsicht!)</li>
+                            </ul>
+
+                            <div class="info-box warning">
+                                <strong>⚠️ False Breakouts:</strong> 20-30% aller Breakouts sind "false breakouts" - der Preis kehrt schnell zurück. Warte auf Bestätigung!
+                            </div>
+
+                            <h4>📊 Volumen-Interpretation:</h4>
+                            <ul>
+                                <li><strong>Range Phase:</strong> Niedriges Volumen normal</li>
+                                <li><strong>Breakout:</strong> Hohes Volumen = Bestätigung</li>
+                                <li><strong>Niedriges Breakout-Volumen:</strong> Höhere Chance auf False Breakout</li>
+                            </ul>
+                        `
+                    },
+                    {
+                        title: "💫 Kopf-Schulter Patterns",
+                        content: `
+                            <p>Das Kopf-Schulter Pattern ist eines der zuverlässigsten Umkehrformationen. Es zeigt eine Schwächung des Trends an.</p>
+
+                            <h4>👤 Kopf-Schulter Top (Bearish):</h4>
+                            <ul>
+                                <li><strong>Linke Schulter:</strong> Normaler Uptrend-Peak</li>
+                                <li><strong>Kopf:</strong> Höchster Peak, oft mit schwächerem Volumen</li>
+                                <li><strong>Rechte Schulter:</strong> Niedrigerer Peak als Kopf</li>
+                                <li><strong>Neckline:</strong> Verbindet die Tiefs zwischen Schultern</li>
+                            </ul>
+
+                            <h4>👤 Umgekehrte Kopf-Schulter (Bullish):</h4>
+                            <ul>
+                                <li><strong>Aufbau:</strong> Wie oben, aber auf dem Kopf stehend</li>
+                                <li><strong>Bedeutung:</strong> Bullish reversal nach Downtrend</li>
+                                <li><strong>Volumen:</strong> Sollte beim Breakout ansteigen</li>
+                            </ul>
+
+                            <div class="code-block">
+Kopf-Schulter Trading:
+Entry: Neckline-Break mit Volumen
+Stop: Zurück über/unter Neckline
+Target: Höhe (Kopf zu Neckline) projizieren
+
+Beispiel:
+Kopf bei 100, Neckline bei 85
+Kursziel: 85 - 15 = 70</div>
+
+                            <h4>🔍 Erkennungsmerkmale:</h4>
+                            <ul>
+                                <li><strong>Symmetrie:</strong> Schultern etwa gleich hoch</li>
+                                <li><strong>Volumen:</strong> Abnehmendes Volumen zum Kopf</li>
+                                <li><strong>Zeitrahmen:</strong> Entwicklung über mehrere Wochen/Monate</li>
+                                <li><strong>Vorangegangener Trend:</strong> Muss vorhanden sein</li>
+                            </ul>
+
+                            <div class="info-box">
+                                <strong>💡 Erfolgsfaktoren:</strong><br>
+                                • Klare Neckline definieren<br>
+                                • Volumen-Bestätigung abwarten<br>
+                                • Pullback zum Breakout-Level ist normal<br>
+                                • Pattern kann auch nicht vollständig werden
+                            </div>
+                        `
+                    }
+                ],
+                quiz: {
+                    question: "Welches Chart Pattern zeigt typischerweise eine Trendumkehr an?",
+                    options: [
+                        "Symmetrisches Dreieck",
+                        "Trading Range",
+                        "Kopf-Schulter Formation",
+                        "Flagge"
+                    ],
+                    correct: 2,
+                    explanation: "Die Kopf-Schulter Formation ist eine klassische Trendumkehr-Formation, die das Ende eines Aufwärtstrends signalisiert, während die anderen Patterns oft Trendfortsetzungen darstellen."
+                }
+            },
+            5: {
+                title: "Technische Indikatoren",
+                difficulty: "medium",
+                duration: "40 Min",
+                completed: false,
+                current: false,
+                locked: true,
+                sections: [
+                    {
+                        title: "📊 Indikator-Grundlagen",
+                        content: `
+                            <p>Technische Indikatoren sind mathematische Berechnungen basierend auf Preis- und Volumendaten. Sie helfen dabei, Trends zu identifizieren, Momentum zu messen und Ein-/Ausstiegspunkte zu finden.</p>
+                            
+                            <div class="info-box">
+                                <strong>💡 Wichtig zu verstehen:</strong><br>
+                                Indikatoren sind <strong>nacheilend</strong> (lagging) - sie basieren auf vergangenen Preisen. Sie bestätigen oft das, was der Preis bereits zeigt.
+                            </div>
+
+                            <h4>📋 Indikator-Kategorien:</h4>
+                            <ul>
+                                <li><strong>Trend-Indikatoren:</strong> Zeigen Trendrichtung und -stärke
+                                    <ul><li>Moving Averages, MACD, ADX</li></ul>
+                                </li>
+                                <li><strong>Momentum-Indikatoren:</strong> Messen Geschwindigkeit der Preisbewegung
+                                    <ul><li>RSI, Stochastic, Williams %R</li></ul>
+                                </li>
+                                <li><strong>Volatilitäts-Indikatoren:</strong> Messen Preisschwankungen
+                                    <ul><li>Bollinger Bands, ATR</li></ul>
+                                </li>
+                                <li><strong>Volumen-Indikatoren:</strong> Analysieren Handelsvolumen
+                                    <ul><li>OBV, Volume Profile</li></ul>
+                                </li>
+                            </ul>
+
+                            <h4>⚠️ Häufige Indikator-Fehler:</h4>
+                            <ul>
+                                <li><strong>Indicator Overload:</strong> Zu viele Indikatoren verwirren</li>
+                                <li><strong>Signal-Jäger:</strong> Jedem Signal folgen</li>
+                                <li><strong>Divergenz-Fixierung:</strong> Auf jede kleine Divergenz reagieren</li>
+                                <li><strong>Parameter-Optimierung:</strong> Zu viel Backtesting</li>
+                            </ul>
+
+                            <div class="info-box warning">
+                                <strong>⚠️ Goldene Regel:</strong> Der Preis ist König! Indikatoren sind nur Hilfsmittel. Wenn Preis und Indikator sich widersprechen, folge dem Preis.
+                            </div>
+                        `
+                    },
+                    {
+                        title: "📈 Moving Averages (Gleitende Durchschnitte)",
+                        content: `
+                            <p>Moving Averages sind die Grundlage der technischen Analyse. Sie glätten Preisschwankungen und zeigen den zugrundeliegenden Trend.</p>
+
+                            <h4>📊 MA-Typen:</h4>
+                            <ul>
+                                <li><strong>Simple MA (SMA):</strong> Arithmetisches Mittel der letzten N Perioden
+                                    <ul><li>Gleichgewichtung aller Preise</li>
+                                    <li>Reagiert langsam auf Änderungen</li></ul>
+                                </li>
+                                <li><strong>Exponential MA (EMA):</strong> Neuere Preise stärker gewichtet
+                                    <ul><li>Reagiert schneller als SMA</li>
+                                    <li>Weniger Lag, mehr Noise</li></ul>
+                                </li>
+                                <li><strong>Weighted MA (WMA):</strong> Linear gewichteter Durchschnitt
+                                    <ul><li>Kompromiss zwischen SMA und EMA</li></ul>
+                                </li>
+                            </ul>
+
+                            <div class="code-block">
+SMA Berechnung (5-Perioden):
+SMA = (P1 + P2 + P3 + P4 + P5) / 5
+
+EMA Berechnung:
+Multiplier = 2 / (n + 1) = 2 / (5 + 1) = 0.33
+EMA = (Close × Multiplier) + (Vorherige EMA × (1 - Multiplier))</div>
+
+                            <h4>🎯 Popular MA-Perioden:</h4>
+                            <ul>
+                                <li><strong>20 EMA:</strong> Kurzfristiger Trend</li>
+                                <li><strong>50 SMA:</strong> Mittelfristiger Trend</li>
+                                <li><strong>200 SMA:</strong> Langfristiger Trend (wichtigste Linie!)</li>
+                                <li><strong>8, 21, 55:</strong> Fibonacci-basierte Perioden</li>
+                            </ul>
+
+                            <h4>📊 MA Trading Strategien:</h4>
+                            <ul>
+                                <li><strong>MA Cross:</strong> Golden Cross (50 über 200) = bullish
+                                    <ul><li>Death Cross (50 unter 200) = bearish</li></ul>
+                                </li>
+                                <li><strong>Preis vs. MA:</strong> Über MA = bullish, unter MA = bearish</li>
+                                <li><strong>MA als Support/Resistance:</strong> Dynamische Level</li>
+                                <li><strong>MA Ribbon:</strong> Multiple MAs für Trend-Stärke</li>
+                            </ul>
+
+                            <div class="info-box">
+                                <strong>💡 MA-Regel:</strong> In starken Trends bleibt der Preis meist über/unter der 20 EMA. Ein Durchbruch kann Trendwende signalisieren.
+                            </div>
+                        `
+                    },
+                    {
+                        title: "⚡ RSI (Relative Strength Index)",
+                        content: `
+                            <p>Der RSI ist ein Momentum-Oszillator, der zwischen 0 und 100 schwankt. Er misst die Geschwindigkeit und Veränderung von Preisbewegungen.</p>
+
+                            <h4>🧮 RSI Berechnung:</h4>
+                            <div class="code-block">
+RSI = 100 - (100 / (1 + RS))
+RS = Durchschnitt der Aufwärts-Bewegungen / Durchschnitt der Abwärts-Bewegungen
+
+Standard-Periode: 14
+Bereich: 0-100</div>
+
+                            <h4>📊 RSI Interpretation:</h4>
+                            <ul>
+                                <li><strong>RSI > 70:</strong> Überkauft - möglicher Verkaufsdruck</li>
+                                <li><strong>RSI < 30:</strong> Überverkauft - möglicher Kaufdruck</li>
+                                <li><strong>RSI 50:</strong> Neutrale Zone</li>
+                                <li><strong>RSI > 50:</strong> Bullish Momentum</li>
+                                <li><strong>RSI < 50:</strong> Bearish Momentum</li>
+                            </ul>
+
+                            <h4>🎯 RSI Trading-Signale:</h4>
+                            <ul>
+                                <li><strong>Overbought/Oversold:</strong> 
+                                    <ul><li>Sell wenn RSI > 70 und dreht nach unten</li>
+                                    <li>Buy wenn RSI < 30 und dreht nach oben</li></ul>
+                                </li>
+                                <li><strong>Centerline Crossover:</strong>
+                                    <ul><li>Bullish: RSI über 50</li>
+                                    <li>Bearish: RSI unter 50</li></ul>
+                                </li>
+                                <li><strong>Divergenz:</strong>
+                                    <ul><li>Bullish: Preis fällt, RSI steigt</li>
+                                    <li>Bearish: Preis steigt, RSI fällt</li></ul>
+                                </li>
+                            </ul>
+
+                            <div class="info-box warning">
+                                <strong>⚠️ RSI in Trends:</strong> In starken Trends kann RSI lange überkauft (>70) oder überverkauft (<30) bleiben. Nutze zusätzliche Bestätigung!
+                            </div>
+
+                            <h4>💡 RSI Pro-Tipps:</h4>
+                            <ul>
+                                <li><strong>Trend-Anpassung:</strong> In Uptrends 40/80, in Downtrends 20/60</li>
+                                <li><strong>Failure Swings:</strong> RSI macht neues Hoch/Tief, aber schwächer</li>
+                                <li><strong>Support/Resistance:</strong> RSI respektiert oft eigene Level</li>
+                            </ul>
+                        `
+                    },
+                    {
+                        title: "📉 MACD (Moving Average Convergence Divergence)",
+                        content: `
+                            <p>MACD ist einer der vielseitigsten Indikatoren. Er kombiniert Trend-Following und Momentum-Messung in einem Tool.</p>
+
+                            <h4>🧮 MACD Komponenten:</h4>
+                            <div class="code-block">
+MACD Line = 12-EMA - 26-EMA
+Signal Line = 9-EMA der MACD Line
+Histogram = MACD Line - Signal Line</div>
+
+                            <h4>📊 MACD Interpretation:</h4>
+                            <ul>
+                                <li><strong>MACD über Null:</strong> Bullish Momentum</li>
+                                <li><strong>MACD unter Null:</strong> Bearish Momentum</li>
+                                <li><strong>MACD über Signal:</strong> Upward Momentum</li>
+                                <li><strong>MACD unter Signal:</strong> Downward Momentum</li>
+                            </ul>
+
+                            <h4>🎯 MACD Trading-Signale:</h4>
+                            <ul>
+                                <li><strong>Signal Line Crossover:</strong>
+                                    <ul><li>Buy: MACD kreuzt Signal Line von unten</li>
+                                    <li>Sell: MACD kreuzt Signal Line von oben</li></ul>
+                                </li>
+                                <li><strong>Zero Line Crossover:</strong>
+                                    <ul><li>Buy: MACD über Null-Linie</li>
+                                    <li>Sell: MACD unter Null-Linie</li></ul>
+                                </li>
+                                <li><strong>Divergenz:</strong>
+                                    <ul><li>Preis und MACD bewegen sich entgegengesetzt</li></ul>
+                                </li>
+                            </ul>
+
+                            <h4>📈 Histogram-Trading:</h4>
+                            <ul>
+                                <li><strong>Wachsendes Histogram:</strong> Momentum nimmt zu</li>
+                                <li><strong>Schrumpfendes Histogram:</strong> Momentum lässt nach</li>
+                                <li><strong>Histogram Peak:</strong> Oft vor Preis-Peak</li>
+                            </ul>
+
+                            <div class="info-box">
+                                <strong>💡 MACD-Geheimtipp:</strong> Das Histogram zeigt oft früher Momentum-Veränderungen als die MACD-Linie selbst. Achte auf Divergenzen im Histogram!
+                            </div>
+
+                            <h4>⚙️ MACD Settings:</h4>
+                            <ul>
+                                <li><strong>Standard:</strong> 12, 26, 9 (für Daily Charts)</li>
+                                <li><strong>Schneller:</strong> 5, 13, 9 (für kürzere Timeframes)</li>
+                                <li><strong>Langsamer:</strong> 19, 39, 9 (für längere Timeframes)</li>
+                            </ul>
+                        `
+                    },
+                    {
+                        title: "🎈 Bollinger Bands",
+                        content: `
+                            <p>Bollinger Bands bestehen aus drei Linien: einem Moving Average in der Mitte und zwei Standard-Abweichungen als oberes und unteres Band. Sie messen Volatilität und mögliche Preis-Extreme.</p>
+
+                            <h4>🧮 Bollinger Bands Berechnung:</h4>
+                            <div class="code-block">
+Middle Band = 20-SMA
+Upper Band = 20-SMA + (2 × Standard Deviation)
+Lower Band = 20-SMA - (2 × Standard Deviation)
+
+Standard Deviation = √(Σ(Close - SMA)² / n)</div>
+
+                            <h4>📊 Bollinger Bands Eigenschaften:</h4>
+                            <ul>
+                                <li><strong>Band-Kontraktion:</strong> Niedrige Volatilität - Explosion erwartet</li>
+                                <li><strong>Band-Expansion:</strong> Hohe Volatilität - Trend könnte schwächen</li>
+                                <li><strong>95% Regel:</strong> 95% aller Preise bleiben zwischen den Bändern</li>
+                                <li><strong>Band-Walking:</strong> In starken Trends läuft Preis am äußeren Band entlang</li>
+                            </ul>
+
+                            <h4>🎯 Trading-Strategien:</h4>
+                            <ul>
+                                <li><strong>Mean Reversion:</strong>
+                                    <ul><li>Buy bei Touch des unteren Bands</li>
+                                    <li>Sell bei Touch des oberen Bands</li>
+                                    <li>Target: Mittleres Band</li></ul>
+                                </li>
+                                <li><strong>Breakout-Trading:</strong>
+                                    <ul><li>Buy bei Breakout über oberes Band</li>
+                                    <li>Sell bei Breakdown unter unteres Band</li>
+                                    <li>Squeeze vorher beachten</li></ul>
+                                </li>
+                                <li><strong>Bollinger Squeeze:</strong>
+                                    <ul><li>Bänder kontrahieren stark</li>
+                                    <li>Volatilitäts-Explosion erwartet</li>
+                                    <li>Richtung oft unvorhersagbar</li></ul>
+                                </li>
+                            </ul>
+
+                            <div class="info-box">
+                                <strong>💡 %B Indikator:</strong><br>
+                                %B = (Close - Lower Band) / (Upper Band - Lower Band)<br>
+                                • %B > 1: Preis über oberem Band<br>
+                                • %B < 0: Preis unter unterem Band<br>
+                                • %B = 0.5: Preis am mittleren Band
+                            </div>
+
+                            <h4>⚠️ Bollinger Bands Fehler:</h4>
+                            <ul>
+                                <li><strong>Automatisches Reversal:</strong> Band-Touch ist kein automatisches Signal</li>
+                                <li><strong>Trend ignorieren:</strong> In starken Trends läuft Preis am Band entlang</li>
+                                <li><strong>Isoliert verwenden:</strong> Immer mit anderen Indikatoren kombinieren</li>
+                            </ul>
+
+                            <div class="info-box warning">
+                                <strong>⚠️ Wichtig:</strong> Bollinger Bands funktionieren am besten in Seitwärtsmärkten. In starken Trends können sie irreführend sein!
+                            </div>
+                        `
+                    }
+                ],
+                quiz: {
+                    question: "Was zeigt der RSI-Indikator hauptsächlich an?",
+                    options: [
+                        "Die Trendrichtung des Marktes",
+                        "Das Handelsvolumen",
+                        "Die Geschwindigkeit und Veränderung von Preisbewegungen (Momentum)",
+                        "Zukünftige Preise"
+                    ],
+                    correct: 2,
+                    explanation: "Der RSI (Relative Strength Index) ist ein Momentum-Oszillator, der die Geschwindigkeit und Veränderung von Preisbewegungen misst, nicht die Trendrichtung selbst."
+                }
+            },
+            6: {
+                title: "Trading Strategien", 
+                difficulty: "hard",
+                duration: "45 Min",
+                completed: false,
+                current: false,
+                locked: true,
+                sections: [
+                    {
+                        title: "🎯 Strategien-Übersicht",
+                        content: `
+                            <p>Eine Trading-Strategie ist ein systematischer Ansatz für Marktentscheidungen. Sie definiert WANN, WAS und WIE du tradest. Ohne Strategie ist Trading nur Glücksspiel!</p>
+                            
+                            <div class="info-box">
+                                <strong>💡 Was macht eine gute Strategie aus?</strong><br>
+                                • Klare Ein- und Ausstiegsregeln<br>
+                                • Definiertes Risk Management<br>
+                                • Statistisch getestet (Backtesting)<br>
+                                • An deine Persönlichkeit angepasst
+                            </div>
+
+                            <h4>⏰ Strategien nach Zeitrahmen:</h4>
+                            <ul>
+                                <li><strong>Scalping (M1-M5):</strong> Sekunden bis Minuten
+                                    <ul><li>Sehr viele kleine Trades</li>
+                                    <li>Hohe Konzentration nötig</li>
+                                    <li>Niedrige Spreads wichtig</li></ul>
+                                </li>
+                                <li><strong>Day Trading (M15-H4):</strong> Stunden, aber nicht über Nacht
+                                    <ul><li>Moderate Anzahl Trades</li>
+                                    <li>Kein Overnight-Risiko</li>
+                                    <li>Vollzeit-Aufmerksamkeit</li></ul>
+                                </li>
+                                <li><strong>Swing Trading (H4-D1):</strong> Tage bis Wochen
+                                    <ul><li>Weniger Trades, längere Haltedauer</li>
+                                    <li>Neben Job möglich</li>
+                                    <li>Fundamentals wichtiger</li></ul>
+                                </li>
+                                <li><strong>Position Trading (D1-W1):</strong> Wochen bis Monate
+                                    <ul><li>Sehr wenige Trades</li>
+                                    <li>Fundamentalanalyse dominant</li>
+                                    <li>Geduld erforderlich</li></ul>
+                                </li>
+                            </ul>
+
+                            <h4>📊 Strategien nach Marktbedingungen:</h4>
+                            <ul>
+                                <li><strong>Trend-Following:</strong> Profitiert von anhaltenden Bewegungen</li>
+                                <li><strong>Mean Reversion:</strong> Profitiert von Rückkehr zum Mittelwert</li>
+                                <li><strong>Breakout:</strong> Profitiert von Ausbrüchen aus Ranges</li>
+                                <li><strong>Arbitrage:</strong> Nutzt Preisunterschiede zwischen Märkten</li>
+                            </ul>
+
+                            <div class="info-box warning">
+                                <strong>⚠️ Strategien-Realität:</strong> Keine Strategie funktioniert immer! Märkte ändern sich, und Strategien müssen angepasst werden. Sei flexibel, aber nicht sprunghaft.
+                            </div>
+                        `
+                    },
+                    {
+                        title: "📈 Trend-Following Strategien",
+                        content: `
+                            <p>Trend-Following versucht, von anhaltenden Preisbewegungen zu profitieren. Der Grundsatz: "The trend is your friend" - bis er endet!</p>
+
+                            <h4>🌊 Moving Average Crossover:</h4>
+                            <div class="code-block">
+Setup:
+• 50 EMA und 200 SMA auf Chart
+• Long: 50 EMA kreuzt 200 SMA von unten (Golden Cross)
+• Short: 50 EMA kreuzt 200 SMA von oben (Death Cross)
+• Stop: Unter/Über dem gekreuzten MA
+• Target: 2:1 oder 3:1 Risk/Reward</div>
+
+                            <ul>
+                                <li><strong>Vorteile:</strong> Einfach, fängt große Moves</li>
+                                <li><strong>Nachteile:</strong> Viele Fehlsignale, späte Einträge</li>
+                                <li><strong>Beste Märkte:</strong> Trending Märkte, längere Timeframes</li>
+                            </ul>
+
+                            <h4>📊 MACD Trend Strategy:</h4>
+                            <div class="code-block">
+Setup:
+• MACD über Null-Linie für Uptrend
+• Long: MACD kreuzt Signal Line von unten
+• Bestätigung: Histogram wächst
+• Stop: MACD zurück unter Signal Line
+• Add-On: Weitere Positionen bei erneutem Signal</div>
+
+                            <h4>🎯 Donchian Channel Breakout:</h4>
+                            <ul>
+                                <li><strong>Setup:</strong> 20-Perioden Channel</li>
+                                <li><strong>Long:</strong> Breakout über Kanal-Hoch</li>
+                                <li><strong>Short:</strong> Breakdown unter Kanal-Tief</li>
+                                <li><strong>Stop:</strong> Mittlere Linie des Kanals</li>
+                                <li><strong>Exit:</strong> 10-Perioden Reversal</li>
+                            </ul>
+
+                            <div class="info-box">
+                                <strong>💡 Turtle Trading Rules:</strong> Eine der berühmtesten Trend-Following Strategien. Basiert auf Donchian Channel Breakouts mit striktem Risk Management.
+                            </div>
+
+                            <h4>⚙️ Trend-Following Optimierungen:</h4>
+                            <ul>
+                                <li><strong>Filter verwenden:</strong> ADX > 25 für Trend-Stärke</li>
+                                <li><strong>Multiple Timeframes:</strong> Trend in höherem TF bestätigen</li>
+                                <li><strong>Volume Konfirmation:</strong> Breakouts mit Volumen</li>
+                                <li><strong>Pyramiding:</strong> Positionen in Trendrichtung aufbauen</li>
+                            </ul>
+
+                            <h4>📉 Wann Trend-Following nicht funktioniert:</h4>
+                            <ul>
+                                <li><strong>Choppy Märkte:</strong> Viele Whipsaws</li>
+                                <li><strong>Low Volatility:</strong> Kleine Bewegungen</li>
+                                <li><strong>Übernachrichten:</strong> Fundamentals dominieren</li>
+                            </ul>
+                        `
+                    },
+                    {
+                        title: "🔄 Mean Reversion Strategien",
+                        content: `
+                            <p>Mean Reversion basiert auf der Annahme, dass Preise zu ihrem Mittelwert zurückkehren. Was zu weit vom Durchschnitt abweicht, kehrt meist zurück.</p>
+
+                            <h4>📊 Bollinger Bands Reversion:</h4>
+                            <div class="code-block">
+Setup:
+• 20 SMA mit 2 Standard Deviations
+• Long: Preis berührt unteres Band + RSI < 30
+• Short: Preis berührt oberes Band + RSI > 70
+• Target: Mittleres Band (20 SMA)
+• Stop: Jenseits des entgegengesetzten Bands</div>
+
+                            <h4>🎯 RSI Reversion:</h4>
+                            <ul>
+                                <li><strong>Oversold Bounce:</strong> RSI < 30, dann Umkehr nach oben</li>
+                                <li><strong>Overbought Fade:</strong> RSI > 70, dann Umkehr nach unten</li>
+                                <li><strong>Bestätigung:</strong> Preis muss auch überextended sein</li>
+                                <li><strong>Timing:</strong> Warte auf erste Anzeichen der Umkehr</li>
+                            </ul>
+
+                            <h4>📈 Support/Resistance Mean Reversion:</h4>
+                            <div class="code-block">
+Setup:
+• Klare S/R Level identifizieren
+• Long: Preis nähert sich Support + oversold
+• Short: Preis nähert sich Resistance + overbought
+• Tight Stop: Unter/Über S/R Level
+• Quick Target: Zur Mitte der Range</div>
+
+                            <h4>🌊 Pairs Trading (Relative Value):</h4>
+                            <ul>
+                                <li><strong>Konzept:</strong> Zwei korrelierende Assets</li>
+                                <li><strong>Long/Short:</strong> Wenn Spread zu weit auseinander</li>
+                                <li><strong>Beispiel:</strong> EUR/USD vs GBP/USD</li>
+                                <li><strong>Market Neutral:</strong> Nur von Spread-Konvergenz profitieren</li>
+                            </ul>
+
+                            <div class="info-box warning">
+                                <strong>⚠️ Mean Reversion Risiken:</strong><br>
+                                • "Falling Knife" Problem - Preis kann weiter fallen<br>
+                                • Trends können länger anhalten als erwartet<br>
+                                • Fundamentale Veränderungen können "Mean" verschieben
+                            </div>
+
+                            <h4>⚙️ Mean Reversion Verbesserungen:</h4>
+                            <ul>
+                                <li><strong>Confluence:</strong> Multiple Indikatoren bestätigen</li>
+                                <li><strong>Time Element:</strong> Wie lange ist Preis überextended?</li>
+                                <li><strong>Volume Analysis:</strong> Exhaustion Volume bei Extremen</li>
+                                <li><strong>Market Regime:</strong> Funktioniert besser in ranging markets</li>
+                            </ul>
+                        `
+                    },
+                    {
+                        title: "💥 Breakout Strategien",
+                        content: `
+                            <p>Breakout-Strategien profitieren von starken Preisbewegungen nach Perioden der Konsolidierung. Der Schlüssel: Echte von falschen Breakouts unterscheiden!</p>
+
+                            <h4>📦 Range Breakout:</h4>
+                            <div class="code-block">
+Setup:
+• Mindestens 20 Bars in Range
+• Klare Support/Resistance Level
+• Long: Break über Resistance + Volumen
+• Short: Break unter Support + Volumen
+• Stop: Zurück in Range
+• Target: Range-Höhe vom Breakout-Point</div>
+
+                            <h4>🔺 Triangle Breakout:</h4>
+                            <ul>
+                                <li><strong>Setup:</strong> Konvergierende Trendlinien</li>
+                                <li><strong>Entry:</strong> Breakout in Richtung des Trends</li>
+                                <li><strong>Volume:</strong> Muss bei Breakout ansteigen</li>
+                                <li><strong>Target:</strong> Dreieckshöhe projizieren</li>
+                                <li><strong>Timing:</strong> Im ersten 2/3 des Dreiecks</li>
+                            </ul>
+
+                            <h4>📰 News Breakout:</h4>
+                            <div class="code-block">
+Setup:
+• Wichtige News Event (NFP, Fed, etc.)
+• Pending Orders über/unter aktueller Range
+• Entry: Breakout in Richtung der News
+• Stop: Entgegengesetzte Seite der Range
+• Target: 1-2x der Range-Größe
+
+Vorsicht: Hohe Spreads und Slippage möglich!</div>
+
+                            <h4>🌅 Opening Range Breakout:</h4>
+                            <ul>
+                                <li><strong>Konzept:</strong> Erste 30-60 Min definieren Range</li>
+                                <li><strong>Long:</strong> Breakout über Opening Range High</li>
+                                <li><strong>Short:</strong> Breakdown unter Opening Range Low</li>
+                                <li><strong>Zeitfenster:</strong> Meist bis Mittag gültig</li>
+                                <li><strong>Märkte:</strong> Besonders bei Aktienindizes</li>
+                            </ul>
+
+                            <h4>🔍 False Breakout Erkennung:</h4>
+                            <ul>
+                                <li><strong>Schwaches Volumen:</strong> Breakout ohne Volumen-Anstieg</li>
+                                <li><strong>Schnelle Rückkehr:</strong> Zurück in Range innerhalb weniger Bars</li>
+                                <li><strong>Divergenz:</strong> Momentum-Indikatoren bestätigen nicht</li>
+                                <li><strong>Context:</strong> Gegen übergeordneten Trend</li>
+                            </ul>
+
+                            <div class="info-box">
+                                <strong>💡 Breakout-Verbesserung:</strong><br>
+                                • Warte auf Pullback zum Breakout-Level<br>
+                                • Nutze Higher Timeframe für Context<br>
+                                • Kombiniere mit Momentum-Indikatoren<br>
+                                • Beachte Market Sessions (London/NY Open)
+                            </div>
+
+                            <h4>⚡ Volatility Breakout:</h4>
+                            <div class="code-block">
+Setup (Bollinger Bands):
+• Bands kontrahieren (Squeeze)
+• Niedriges Volumen in Konsolidierung
+• Entry: Breakout aus Bands mit Volumen
+• Direction: Oft unvorhersagbar
+• Stop: Mittleres Band
+• Target: 1-2x der Band-Breite</div>
+
+                            <h4>⚠️ Breakout-Fallstricke:</h4>
+                            <ul>
+                                <li><strong>Late Entry:</strong> Zu spät nach Breakout einsteigen</li>
+                                <li><strong>No Confirmation:</strong> Ohne Volumen/Momentum-Bestätigung</li>
+                                <li><strong>Wrong Context:</strong> Gegen übergeordneten Trend</li>
+                                <li><strong>Overtrading:</strong> Jeder kleine Breakout ist kein Signal</li>
+                            </ul>
+                        `
+                    },
+                    {
+                        title: "🎪 Strategie-Entwicklung & Testing",
+                        content: `
+                            <p>Eine erfolgreiche Strategie zu entwickeln ist ein Prozess. Von der Idee bis zur Live-Implementation gibt es wichtige Schritte zu beachten.</p>
+
+                            <h4>🔬 Entwicklungsprozess:</h4>
+                            <ol>
+                                <li><strong>Hypothese entwickeln:</strong> "Was könnte funktionieren?"</li>
+                                <li><strong>Regel definieren:</strong> Klare Ein-/Ausstiegskriterien</li>
+                                <li><strong>Backtesting:</strong> Historische Daten testen</li>
+                                <li><strong>Forward Testing:</strong> Demo-Trading</li>
+                                <li><strong>Live Testing:</strong> Kleine Positions-Größen</li>
+                                <li><strong>Optimierung:</strong> Anpassungen basierend auf Ergebnissen</li>
+                            </ol>
+
+                            <h4>📊 Backtesting Essentials:</h4>
+                            <div class="code-block">
+Wichtige Metriken:
+• Win Rate: % der profitablen Trades
+• Average Win/Loss: Durchschnittlicher Gewinn/Verlust
+• Profit Factor: Gross Profit / Gross Loss
+• Maximum Drawdown: Größter Verlust vom Peak
+• Sharpe Ratio: Risk-adjusted Returns
+• Sortino Ratio: Downside Risk fokussiert</div>
+
+                            <ul>
+                                <li><strong>Minimum Sample:</strong> Mind. 100 Trades für Statistik</li>
+                                <li><strong>Out-of-Sample:</strong> Teste auch auf ungesehenen Daten</li>
+                                <li><strong>Transaction Costs:</strong> Spreads/Kommissionen berücksichtigen</li>
+                                <li><strong>Slippage:</strong> Realistische Ausführungspreise</li>
+                            </ul>
+
+                            <h4>⚠️ Backtesting-Fallen:</h4>
+                            <ul>
+                                <li><strong>Curve Fitting:</strong> Über-Optimierung auf historische Daten</li>
+                                <li><strong>Look-ahead Bias:</strong> Zukünftige Infos verwenden</li>
+                                <li><strong>Survivorship Bias:</strong> Nur erfolgreiche Assets testen</li>
+                                <li><strong>Data Mining:</strong> Zu viele Parameter optimieren</li>
+                            </ul>
+
+                            <div class="info-box warning">
+                                <strong>⚠️ Wichtig:</strong> Backtesting-Ergebnisse sind keine Garantie für zukünftige Performance! Märkte ändern sich ständig.
+                            </div>
+
+                            <h4>🎯 Strategie-Auswahl Kriterien:</h4>
+                            <ul>
+                                <li><strong>Persönlichkeit:</strong> Passt zu deinem Risikoprofil?</li>
+                                <li><strong>Zeitaufwand:</strong> Kannst du die Märkte beobachten?</li>
+                                <li><strong>Kapital:</strong> Mindest-Kontogröße erforderlich?</li>
+                                <li><strong>Märkte:</strong> In welchen Assets funktioniert sie?</li>
+                                <li><strong>Bedingungen:</strong> Trending vs. Ranging Märkte?</li>
+                            </ul>
+
+                            <div class="info-box">
+                                <strong>💡 Pro-Tipp:</strong> Beginne einfach! Eine simple, gut verstandene Strategie schlägt oft komplexe Systeme. Mastery beats complexity!
+                            </div>
+                        `
+                    }
+                ],
+                quiz: {
+                    question: "Was ist der wichtigste Faktor bei der Auswahl einer Trading-Strategie?",
+                    options: [
+                        "Die höchste historische Rendite",
+                        "Die komplexesten Indikatoren",
+                        "Dass sie zu deiner Persönlichkeit und deinen Umständen passt",
+                        "Dass sie von einem Guru empfohlen wird"
+                    ],
+                    correct: 2,
+                    explanation: "Die beste Strategie ist die, die zu deiner Persönlichkeit, deinem Risikoprofil, verfügbarer Zeit und Umständen passt. Eine Strategie, die du nicht durchhalten kannst, wird nie erfolgreich sein."
+                }
+            },
+            7: {
+                title: "Trading Psychologie",
+                difficulty: "hard", 
+                duration: "25 Min",
+                completed: false,
+                current: false,
+                locked: true,
+                sections: [
+                    {
+                        title: "🧠 Die Psychologie des Tradings",
+                        content: `
+                            <p>Trading ist zu 10% Technik und zu 90% Psychologie. Die größten Verluste entstehen nicht durch schlechte Strategien, sondern durch emotionale Entscheidungen!</p>
+                            
+                            <div class="info-box danger">
+                                <strong>🚨 Schockierende Wahrheit:</strong><br>
+                                95% der Trader scheitern nicht an mangelndem Wissen, sondern an psychologischen Faktoren: Gier, Angst, Ungeduld und Selbstüberschätzung.
+                            </div>
+
+                            <h4>😨 Die großen Trading-Emotionen:</h4>
+                            <ul>
+                                <li><strong>Gier:</strong> "Nur noch ein Trade..." führt zu Overtrading</li>
+                                <li><strong>Angst:</strong> Verpassen von Gelegenheiten oder zu frühe Exits</li>
+                                <li><strong>Hoffnung:</strong> Verlustpositionen zu lange halten</li>
+                                <li><strong>Selbstüberschätzung:</strong> Nach Gewinnen zu riskant werden</li>
+                                <li><strong>Rache:</strong> Nach Verlusten "den Markt schlagen" wollen</li>
+                            </ul>
+
+                            <h4>🎭 Kognitive Verzerrungen beim Trading:</h4>
+                            <ul>
+                                <li><strong>Confirmation Bias:</strong> Nur bestätigende Infos suchen</li>
+                                <li><strong>Anchoring:</strong> Zu stark an erste Info gebunden</li>
+                                <li><strong>Loss Aversion:</strong> Verluste emotional schwerer als Gewinne</li>
+                                <li><strong>Recency Bias:</strong> Letzte Erfahrungen übergewichten</li>
+                                <li><strong>Overconfidence:</strong> Eigene Fähigkeiten überschätzen</li>
+                            </ul>
+
+                            <div class="info-box">
+                                <strong>💡 Fakt:</strong> Unser Gehirn ist für Trading nicht gemacht! Es ist für Überleben in der Steinzeit optimiert, nicht für Finanzmärkte. Deshalb brauchen wir Systeme und Disziplin.
+                            </div>
+
+                            <h4>⚖️ Fear vs. Greed Zyklus:</h4>
+                            <div class="code-block">
+Der Trading-Teufelskreis:
+1. Angst → Verpassen von Gelegenheiten
+2. FOMO → Einstieg zu spät/zu hoch
+3. Gier → Position zu lange halten  
+4. Verlust → Wut und Rachegelüste
+5. Revenge Trading → Größere Verluste
+6. Noch mehr Angst → Zyklus beginnt von vorn</div>
+
+                            <p><strong>Lösung:</strong> Diesen Zyklus durch systematisches Trading und emotionale Kontrolle durchbrechen!</p>
+                        `
+                    },
+                    {
+                        title: "🎯 Trading-Disziplin entwickeln",
+                        content: `
+                            <p>Disziplin ist der Unterschied zwischen dauerhaft profitablen Tradern und allen anderen. Sie ist erlernbar, aber erfordert bewusste Anstrengung.</p>
+
+                            <h4>📋 Trading-Plan erstellen:</h4>
+                            <ul>
+                                <li><strong>Strategie:</strong> Welche Setups tradest du?</li>
+                                <li><strong>Risk Management:</strong> Wie viel riskierst du pro Trade?</li>
+                                <li><strong>Märkte:</strong> Welche Assets, welche Sessions?</li>
+                                <li><strong>Ziele:</strong> Monatliche/jährliche Ziele</li>
+                                <li><strong>Regeln:</strong> Was ist erlaubt, was nicht?</li>
+                            </ul>
+
+                            <div class="code-block">
+Beispiel Trading-Regeln:
+• Maximal 3 Trades pro Tag
+• Niemals mehr als 2% pro Trade riskieren  
+• Stop-Loss immer setzen, niemals verschieben
+• Bei 5% Drawdown: Risiko halbieren
+• Nach 3 Verlusten in Folge: 1 Tag Pause
+• Keine Trades 30 Min vor wichtigen News</div>
+
+                            <h4>📊 Trading-Journal führen:</h4>
+                            <ul>
+                                <li><strong>Trade-Details:</strong> Entry, Exit, Grund, Ergebnis</li>
+                                <li><strong>Emotionen:</strong> Wie hast du dich vor/während/nach gefühlt?</li>
+                                <li><strong>Lessons Learned:</strong> Was war gut/schlecht?</li>
+                                <li><strong>Screenshots:</strong> Charts für spätere Analyse</li>
+                                <li><strong>Weekly Review:</strong> Wöchentliche Auswertung</li>
+                            </ul>
+
+                            <h4>🧘 Emotionale Kontrolle-Techniken:</h4>
+                            <ul>
+                                <li><strong>Breathing Exercises:</strong> 4-7-8 Atemtechnik vor Trades</li>
+                                <li><strong>Meditation:</strong> 10 Min täglich für Klarheit</li>
+                                <li><strong>Visualization:</strong> Erfolgreiches Trading mental durchspielen</li>
+                                <li><strong>Physical Exercise:</strong> Stress abbauen durch Sport</li>
+                                <li><strong>Breaks:</strong> Bei emotionalen Peaks pausieren</li>
+                            </ul>
+
+                            <div class="info-box">
+                                <strong>💡 Der "Marshmallow-Test" für Trader:</strong><br>
+                                Kannst du warten? Geduld ist die wichtigste Trading-Eigenschaft. Warte auf das perfekte Setup, statt jeden Marktmove zu jagen.
+                            </div>
+
+                            <h4>🎮 Position Sizing Psychologie:</h4>
+                            <ul>
+                                <li><strong>Comfort Zone:</strong> Trade nur Größen, die dich nicht nachts wachhalten</li>
+                                <li><strong>Scale Down:</strong> Bei Verlusten Größe reduzieren</li>
+                                <li><strong>Scale Up:</strong> Erst bei bewiesener Konsistenz</li>
+                                <li><strong>"Sleep Test":</strong> Kannst du ruhig schlafen? Dann ist die Größe ok</li>
+                            </ul>
+                        `
+                    },
+                    {
+                        title: "💪 Mentale Stärke aufbauen",
+                        content: `
+                            <p>Trading ist ein Marathon, kein Sprint. Mentale Stärke ist wie ein Muskel - sie muss trainiert werden, um in stressigen Situationen zu funktionieren.</p>
+
+                            <h4>🏋️ Mental Fitness Training:</h4>
+                            <ul>
+                                <li><strong>Demo-Trading:</strong> Strategie ohne Geld-Emotionen üben</li>
+                                <li><strong>Small Size:</strong> Mit kleinsten Positionen beginnen</li>
+                                <li><strong>Gradual Increase:</strong> Größe langsam steigern</li>
+                                <li><strong>Simulation:</strong> Schwierige Szenarien mental durchspielen</li>
+                                <li><strong>Routine:</strong> Feste Abläufe für Konsistenz</li>
+                            </ul>
+
+                            <h4>🎯 Ziele richtig setzen:</h4>
+                            <div class="code-block">
+SMART Trading-Ziele:
+S - Spezifisch: "5% monatliche Rendite"
+M - Messbar: Klare Zahlen und Metriken
+A - Erreichbar: Realistisch basierend auf Skill
+R - Relevant: Passt zu langfristigem Plan
+T - Zeitgebunden: Klare Deadlines</div>
+
+                            <ul>
+                                <li><strong>Prozess- vs. Ergebnis-Ziele:</strong>
+                                    <ul><li>Schlecht: "10.000€ pro Monat verdienen"</li>
+                                    <li>Gut: "Jeden Tag mein Setup korrekt traden"</li></ul>
+                                </li>
+                                <li><strong>Short-term Milestones:</strong> Kleine Erfolge feiern</li>
+                                <li><strong>Long-term Vision:</strong> Großes Ziel vor Augen behalten</li>
+                            </ul>
+
+                            <h4>🔄 Mit Verlusten umgehen:</h4>
+                            <ul>
+                                <li><strong>Accept Losses:</strong> Verluste sind Teil des Geschäfts</li>
+                                <li><strong>Learn from Mistakes:</strong> Was kannst du besser machen?</li>
+                                <li><strong>Stay Objective:</strong> Emotionen aus der Analyse raushalten</li>
+                                <li><strong>Move On:</strong> Nicht zu lange bei einem Verlust verweilen</li>
+                                <li><strong>System Trust:</strong> Vertraue deiner getesteten Strategie</li>
+                            </ul>
+
+                            <div class="info-box warning">
+                                <strong>⚠️ Drawdown Psychologie:</strong><br>
+                                Drawdowns sind unvermeidlich! Sogar die besten Trader haben 20-30% Drawdowns. Der Schlüssel: Nicht die Strategie in Frage stellen, sondern durchhalten.
+                            </div>
+
+                            <h4>🌟 Winning Streaks handhaben:</h4>
+                            <ul>
+                                <li><strong>Stay Humble:</strong> Erfolg ist oft auch Glück</li>
+                                <li><strong>Don't Deviate:</strong> Nicht von bewährter Strategie abweichen</li>
+                                <li><strong>Take Profits:</strong> Gelegentlich Gewinne realisieren</li>
+                                <li><strong>Prepare for Drawdown:</strong> Der nächste Verlust kommt bestimmt</li>
+                            </ul>
+
+                            <div class="info-box">
+                                <strong>💡 Top-Trader Mindset:</strong><br>
+                                "Ich bin ein Geschäftsmann, der zufällig mit Märkten arbeitet. Jeder Trade ist ein Geschäft mit kalkuliertem Risiko und erwarteter Rendite."
+                            </div>
+                        `
+                    },
+                    {
+                        title: "⚡ Stress Management & Performance",
+                        content: `
+                            <p>Trading ist einer der stressigsten Berufe der Welt. Chronischer Stress führt zu schlechten Entscheidungen und Burnout. Stress-Management ist Performance-Management!</p>
+
+                            <h4>🔥 Stress-Symptome beim Trading:</h4>
+                            <ul>
+                                <li><strong>Körperlich:</strong> Schwitzen, Herzrasen, Verspannungen</li>
+                                <li><strong>Mental:</strong> Unkonzentriertheit, Tunnelblick</li>
+                                <li><strong>Emotional:</strong> Reizbarkeit, Angst, Depression</li>
+                                <li><strong>Behavioral:</strong> Impulsive Trades, Overtrading</li>
+                            </ul>
+
+                            <h4>🧘 Stress-Reduktions-Techniken:</h4>
+                            <div class="code-block">
+4-7-8 Atemtechnik:
+1. 4 Sekunden einatmen
+2. 7 Sekunden Luft anhalten  
+3. 8 Sekunden ausatmen
+4. 4 Zyklen wiederholen
+
+Sofortige Entspannung und Klarheit!</div>
+
+                            <ul>
+                                <li><strong>Progressive Muskelentspannung:</strong> Systematisch Muskeln anspannen und entspannen</li>
+                                <li><strong>Mindfulness Meditation:</strong> 10-20 Min täglich</li>
+                                <li><strong>Physical Exercise:</strong> Cardio für Stress-Abbau</li>
+                                <li><strong>Adequate Sleep:</strong> 7-8 Stunden für optimale Performance</li>
+                                <li><strong>Healthy Diet:</strong> Stable Blutzucker für stable Emotionen</li>
+                            </ul>
+
+                            <h4>🎪 Work-Life-Balance:</h4>
+                            <ul>
+                                <li><strong>Set Hours:</strong> Feste Trading-Zeiten definieren</li>
+                                <li><strong>Weekend Breaks:</strong> Märkte auch mal vergessen</li>
+                                <li><strong>Hobbies:</strong> Andere Interessen pflegen</li>
+                                <li><strong>Social Contact:</strong> Familie und Freunde nicht vernachlässigen</li>
+                                <li><strong>Vacation Time:</strong> Regelmäßige Auszeiten</li>
+                            </ul>
+
+                            <h4>🏆 Peak Performance Protokoll:</h4>
+                            <div class="code-block">
+Optimaler Trading-Tag:
+06:00 - Aufstehen, Wasser trinken
+06:30 - 20 Min Meditation oder Sport  
+07:00 - Gesundes Frühstück
+07:30 - Marktanalyse ohne Zeitdruck
+08:30 - Trading Session (max 4h)
+12:30 - Lunch Break, raus an frische Luft
+14:00 - Review und Journal Update
+15:00 - Andere Projekte oder Freizeit</div>
+
+                            <div class="info-box">
+                                <strong>💡 Performance-Hack:</strong> Die besten Trading-Entscheidungen triffst du, wenn du entspannt, ausgeruht und nicht unter Zeitdruck stehst. Optimiere deine Umgebung!
+                            </div>
+
+                            <h4>🚨 Burnout-Prävention:</h4>
+                            <ul>
+                                <li><strong>Warnsignale erkennen:</strong> Chronische Müdigkeit, Zynismus</li>
+                                <li><strong>Früh gegensteuern:</strong> Pausen vor dem Zusammenbruch</li>
+                                <li><strong>Professional Help:</strong> Trading-Psychologe bei Bedarf</li>
+                                <li><strong>Perspective:</strong> Trading ist nicht alles im Leben</li>
+                            </ul>
+
+                            <div class="info-box warning">
+                                <strong>⚠️ Realitätscheck:</strong> Falls Trading dein Leben, deine Beziehungen oder deine Gesundheit zerstört, ist es Zeit für eine Pause und Neubewertung!
+                            </div>
+                        `
+                    }
+                ],
+                quiz: {
+                    question: "Was ist die Hauptursache für das Scheitern der meisten Trader?",
+                    options: [
+                        "Mangelndes technisches Wissen",
+                        "Zu wenig Startkapital",
+                        "Psychologische Faktoren wie Gier, Angst und emotionale Entscheidungen",
+                        "Schlechte Broker"
+                    ],
+                    correct: 2,
+                    explanation: "Studien zeigen, dass 95% der Trader nicht an mangelndem Wissen scheitern, sondern an psychologischen Faktoren. Trading ist zu 90% Psychologie!"
+                }
+            },
+            8: {
+                title: "Portfolio Management",
+                difficulty: "hard",
+                duration: "50 Min", 
+                completed: false,
+                current: false,
+                locked: true,
+                sections: [
+                    {
+                        title: "💼 Portfolio-Grundlagen",
+                        content: `
+                            <p>Portfolio Management geht über einzelne Trades hinaus und betrachtet dein gesamtes Trading-Kapital als Geschäft. Es ist die Königsdisziplin des professionellen Tradings!</p>
+                            
+                            <div class="info-box">
+                                <strong>💡 Portfolio vs. Trade-Sicht:</strong><br>
+                                <strong>Trade-Sicht:</strong> "Ich will bei diesem Trade gewinnen"<br>
+                                <strong>Portfolio-Sicht:</strong> "Ich will langfristig profitabel sein"
+                            </div>
+
+                            <h4>📊 Portfolio Management Komponenten:</h4>
+                            <ul>
+                                <li><strong>Asset Allocation:</strong> Wie verteile ich Kapital auf verschiedene Märkte?</li>
+                                <li><strong>Position Sizing:</strong> Wie groß soll jede Position sein?</li>
+                                <li><strong>Risk Management:</strong> Wie kontrolliere ich Gesamtrisiko?</li>
+                                <li><strong>Correlation Analysis:</strong> Wie hängen meine Positionen zusammen?</li>
+                                <li><strong>Performance Measurement:</strong> Wie messe ich Erfolg?</li>
+                            </ul>
+
+                            <h4>🎯 Portfolio-Ziele definieren:</h4>
+                            <div class="code-block">
+Beispiel Portfolio-Ziele:
+• Target Return: 20% pro Jahr
+• Maximum Drawdown: 15%
+• Sharpe Ratio: > 1.5
+• Win Rate: > 55%
+• Maximum einzelne Position: 5%</div>
+
+                            <h4>⚖️ Risk-Return Trade-off:</h4>
+                            <ul>
+                                <li><strong>Conservative:</strong> 10-15% Return, 5-10% Drawdown</li>
+                                <li><strong>Moderate:</strong> 15-25% Return, 10-20% Drawdown</li>
+                                <li><strong>Aggressive:</strong> 25%+ Return, 20%+ Drawdown</li>
+                            </ul>
+
+                            <div class="info-box warning">
+                                <strong>⚠️ Wichtig:</strong> Höhere Returns bedeuten IMMER höheres Risiko. Jeder der dir risikofreie hohe Returns verspricht, lügt!
+                            </div>
+
+                            <h4>📈 Performance-Metriken:</h4>
+                            <ul>
+                                <li><strong>Total Return:</strong> Absolute Performance</li>
+                                <li><strong>CAGR:</strong> Compound Annual Growth Rate</li>
+                                <li><strong>Maximum Drawdown:</strong> Größter Peak-to-Trough Verlust</li>
+                                <li><strong>Sharpe Ratio:</strong> Excess Return per unit of risk</li>
+                                <li><strong>Calmar Ratio:</strong> CAGR / Maximum Drawdown</li>
+                                <li><strong>Win/Loss Ratio:</strong> Durchschnittlicher Gewinn vs. Verlust</li>
+                            </ul>
+                        `
+                    },
+                    {
+                        title: "🎯 Asset Allocation & Diversifikation",
+                        content: `
+                            <p>Asset Allocation ist die wichtigste Entscheidung im Portfolio Management. Studien zeigen: 90% der Portfolio-Performance kommt von der Asset Allocation, nur 10% von der Einzeltitel-Auswahl!</p>
+
+                            <h4>🌍 Asset-Klassen für Trader:</h4>
+                            <ul>
+                                <li><strong>Forex (30-50%):</strong> 24/5 Handel, hohe Liquidität
+                                    <ul><li>Major Pairs: EUR/USD, GBP/USD, USD/JPY</li>
+                                    <li>Minor Pairs: EUR/GBP, AUD/CAD</li>
+                                    <li>Exotics: USD/ZAR, EUR/TRY</li></ul>
+                                </li>
+                                <li><strong>Indices (20-30%):</strong> Diversifizierte Märkte
+                                    <ul><li>S&P 500, NASDAQ, DAX, FTSE</li></ul>
+                                </li>
+                                <li><strong>Commodities (10-20%):</strong> Inflation hedge
+                                    <ul><li>Gold, Silver, Oil, Gas</li></ul>
+                                </li>
+                                <li><strong>Crypto (5-15%):</strong> Hochriskant, hohe Volatilität
+                                    <ul><li>Bitcoin, Ethereum, Altcoins</li></ul>
+                                </li>
+                            </ul>
+
+                            <h4>📊 Korrelations-Management:</h4>
+                            <div class="code-block">
+Korrelations-Matrix Beispiel:
+           EUR/USD  GBP/USD  USD/JPY  Gold  S&P500
+EUR/USD      1.0     0.85   -0.65   0.25    0.15
+GBP/USD     0.85     1.0    -0.60   0.20    0.20  
+USD/JPY    -0.65   -0.60     1.0   -0.30   -0.25
+Gold        0.25    0.20    -0.30    1.0     0.10
+S&P500      0.15    0.20    -0.25   0.10     1.0
+
+Interpretation: 1.0 = perfekte positive Korrelation
+                0.0 = keine Korrelation  
+               -1.0 = perfekte negative Korrelation</div>
+
+                            <h4>🎪 Diversifikations-Strategien:</h4>
+                            <ul>
+                                <li><strong>Geographic:</strong> US, Europe, Asia Markets</li>
+                                <li><strong>Temporal:</strong> Verschiedene Zeitrahmen traden</li>
+                                <li><strong>Strategy:</strong> Trend-following + Mean reversion</li>
+                                <li><strong>Volatility:</strong> High-vol + Low-vol Assets</li>
+                            </ul>
+
+                            <div class="info-box">
+                                <strong>💡 Diversifikations-Regel:</strong> Echte Diversifikation funktioniert nur, wenn Assets in unterschiedlichen Marktbedingungen gut/schlecht performen. Alles was bei Krisen zusammen fällt, ist nicht diversifiziert!
+                            </div>
+
+                            <h4>⚡ Dynamische Allocation:</h4>
+                            <ul>
+                                <li><strong>Bull Market:</strong> Mehr Risk-On Assets (Stocks, Growth)</li>
+                                <li><strong>Bear Market:</strong> Mehr Risk-Off Assets (Bonds, Defensives)</li>
+                                <li><strong>High Volatility:</strong> Position Sizes reduzieren</li>
+                                <li><strong>Low Volatility:</strong> Position Sizes erhöhen</li>
+                            </ul>
+                        `
+                    },
+                    {
+                        title: "📏 Position Sizing Methoden",
+                        content: `
+                            <p>Position Sizing bestimmt, wie viel Kapital du in jeden einzelnen Trade investierst. Es ist kritisch für langfristigen Erfolg - sogar wichtiger als die Trade-Auswahl!</p>
+
+                            <h4>💰 Fixed Dollar Amount:</h4>
+                            <div class="code-block">
+Beispiel:
+Konto: 100.000€
+Risk per Trade: 1.000€ (1%)
+EUR/USD Entry: 1.2000
+Stop Loss: 1.1950 (50 pips)  
+Position Size: 1.000€ ÷ 0.005 = 200.000 EUR (2 Lots)</div>
+
+                            <ul>
+                                <li><strong>✅ Vorteile:</strong> Einfach, konstantes Risiko</li>
+                                <li><strong>❌ Nachteile:</strong> Ignoriert Volatilität und Setup-Qualität</li>
+                            </ul>
+
+                            <h4>📊 Volatility-Based Sizing:</h4>
+                            <div class="code-block">
+ATR Position Sizing:
+Position Size = (Account × Risk%) ÷ (ATR × Multiplier)
+
+Beispiel:
+Account: 100.000€
+Risk: 2% = 2.000€
+ATR(14): 80 pips
+Multiplier: 2 (für 2×ATR Stop)
+Position Size = 2.000€ ÷ (80 × 2) = 12.5€ per pip</div>
+
+                            <h4>🎯 Kelly Criterion:</h4>
+                            <div class="code-block">
+Kelly % = (Win Rate × Avg Win) - ((1-Win Rate) × Avg Loss) / Avg Win
+
+Beispiel:
+Win Rate: 60%
+Avg Win: 150€  
+Avg Loss: 100€
+Kelly % = (0.6 × 150) - (0.4 × 100) / 150 = 0.4 = 40%
+
+Achtung: Meist zu aggressiv, verwende 25% von Kelly!</div>
+
+                            <h4>🏆 Optimal F:</h4>
+                            <ul>
+                                <li><strong>Konzept:</strong> Maximiert geometrisches Wachstum</li>
+                                <li><strong>Berechnung:</strong> Basiert auf historischen Trade-Ergebnissen</li>
+                                <li><strong>Problem:</strong> Sehr aggressiv, hohe Drawdowns</li>
+                                <li><strong>Lösung:</strong> Fractional Optimal F (25-50%)</li>
+                            </ul>
+
+                            <div class="info-box warning">
+                                <strong>⚠️ Position Sizing Fehler:</strong><br>
+                                • Zu große Positionen nach Gewinnen<br>
+                                • Zu kleine Positionen nach Verlusten<br>  
+                                • Emotionales statt systematisches Sizing<br>
+                                • Kelly/Optimal F voll ausschöpfen
+                            </div>
+
+                            <h4>📈 Pyramiding-Strategien:</h4>
+                            <ul>
+                                <li><strong>Scale In:</strong> Position schrittweise aufbauen</li>
+                                <li><strong>Scale Up:</strong> Profitable Positionen verstärken</li>
+                                <li><strong>Scale Down:</strong> Verlustpositionen reduzieren</li>
+                                <li><strong>Scale Out:</strong> Gewinne schrittweise realisieren</li>
+                            </ul>
+
+                            <div class="code-block">
+Pyramiding Beispiel:
+Initial Position: 1% Risk
++50 pips: Add 0.75% Risk (Stop to BE)
++100 pips: Add 0.5% Risk (Trail Stop)
+Total Exposure: 2.25% but Risk reduced through trailing</div>
+                        `
+                    },
+                    {
+                        title: "📊 Portfolio Risk Management",
+                        content: `
+                            <p>Portfolio Risk Management betrachtet das Gesamtrisiko aller Positionen zusammen. Eine Position mag sicher aussehen, aber 10 ähnliche Positionen können das Konto sprengen!</p>
+
+                            <h4>🎯 Risk Budgeting:</h4>
+                            <div class="code-block">
+Portfolio Risk Budget:
+• Single Trade Risk: Max 2%
+• Single Market Risk: Max 6% (3 Trades)
+• Daily Risk: Max 4% (2 große Verluste)  
+• Weekly Risk: Max 8%
+• Monthly Risk: Max 15%
+• Total Portfolio Risk: Max 20%</div>
+
+                            <h4>🔗 Korrelations-Risiko:</h4>
+                            <ul>
+                                <li><strong>Problem:</strong> 5× EUR/USD Trades = 5× dasselbe Risiko</li>
+                                <li><strong>Lösung:</strong> Korrelation in Position Sizing berücksichtigen</li>
+                                <li><strong>Formula:</strong> Adjusted Risk = Base Risk ÷ √Number of Correlated Trades</li>
+                                <li><strong>Beispiel:</strong> 4 korrelierende Trades → Risk ÷ 2</li>
+                            </ul>
+
+                            <h4>📉 Drawdown Management:</h4>
+                            <div class="code-block">
+Drawdown Rules:
+• 0-5% DD: Normal trading
+• 5-10% DD: Reduce risk by 50%  
+• 10-15% DD: Reduce risk by 75%
+• 15-20% DD: Stop trading, analyze
+• 20%+ DD: Emergency stop, complete review</div>
+
+                            <h4>⚡ Value at Risk (VaR):</h4>
+                            <ul>
+                                <li><strong>Definition:</strong> Maximum erwarteter Verlust bei gegebener Wahrscheinlichkeit</li>
+                                <li><strong>Beispiel:</strong> 5% VaR = 95% Chance, nicht mehr als X% zu verlieren</li>
+                                <li><strong>Berechnung:</strong> Basiert auf historischer Volatilität</li>
+                                <li><strong>Limitations:</strong> Funktioniert nicht bei Extremereignissen</li>
+                            </ul>
+
+                            <h4>🌪️ Tail Risk Management:</h4>
+                            <ul>
+                                <li><strong>Black Swan Events:</strong> Seltene, extreme Ereignisse</li>
+                                <li><strong>Fat Tails:</strong> Mehr Extremereignisse als Normal-Verteilung zeigt</li>
+                                <li><strong>Protection:</strong> 
+                                    <ul><li>Nie mehr als 5% in einer Position</li>
+                                    <li>Hedging bei wichtigen Events</li>
+                                    <li>Cash Reserve für Opportunities</li></ul>
+                                </li>
+                            </ul>
+
+                            <div class="info-box danger">
+                                <strong>🚨 Lehre aus 2008/2020:</strong><br>
+                                In Krisen korrelieren ALLE Risiko-Assets. Diversifikation funktioniert nicht. Nur Cash und Government Bonds bleiben sicher!
+                            </div>
+
+                            <h4>🛡️ Hedging-Strategien:</h4>
+                            <ul>
+                                <li><strong>Direct Hedge:</strong> Entgegengesetzte Position im selben Asset</li>
+                                <li><strong>Cross Hedge:</strong> Korrelierende Assets nutzen</li>
+                                <li><strong>Options Hedge:</strong> Put Options als Versicherung</li>
+                                <li><strong>VIX Hedge:</strong> Volatility als Krisenschutz</li>
+                            </ul>
+                        `
+                    },
+                    {
+                        title: "📈 Performance Tracking & Optimierung",
+                        content: `
+                            <p>Was nicht gemessen wird, kann nicht verbessert werden! Professionelles Performance Tracking ist essentiell für langfristigen Erfolg.</p>
+
+                            <h4>📊 Key Performance Indicators (KPIs):</h4>
+                            <div class="code-block">
+Essential Trading KPIs:
+• Total Return: 24.5% YTD
+• CAGR: 18.2% (3 years)  
+• Maximum Drawdown: -12.3%
+• Calmar Ratio: 1.48 (CAGR/Max DD)
+• Sharpe Ratio: 1.67 (Risk-adjusted return)
+• Win Rate: 58.3%
+• Profit Factor: 1.84 (Gross Profit/Gross Loss)
+• Average Trade: +0.31%</div>
+
+                            <h4>📈 Equity Curve Analysis:</h4>
+                            <ul>
+                                <li><strong>Smooth Curve:</strong> Konsistente Performance</li>
+                                <li><strong>Steep Inclines:</strong> Mögliche Overperformance (Glück?)</li>
+                                <li><strong>Flat Periods:</strong> Normal, aber frustrierend</li>
+                                <li><strong>Drawdown Phases:</strong> Unvermeidlich, sollten begrenzt sein</li>
+                            </ul>
+
+                            <h4>🎯 Benchmark Comparison:</h4>
+                            <div class="code-block">
+Portfolio vs. Benchmarks (YTD):
+Your Portfolio:    +24.5%
+S&P 500:          +18.2%  
+EURUSD Buy&Hold:   -3.1%
+60/40 Portfolio:   +12.4%
+Risk-Free Rate:     +2.1%
+
+Alpha: +6.3% vs S&P 500 ✅
+Beta: 1.2 (20% more volatile) ⚠️</div>
+
+                            <h4>🔍 Trade Analysis:</h4>
+                            <ul>
+                                <li><strong>By Strategy:</strong> Welche Strategie performt am besten?</li>
+                                <li><strong>By Market:</strong> In welchen Assets bist du stark?</li>
+                                <li><strong>By Time:</strong> Welche Sessions/Zeiten sind profitabel?</li>
+                                <li><strong>By Size:</strong> Optimale Position-Größe?</li>
+                                <li><strong>By Duration:</strong> Wie lange solltest du Positionen halten?</li>
+                            </ul>
+
+                            <h4>🧮 Monte Carlo Simulation:</h4>
+                            <div class="code-block">
+Monte Carlo Analysis:
+• 10,000 Simulationen basierend auf historischen Trades
+• Worst Case (5% Probability): -28% Drawdown
+• Expected Case (50% Probability): +16% Annual Return
+• Best Case (95% Probability): +45% Annual Return
+
+Risk of Ruin (50% DD): 2.3% ✅</div>
+
+                            <div class="info-box">
+                                <strong>💡 Performance-Optimierung:</strong><br>
+                                1. Identifiziere deine besten Setups<br>
+                                2. Eliminiere/reduziere schlechte Setups<br>
+                                3. Optimiere Position Sizing<br>
+                                4. Verbessere Entry/Exit Timing<br>
+                                5. Reduziere Trading-Kosten
+                            </div>
+
+                            <h4>📅 Reporting Schedule:</h4>
+                            <ul>
+                                <li><strong>Daily:</strong> P&L, offene Positionen, Risk metrics</li>
+                                <li><strong>Weekly:</strong> Performance vs. Benchmark, Trade review</li>
+                                <li><strong>Monthly:</strong> Detaillierte Analyse, Strategy performance</li>
+                                <li><strong>Quarterly:</strong> Portfolio rebalancing, Goal adjustment</li>
+                                <li><strong>Yearly:</strong> Complete review, Tax planning</li>
+                            </ul>
+
+                            <div class="info-box warning">
+                                <strong>⚠️ Overoptimization Warning:</strong><br>
+                                Zu viel Optimierung kann zu Curve Fitting führen. Was in der Vergangenheit perfekt war, funktioniert oft nicht in der Zukunft!
+                            </div>
+
+                            <h4>🎪 Kontinuierliche Verbesserung:</h4>
+                            <ul>
+                                <li><strong>A/B Testing:</strong> Verschiedene Ansätze parallel testen</li>
+                                <li><strong>Walk Forward Analysis:</strong> Rolling Optimierung</li>
+                                <li><strong>Out-of-Sample Testing:</strong> An ungesehenen Daten testen</li>
+                                <li><strong>Regime Detection:</strong> Marktumgebung berücksichtigen</li>
+                                <li><strong>Feedback Loops:</strong> Learnings in Strategie integrieren</li>
+                            </ul>
+                        `
+                    }
+                ],
+                quiz: {
+                    question: "Was bestimmt laut Studien 90% der Portfolio-Performance?",
+                    options: [
+                        "Die Auswahl der einzelnen Trades",
+                        "Das Timing der Ein- und Ausstiege",
+                        "Die Asset Allocation (Verteilung auf verschiedene Anlageklassen)",
+                        "Die Verwendung von Hebel"
+                    ],
+                    correct: 2,
+                    explanation: "Studien zeigen, dass 90% der Portfolio-Performance von der Asset Allocation kommt - also wie das Kapital auf verschiedene Märkte und Anlageklassen verteilt wird. Die Einzeltitel-Auswahl macht nur 10% aus."
+                }
+            }
+        };
+
+        // Aktueller Zustand
+        let currentLesson = null;
+        let completedLessons = JSON.parse(localStorage.getItem('completedLessons') || '[]');
+
+        // Initialisierung beim Laden
+        function initializeLessonState() {
+            // Erste Lektion ist immer verfügbar
+            lessons[1].locked = false;
+            lessons[1].current = true;
+            
+            // Abgeschlossene Lektionen aus localStorage laden
+            completedLessons.forEach(lessonId => {
+                if (lessons[lessonId]) {
+                    lessons[lessonId].completed = true;
+                    lessons[lessonId].current = false;
+                    
+                    // Nächste Lektion freischalten
+                    if (lessonId < 8 && lessons[lessonId + 1]) {
+                        lessons[lessonId + 1].locked = false;
+                        if (!lessons[lessonId + 1].completed) {
+                            lessons[lessonId + 1].current = true;
+                        }
+                    }
+                }
+            });
+        }
+
+        // Event Listeners für Pfad-Knoten
+        function initializePathNodes() {
+            const pathNodes = document.querySelectorAll('.path-node');
+            
+            pathNodes.forEach(node => {
+                node.addEventListener('click', () => {
+                    const lessonId = parseInt(node.dataset.lesson);
+                    const lesson = lessons[lessonId];
+                    
+                    // Nur wenn nicht gesperrt
+                    if (!lesson.locked) {
+                        loadLesson(lessonId);
+                        
+                        // Aktive Node markieren
+                        pathNodes.forEach(n => n.classList.remove('active'));
+                        node.classList.add('active');
+                    }
+                });
+            });
+        }
+
+        // Quiz-Funktionen
+        function createQuizHTML(quiz, lessonId) {
+            if (!quiz) return '';
+            
+            return `
+                <div class="quiz-section" id="quiz-${lessonId}">
+                    <h4>🎯 Quiz: Teste dein Wissen</h4>
+                    <div class="quiz-question">${quiz.question}</div>
+                    <div class="quiz-options">
+                        ${quiz.options.map((option, index) => `
+                            <div class="quiz-option" data-option="${index}" onclick="selectQuizOption(${lessonId}, ${index})">
+                                ${String.fromCharCode(65 + index)}. ${option}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="quiz-feedback" id="quiz-feedback-${lessonId}"></div>
+                </div>
+            `;
+        }
+
+        function selectQuizOption(lessonId, selectedOption) {
+            const quiz = lessons[lessonId].quiz;
+            const options = document.querySelectorAll(`#quiz-${lessonId} .quiz-option`);
+            const feedback = document.getElementById(`quiz-feedback-${lessonId}`);
+            
+            // Alle Optionen zurücksetzen
+            options.forEach(opt => {
+                opt.classList.remove('selected', 'correct', 'incorrect');
+            });
+            
+            // Gewählte Option markieren
+            options[selectedOption].classList.add('selected');
+            
+            // Nach kurzer Verzögerung Ergebnis zeigen
+            setTimeout(() => {
+                options[quiz.correct].classList.add('correct');
+                
+                if (selectedOption !== quiz.correct) {
+                    options[selectedOption].classList.add('incorrect');
+                    feedback.className = 'quiz-feedback incorrect';
+                    feedback.innerHTML = `❌ <strong>Falsch!</strong><br>${quiz.explanation}`;
+                } else {
+                    feedback.className = 'quiz-feedback correct';
+                    feedback.innerHTML = `✅ <strong>Richtig!</strong><br>${quiz.explanation}`;
+                    
+                    // Quiz als bestanden markieren
+                    lessonProgress[lessonId].quizCompleted = true;
+                    updateCompletionRequirements(lessonId);
+                }
+                
+                feedback.style.display = 'block';
+                
+                // Optionen deaktivieren
+                options.forEach(opt => {
+                    opt.style.pointerEvents = 'none';
+                });
+            }, 500);
+        }
+
+        // Completion Requirements
+        function createCompletionRequirementsHTML(lessonId) {
+            const progress = lessonProgress[lessonId];
+            
+            return `
+                <div class="completion-requirements" id="completion-${lessonId}">
+                    <h4>📋 Zum Abschluss der Lektion:</h4>
+                    <ul class="completion-checklist">
+                        <li class="${progress.readingCompleted ? 'completed' : ''}">
+                            ${progress.readingCompleted ? '✅' : '⏳'} Alle Inhalte durchlesen
+                        </li>
+                        <li class="${progress.quizCompleted ? 'completed' : ''}">
+                            ${progress.quizCompleted ? '✅' : '⏳'} Quiz erfolgreich abschließen
+                        </li>
+                    </ul>
+                </div>
+            `;
+        }
+
+        function updateCompletionRequirements(lessonId) {
+            const progress = lessonProgress[lessonId];
+            const container = document.getElementById(`completion-${lessonId}`);
+            
+            if (container) {
+                container.innerHTML = `
+                    <h4>📋 Zum Abschluss der Lektion:</h4>
+                    <ul class="completion-checklist">
+                        <li class="${progress.readingCompleted ? 'completed' : ''}">
+                            ${progress.readingCompleted ? '✅' : '⏳'} Alle Inhalte durchlesen
+                        </li>
+                        <li class="${progress.quizCompleted ? 'completed' : ''}">
+                            ${progress.quizCompleted ? '✅' : '⏳'} Quiz erfolgreich abschließen
+                        </li>
+                    </ul>
+                `;
+            }
+            
+            // Prüfen ob Lektion abgeschlossen werden kann
+            const canComplete = progress.readingCompleted && progress.quizCompleted;
+            const completeBtn = document.getElementById(`complete-lesson-${lessonId}`);
+            
+            if (completeBtn) {
+                completeBtn.disabled = !canComplete;
+                completeBtn.textContent = canComplete ? '✅ Lektion abschließen' : '⏳ Anforderungen erfüllen';
+            }
+        }
+
+        // Scroll-Tracking für Reading Progress
+        function initializeScrollTracking(lessonId) {
+            const content = document.querySelector('.learning-content');
+            let hasScrolledToBottom = false;
+            
+            content.addEventListener('scroll', () => {
+                const scrollTop = content.scrollTop;
+                const scrollHeight = content.scrollHeight;
+                const clientHeight = content.clientHeight;
+                
+                // Wenn 90% gescrollt wurde
+                if (scrollTop + clientHeight >= scrollHeight * 0.9 && !hasScrolledToBottom) {
+                    hasScrolledToBottom = true;
+                    lessonProgress[lessonId].readingCompleted = true;
+                    updateCompletionRequirements(lessonId);
+                }
+            });
+        }
+
+        // Lerneinheit laden
+        function loadLesson(lessonId) {
+            const lesson = lessons[lessonId];
+            currentLesson = lessonId;
+            
+            const learningContent = document.getElementById('learningContent');
+            
+            // Content erstellen
+            let sectionsHTML = '';
+            lesson.sections.forEach(section => {
+                sectionsHTML += `
+                    <div class="content-section">
+                        <h3>${section.title}</h3>
+                        <div>${section.content}</div>
+                    </div>
+                `;
+            });
+            
+            // Quiz hinzufügen
+            const quizHTML = createQuizHTML(lesson.quiz, lessonId);
+            const requirementsHTML = createCompletionRequirementsHTML(lessonId);
+            
+            learningContent.innerHTML = `
+                <div class="learning-header">
+                    <h1 class="learning-title">${lesson.title}</h1>
+                    <div class="learning-meta">
+                        <div class="meta-badge difficulty-${lesson.difficulty}">
+                            ${lesson.difficulty === 'easy' ? '🟢 Einfach' : lesson.difficulty === 'medium' ? '🟡 Mittel' : '🔴 Schwer'}
+                        </div>
+                        <div class="meta-badge duration-badge">
+                            ⏱️ ${lesson.duration}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="learning-content">
+                    ${sectionsHTML}
+                    ${quizHTML}
+                    ${requirementsHTML}
+                    ${lesson.completed ? '<div class="quiz-completed">🎉 Diese Lektion wurde bereits erfolgreich abgeschlossen!</div>' : ''}
+                </div>
+                
+                <div class="learning-actions">
+                    <button class="btn btn-secondary" onclick="goToPreviousLesson()" ${lessonId <= 1 ? 'disabled' : ''}>
+                        ← Vorherige Lektion
+                    </button>
+                    
+                    <div style="display: flex; gap: 1rem;">
+                        ${!lesson.completed ? `
+                            <button class="btn btn-primary" id="complete-lesson-${lessonId}" onclick="completeLesson(${lessonId})" disabled>
+                                ⏳ Anforderungen erfüllen
+                            </button>
+                        ` : ''}
+                        
+                        <button class="btn btn-primary" onclick="goToNextLesson()" ${lessonId >= 8 ? 'disabled' : ''}>
+                            Nächste Lektion →
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Scroll-Tracking initialisieren
+            initializeScrollTracking(lessonId);
+            
+            // Completion Requirements aktualisieren
+            updateCompletionRequirements(lessonId);
+        }
+
+        // Navigation Funktionen
+        function goToPreviousLesson() {
+            if (currentLesson > 1) {
+                loadLesson(currentLesson - 1);
+                updateActiveNode(currentLesson - 1);
+            }
+        }
+
+        function goToNextLesson() {
+            if (currentLesson < 8) {
+                const nextLessonId = currentLesson + 1;
+                const nextLesson = lessons[nextLessonId];
+                
+                if (!nextLesson.locked) {
+                    loadLesson(nextLessonId);
+                    updateActiveNode(nextLessonId);
+                }
+            }
+        }
+
+        function completeLesson(lessonId) {
+            const progress = lessonProgress[lessonId];
+            
+            // Prüfen ob alle Anforderungen erfüllt sind
+            if (!progress.readingCompleted || !progress.quizCompleted) {
+                showCompletionMessage('Bitte erfülle alle Anforderungen!', 'warning');
+                return;
+            }
+            
+            // Lektion als abgeschlossen markieren
+            lessons[lessonId].completed = true;
+            lessons[lessonId].current = false;
+            
+            // In localStorage speichern
+            if (!completedLessons.includes(lessonId)) {
+                completedLessons.push(lessonId);
+                localStorage.setItem('completedLessons', JSON.stringify(completedLessons));
+            }
+            
+            // Nächste Lektion freischalten
+            if (lessonId < 8) {
+                lessons[lessonId + 1].locked = false;
+                lessons[lessonId + 1].current = true;
+            }
+            
+            // UI aktualisieren
+            updatePathUI();
+            updateProgress();
+            
+            // Erfolgsmeldung
+            showCompletionMessage(lessons[lessonId].title + ' erfolgreich abgeschlossen!', 'success');
+            
+            // Lektion neu laden um Buttons zu aktualisieren
+            loadLesson(lessonId);
+            
+            // Wenn letzte Lektion abgeschlossen
+            if (lessonId === 8) {
+                showCongratulationsModal();
+            }
+        }
+
+        function updateActiveNode(lessonId) {
+            const pathNodes = document.querySelectorAll('.path-node');
+            pathNodes.forEach((node, index) => {
+                node.classList.remove('active');
+                if (parseInt(node.dataset.lesson) === lessonId) {
+                    node.classList.add('active');
+                }
+            });
+        }
+
+        function updatePathUI() {
+            const pathNodes = document.querySelectorAll('.path-node');
+            
+            pathNodes.forEach(node => {
+                const lessonId = parseInt(node.dataset.lesson);
+                const lesson = lessons[lessonId];
+                const circle = node.querySelector('.node-circle');
+                
+                // Klassen entfernen
+                node.classList.remove('completed', 'current', 'locked');
+                
+                // Status setzen
+                if (lesson.completed) {
+                    node.classList.add('completed');
+                    circle.textContent = '✓';
+                } else if (lesson.current) {
+                    node.classList.add('current');
+                    circle.textContent = lessonId;
+                } else if (lesson.locked) {
+                    node.classList.add('locked');
+                    circle.textContent = '🔒';
+                } else {
+                    circle.textContent = lessonId;
+                }
+            });
+        }
+
+        function updateProgress() {
+            const completedCount = completedLessons.length;
+            const totalLessons = Object.keys(lessons).length;
+            const progress = (completedCount / totalLessons) * 100;
+            
+            document.getElementById('overallProgress').style.width = progress + '%';
+            document.getElementById('progressText').textContent = `${completedCount} von ${totalLessons} Lektionen abgeschlossen`;
+        }
+
+        function showCompletionMessage(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, ${type === 'success' ? 'var(--success-color), #059669' : 'var(--warning-color), #d97706'});
+                color: white;
+                padding: 1rem 2rem;
+                border-radius: 10px;
+                box-shadow: 0 8px 32px rgba(${type === 'success' ? '16, 185, 129' : '245, 158, 11'}, 0.3);
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+                max-width: 400px;
+            `;
+            
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="font-size: 1.2rem;">${type === 'success' ? '🎉' : '⚠️'}</span>
+                    <div>
+                        <div style="font-weight: 600;">${message}</div>
+                        ${type === 'success' && currentLesson < 8 ? '<div style="font-size: 0.9rem; opacity: 0.9;">Nächste Lektion freigeschaltet!</div>' : ''}
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 4000);
+        }
+
+        function showCongratulationsModal() {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 2000;
+                animation: fadeIn 0.5s ease;
+            `;
+            
+            modal.innerHTML = `
+                <div style="
+                    background: var(--card-bg);
+                    border-radius: 20px;
+                    padding: 3rem;
+                    text-align: center;
+                    max-width: 500px;
+                    margin: 2rem;
+                    border: 1px solid var(--accent-color);
+                    box-shadow: 0 20px 50px rgba(0, 255, 136, 0.3);
+                    animation: zoomIn 0.5s ease;
+                ">
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">🏆</div>
+                    <h2 style="color: var(--accent-color); font-size: 2rem; margin-bottom: 1rem;">
+                        Herzlichen Glückwunsch!
+                    </h2>
+                    <p style="color: var(--text-secondary); font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem;">
+                        Du hast alle 8 Lektionen erfolgreich abgeschlossen und bist nun bereit für den echten Handel! 
+                        Denke daran: Das theoretische Wissen ist nur der Anfang - jetzt heißt es üben, üben, üben!
+                    </p>
+                    <button onclick="this.parentElement.parentElement.remove()" style="
+                        background: linear-gradient(135deg, var(--accent-color), #00cc6a);
+                        color: #000;
+                        border: none;
+                        padding: 1rem 2rem;
+                        border-radius: 10px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        font-size: 1.1rem;
+                    ">
+                        🚀 Let's Trade!
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        // Theme Toggle
+        function toggleTheme() {
+            document.body.classList.toggle('theme-light');
+            localStorage.setItem('theme', document.body.classList.contains('theme-light') ? 'light' : 'dark');
+        }
+
+        // Initialisierung
+        function initialize() {
+            // Theme laden
+            if (localStorage.getItem('theme') === 'light') {
+                document.body.classList.add('theme-light');
+            }
+            
+            // Lesson State initialisieren
+            initializeLessonState();
+            
+            // Event Listeners
+            initializePathNodes();
+            
+            // UI aktualisieren
+            updatePathUI();
+            updateProgress();
+            
+            // Erste verfügbare Lektion laden
+            const firstAvailable = Object.entries(lessons).find(([id, lesson]) => !lesson.locked);
+            if (firstAvailable) {
+                loadLesson(parseInt(firstAvailable[0]));
+            }
+        }
+
+        // Keyboard Navigation
+        document.addEventListener('keydown', (e) => {
+            if (currentLesson) {
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    goToPreviousLesson();
+                } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    goToNextLesson();
+                }
+            }
+        });
+
+        // Globale Funktionen verfügbar machen
+        window.goToPreviousLesson = goToPreviousLesson;
+        window.goToNextLesson = goToNextLesson;
+        window.completeLesson = completeLesson;
+        window.toggleTheme = toggleTheme;
+        window.selectQuizOption = selectQuizOption;
+
+        // App starten
+        document.addEventListener('DOMContentLoaded', initialize);
+    </script>
+</body>
+</html>
