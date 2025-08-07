@@ -167,7 +167,6 @@
             opacity: 0.5;
             cursor: not-allowed;
             transform: none;
-            pointer-events: none;
         }
 
         .btn.danger {
@@ -196,7 +195,6 @@
         .btn-loading {
             opacity: 0.7;
             cursor: not-allowed;
-            pointer-events: none;
         }
 
         .btn-loading::before {
@@ -386,9 +384,13 @@
             if (isLoading) {
                 button.classList.add('btn-loading');
                 button.disabled = true;
+                // Temporarily disable just for the loading period
+                button.style.pointerEvents = 'none';
             } else {
                 button.classList.remove('btn-loading');
                 button.disabled = false;
+                // Re-enable pointer events
+                button.style.pointerEvents = 'auto';
             }
         }
 
@@ -815,13 +817,13 @@
             console.log("Eingeloggt als:", user.email);
         });
 
-        // Create debounced versions of the functions for mobile
-        const debouncedStartTrading = debounce(startTrading, 300);
-        const debouncedStopTrading = debounce(stopTrading, 300);
-        const debouncedStartSport = debounce(startSport, 300);
-        const debouncedStopSport = debounce(stopSport, 300);
-        const debouncedStartGamedev = debounce(startGamedev, 300);
-        const debouncedStopGamedev = debounce(stopGamedev, 300);
+        // Create debounced versions of the functions for mobile (reduced from 300ms to 200ms for better responsiveness)
+        const debouncedStartTrading = debounce(startTrading, 200);
+        const debouncedStopTrading = debounce(stopTrading, 200);
+        const debouncedStartSport = debounce(startSport, 200);
+        const debouncedStopSport = debounce(stopSport, 200);
+        const debouncedStartGamedev = debounce(startGamedev, 200);
+        const debouncedStopGamedev = debounce(stopGamedev, 200);
 
         // Event Listeners with debouncing
         document.getElementById("tradingStart").addEventListener("click", debouncedStartTrading);
@@ -831,11 +833,11 @@
         document.getElementById("gamedevStart").addEventListener("click", debouncedStartGamedev);
         document.getElementById("gamedevStop").addEventListener("click", debouncedStopGamedev);
 
-        // Prevent double-tap/zoom on mobile for all buttons
+        // Prevent double-tap/zoom on mobile for all buttons (but allow clicks)
         document.querySelectorAll('.btn').forEach(button => {
-            button.addEventListener('touchend', (e) => {
-                e.preventDefault();
-            });
+            button.style.touchAction = 'manipulation';
+            // Remove any potential pointer-events blocking
+            button.style.pointerEvents = 'auto';
         });
 
         // Theme setup
