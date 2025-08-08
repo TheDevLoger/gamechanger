@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Learning Path - SK Trading</title>
+    <style>
+        :root {
+            --primary-bg: #0a0a0a;
+            --secondary-bg: #1a1a1a;
+            --card-bg: #222;
+            --accent-color: #00ff88;
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --border-color: #333;
+            --shadow: rgba(0, 0, 0, 0.5);
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --gradient-primary: linear-gradient(135deg, var(--accent-color), #00cc6a);
+            --neon-glow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .theme-light {
+            --primary-bg: #f8fafc;
+            --secondary-bg: #ffffff;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--secondary-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 2px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.5rem;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--accent-color);
+            box-shadow: var(--neon-glow);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 400px;
+            background: var(--secondary-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 6rem 2rem 2rem;
+            overflow-y: auto;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+        }
+
+        .progress-section {
+            margin-bottom: 2rem;
+        }
+
+        .progress-bar {
+            background: var(--border-color);
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-fill {
+            background: var(--gradient-primary);
+            height: 100%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        .progress-text {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .path-container {
+            position: relative;
+        }
+
+        .path-line {
+            position: absolute;
+            left: 24px;
+            top: 60px;
+            bottom: 60px;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--accent-color), transparent);
+            opacity: 0.3;
+        }
+
+        .path-node {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .path-node:hover {
+            background: var(--card-bg);
+            transform: translateX(5px);
+        }
+
+        .path-node.current {
+            background: var(--card-bg);
+            border: 2px solid var(--accent-color);
+            box-shadow: var(--neon-glow);
+        }
+
+        .path-node.completed {
+            background: rgba(16, 185, 129, 0.1);
+            border: 2px solid var(--success-color);
+        }
+
+        .path-node.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .path-node.active {
+            background: var(--card-bg);
+            border: 2px solid var(--accent-color);
+            box-shadow: var(--neon-glow);
+        }
+
+        .node-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .path-node.completed .node-circle {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .path-node.locked .node-circle {
+            background: var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .node-label {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 400px;
+            padding: 6rem 2rem 2rem;
+            overflow-y: auto;
+        }
+
+        .learning-section {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .welcome-screen {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .welcome-screen .icon {
+            font-size: 4rem;
+            margin-bottom: 2rem;
+        }
+
+        .welcome-screen h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .welcome-screen p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .lesson-container {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .lesson-header {
+            margin-bottom: 2rem;
+        }
+
+        .lesson-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .lesson-meta {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .meta-badge {
+            background: var(--secondary-bg);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .difficulty-badge.easy { border-color: var(--success-color); color: var(--success-color); }
+        .difficulty-badge.medium { border-color: var(--warning-color); color: var(--warning-color); }
+        .difficulty-badge.hard { border-color: #ef4444; color: #ef4444; }
+
+        .learning-content {
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+
+        .learning-content h3 {
+            color: var(--accent-color);
+            font-size: 1.4rem;
+            margin: 2rem 0 1rem;
+        }
+
+        .learning-content h4 {
+            color: var(--accent-color);
+            font-size: 1.2rem;
+            margin: 1.5rem 0 0.8rem;
+        }
+
+        .learning-content p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .learning-content ul, .learning-content ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .learning-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .highlight-box {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid var(--accent-color);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .quiz-section {
+            background: var(--secondary-bg);
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 1px solid var(--border-color);
+        }
+
+        .quiz-question {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .quiz-option {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quiz-option:hover {
+            border-color: var(--accent-color);
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        .quiz-option.selected {
+            border-color: var(--accent-color);
+            background: rgba(0, 255, 136, 0.2);
+        }
+
+        .quiz-option.correct {
+            border-color: var(--success-color);
+            background: rgba(16, 185, 129, 0.2);
+        }
+
+        .quiz-option.incorrect {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .quiz-completed {
+            background: rgba(16, 185, 129, 0.1);
+            border: 2px solid var(--success-color);
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            font-weight: 600;
+            color: var(--success-color);
+            margin: 2rem 0;
+        }
+
+        .completion-requirements {
+            background: var(--secondary-bg);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border: 1px solid var(--border-color);
+        }
+
+        .requirement {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .requirement.completed {
+            color: var(--success-color);
+        }
+
+        .learning-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: #000;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--secondary-bg);
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            border-color: var(--accent-color);
+            box-shadow: var(--neon-glow);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        @keyframes zoomIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 300px;
+            }
+            
+            .main-content {
+                margin-left: 300px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                position: static;
+                width: 100%;
+                height: auto;
+                padding: 2rem 1rem 1rem;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 2rem 1rem;
+            }
+            
+            .header {
+                padding: 1rem;
+            }
+            
+            .lesson-container {
+                padding: 1.5rem;
+            }
+            
+            .learning-actions {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            border-radius: 10px;
+            padding: 1rem;
+            color: #ef4444;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">📚 Trading Learning Path</div>
+        <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="progress-section">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="overallProgress" style="width: 0%"></div>
+                </div>
+                <div class="progress-text" id="progressText">0 von 8 Lektionen abgeschlossen</div>
+            </div>
+
+            <!-- Path Nodes -->
+            <div class="path-container">
+                <div class="path-line"></div>
+                
+                <div class="path-node current" data-lesson="1" data-file="lektion1-trading-grundlagen.html">
+                    <div class="node-circle">1</div>
+                    <div class="node-label">Trading Grundlagen</div>
+                </div>
+
+                <div class="path-node locked" data-lesson="2" data-file="lektion2-markt-analyse.html">
+                    <div class="node-circle">🔒</div>
+                    <div class="node-label">Markt Analyse</div>
+                </div>
+
+                <div class="path-node locked" data-lesson="3" data-file="lektion3-risk-management.html">
+                    <div class="node-circle">🔒</div>
+                    <div class="node-label">Risk Management</div>
+                </div>
+
+                <div class="path-node locked" data-lesson="4" data-file="lektion4-chart-patterns.html">
+                    <div class="node-circle">🔒</div>
+                    <div class="node-label">Chart Patterns</div>
+                </div>
+
+                <div class="path-node locked" data-lesson="5" data-file="lektion5-technische-indikatoren.html">
+                    <div class="node-circle">🔒</div>
+                    <div class="node-label">Technische Indikatoren</div>
+                </div>
+
+                <div class="path-node locked" data-lesson="6" data-file="lektion6-trading-strategien.html">
+                    <div class="node-circle">🔒</div>
+                    <div class="node-label">Trading Strategien</div>
+                </div>
+
+                <div class="path-node locked" data-lesson="7" data-file="lektion7-trading-psychologie.html">
+                    <div class="node-circle">🔒</div>
+                    <div class="node-label">Trading Psychologie</div>
+                </div>
+
+                <div class="path-node locked" data-lesson="8" data-file="lektion8-portfolio-management.html">
+                    <div class="node-circle">🔒</div>
+                    <div class="node-label">Portfolio Management</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="learning-section">
+                <div id="learningContent">
+                    <!-- Welcome Screen -->
+                    <div class="welcome-screen">
+                        <div class="icon">🎓</div>
+                        <h2>Willkommen zum Trading Learning Path!</h2>
+                        <p>Wähle eine Lerneinheit auf der linken Seite aus, um zu beginnen. Arbeite dich Schritt für Schritt durch alle Module und werde zum Trading-Experten.</p>
+                        <p style="margin-top: 1rem; color: var(--accent-color);">Klicke auf "Trading Grundlagen" um zu starten!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Globaler Zustand für Abschlusskriterien
+        let lessonProgress = {
+            1: { quizCompleted: false, readingCompleted: false },
+            2: { quizCompleted: false, readingCompleted: false },
+            3: { quizCompleted: false, readingCompleted: false },
+            4: { quizCompleted: false, readingCompleted: false },
+            5: { quizCompleted: false, readingCompleted: false },
+            6: { quizCompleted: false, readingCompleted: false },
+            7: { quizCompleted: false, readingCompleted: false },
+            8: { quizCompleted: false, readingCompleted: false }
+        };
+
+        // Lerneinheiten Konfiguration (nur Metadaten)
+        const lessons = {
+            1: { title: "Trading Grundlagen", difficulty: "easy", duration: "20 Min", completed: false, current: true, locked: false, file: "lektion1-trading-grundlagen.html" },
+            2: { title: "Markt Analyse", difficulty: "medium", duration: "25 Min", completed: false, current: false, locked: true, file: "lektion2-markt-analyse.html" },
+            3: { title: "Risk Management", difficulty: "medium", duration: "30 Min", completed: false, current: false, locked: true, file: "lektion3-risk-management.html" },
+            4: { title: "Chart Patterns", difficulty: "medium", duration: "35 Min", completed: false, current: false, locked: true, file: "lektion4-chart-patterns.html" },
+            5: { title: "Technische Indikatoren", difficulty: "hard", duration: "40 Min", completed: false, current: false, locked: true, file: "lektion5-technische-indikatoren.html" },
+            6: { title: "Trading Strategien", difficulty: "hard", duration: "45 Min", completed: false, current: false, locked: true, file: "lektion6-trading-strategien.html" },
+            7: { title: "Trading Psychologie", difficulty: "medium", duration: "25 Min", completed: false, current: false, locked: true, file: "lektion7-trading-psychologie.html" },
+            8: { title: "Portfolio Management", difficulty: "hard", duration: "30 Min", completed: false, current: false, locked: true, file: "lektion8-portfolio-management.html" }
+        };
+
+        // Aktueller Zustand
+        let currentLesson = null;
+        let completedLessons = JSON.parse(localStorage.getItem('completedLessons') || '[]');
+
+        // Initialisierung beim Laden
+        function initializeLessonState() {
+            // Erste Lektion ist immer verfügbar
+            lessons[1].locked = false;
+            lessons[1].current = true;
+            
+            // Abgeschlossene Lektionen aus localStorage laden
+            completedLessons.forEach(lessonId => {
+                if (lessons[lessonId]) {
+                    lessons[lessonId].completed = true;
+                    lessons[lessonId].current = false;
+                    
+                    // Nächste Lektion freischalten
+                    if (lessonId < 8 && lessons[lessonId + 1]) {
+                        lessons[lessonId + 1].locked = false;
+                        if (!lessons[lessonId + 1].completed) {
+                            lessons[lessonId + 1].current = true;
+                        }
+                    }
+                }
+            });
+        }
+
+        // Event Listeners für Pfad-Knoten
+        function initializePathNodes() {
+            const pathNodes = document.querySelectorAll('.path-node');
+            
+            pathNodes.forEach(node => {
+                node.addEventListener('click', async () => {
+                    const lessonId = parseInt(node.dataset.lesson);
+                    const lesson = lessons[lessonId];
+                    
+                    // Nur wenn nicht gesperrt
+                    if (!lesson.locked) {
+                        await loadLessonFromFile(lessonId, lesson.file);
+                        
+                        // Aktive Node markieren
+                        pathNodes.forEach(n => n.classList.remove('active'));
+                        node.classList.add('active');
+                    }
+                });
+            });
+        }
+
+        // Lektion aus externer Datei laden
+        async function loadLessonFromFile(lessonId, filename) {
+            currentLesson = lessonId;
+            const lesson = lessons[lessonId];
+            
+            try {
+                // Loading-Zustand anzeigen
+                document.getElementById('learningContent').innerHTML = `
+                    <div class="loading">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">⏳</div>
+                        <h3>Lade ${lesson.title}...</h3>
+                    </div>
+                `;
+
+                // Externe HTML-Datei laden
+                const response = await fetch(filename);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const lessonContent = await response.text();
+                
+                // Lektion-Container erstellen
+                const lessonHTML = `
+                    <div class="lesson-container" id="lesson-${lessonId}">
+                        <div class="lesson-header">
+                            <h1 class="lesson-title">${lesson.title}</h1>
+                            <div class="lesson-meta">
+                                <div class="meta-badge difficulty-badge ${lesson.difficulty}">
+                                    ${lesson.difficulty === 'easy' ? '🟢 Einfach' : lesson.difficulty === 'medium' ? '🟡 Mittel' : '🔴 Schwer'}
+                                </div>
+                                <div class="meta-badge duration-badge">
+                                    ⏱️ ${lesson.duration}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="learning-content">
+                            ${lessonContent}
+                            ${lesson.completed ? '<div class="quiz-completed">🎉 Diese Lektion wurde bereits erfolgreich abgeschlossen!</div>' : ''}
+                        </div>
+                        
+                        <div class="learning-actions">
+                            <button class="btn btn-secondary" onclick="goToPreviousLesson()" ${lessonId <= 1 ? 'disabled' : ''}>
+                                ← Vorherige Lektion
+                            </button>
+                            
+                            <div style="display: flex; gap: 1rem;">
+                                ${!lesson.completed ? `
+                                    <button class="btn btn-primary" id="complete-lesson-${lessonId}" onclick="completeLesson(${lessonId})" disabled>
+                                        ⏳ Anforderungen erfüllen
+                                    </button>
+                                ` : ''}
+                                
+                                <button class="btn btn-primary" onclick="goToNextLesson()" ${lessonId >= 8 ? 'disabled' : ''}>
+                                    Nächste Lektion →
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('learningContent').innerHTML = lessonHTML;
+                
+                // Quiz-Event-Listener und Scroll-Tracking initialisieren
+                initializeLessonInteractions(lessonId);
+                
+                // Completion Requirements aktualisieren
+                updateCompletionRequirements(lessonId);
+                
+            } catch (error) {
+                console.error('Fehler beim Laden der Lektion:', error);
+                document.getElementById('learningContent').innerHTML = `
+                    <div class="error">
+                        <h3>⚠️ Fehler beim Laden</h3>
+                        <p>Die Lektionsdatei "${filename}" konnte nicht geladen werden.</p>
+                        <p>Fehler: ${error.message}</p>
+                        <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 1rem;">
+                            🔄 Seite neu laden
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // Lektion Interaktionen initialisieren
+        function initializeLessonInteractions(lessonId) {
+            // Quiz-Optionen Event-Listener
+            const quizOptions = document.querySelectorAll(`#lesson-${lessonId} .quiz-option`);
+            quizOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    const selectedIndex = parseInt(option.dataset.option);
+                    const quizSection = option.closest('.quiz-section');
+                    const correctAnswer = parseInt(quizSection.dataset.correct);
+                    
+                    selectQuizOption(lessonId, selectedIndex, correctAnswer);
+                });
+            });
+
+            // Scroll-Tracking
+            initializeScrollTracking(lessonId);
+        }
+
+        // Quiz Option auswählen
+        function selectQuizOption(lessonId, selectedIndex, correctAnswer) {
+            const quizSection = document.querySelector(`#lesson-${lessonId} .quiz-section`);
+            const options = quizSection.querySelectorAll('.quiz-option');
+            
+            // Alle Optionen zurücksetzen
+            options.forEach((option, index) => {
+                option.classList.remove('selected', 'correct', 'incorrect');
+                
+                if (index === correctAnswer) {
+                    option.classList.add('correct');
+                } else if (index === selectedIndex) {
+                    option.classList.add('incorrect');
+                }
+            });
+            
+            // Quiz als abgeschlossen markieren
+            lessonProgress[lessonId].quizCompleted = true;
+            
+            // Erfolgsmeldung
+            const isCorrect = selectedIndex === correctAnswer;
+            showCompletionMessage(
+                isCorrect ? '🎉 Richtige Antwort!' : '❌ Falsche Antwort, aber Quiz abgeschlossen!',
+                isCorrect ? 'success' : 'warning'
+            );
+            
+            // Completion Requirements aktualisieren
+            updateCompletionRequirements(lessonId);
+        }
+
+        // Scroll-Tracking initialisieren
+        function initializeScrollTracking(lessonId) {
+            const content = document.querySelector(`#lesson-${lessonId} .learning-content`);
+            let hasScrolledToBottom = false;
+
+            function checkScroll() {
+                const scrollTop = content.scrollTop;
+                const scrollHeight = content.scrollHeight;
+                const clientHeight = content.clientHeight;
+                
+                if (scrollTop + clientHeight >= scrollHeight - 50 && !hasScrolledToBottom) {
+                    hasScrolledToBottom = true;
+                    lessonProgress[lessonId].readingCompleted = true;
+                    updateCompletionRequirements(lessonId);
+                }
+            }
+
+            // Alternative: Intersection Observer für bessere Performance
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && entry.target.classList.contains('lesson-end-marker')) {
+                        lessonProgress[lessonId].readingCompleted = true;
+                        updateCompletionRequirements(lessonId);
+                        observer.unobserve(entry.target);
+                    }
+                });
+            });
+
+            // End-Marker suchen und beobachten
+            const endMarker = content.querySelector('.lesson-end-marker');
+            if (endMarker) {
+                observer.observe(endMarker);
+            } else {
+                // Fallback: Scroll-Event
+                content.addEventListener('scroll', checkScroll);
+            }
+        }
+
+        // Completion Requirements aktualisieren
+        function updateCompletionRequirements(lessonId) {
+            const progress = lessonProgress[lessonId];
+            const completeButton = document.getElementById(`complete-lesson-${lessonId}`);
+            
+            if (completeButton && !lessons[lessonId].completed) {
+                const allRequirementsMet = progress.readingCompleted && progress.quizCompleted;
+                
+                completeButton.disabled = !allRequirementsMet;
+                completeButton.textContent = allRequirementsMet 
+                    ? '✅ Lektion abschließen' 
+                    : '⏳ Anforderungen erfüllen';
+            }
+        }
+
+        // Navigation Funktionen
+        function goToPreviousLesson() {
+            if (currentLesson > 1) {
+                const lessonId = currentLesson - 1;
+                const lesson = lessons[lessonId];
+                loadLessonFromFile(lessonId, lesson.file);
+                updateActiveNode(lessonId);
+            }
+        }
+
+        function goToNextLesson() {
+            if (currentLesson < 8) {
+                const lessonId = currentLesson + 1;
+                const lesson = lessons[lessonId];
+                
+                if (!lesson.locked) {
+                    loadLessonFromFile(lessonId, lesson.file);
+                    updateActiveNode(lessonId);
+                }
+            }
+        }
+
+        function completeLesson(lessonId) {
+            const progress = lessonProgress[lessonId];
+            
+            // Prüfen ob alle Anforderungen erfüllt sind
+            if (!progress.readingCompleted || !progress.quizCompleted) {
+                showCompletionMessage('Bitte erfülle alle Anforderungen!', 'warning');
+                return;
+            }
+            
+            // Lektion als abgeschlossen markieren
+            lessons[lessonId].completed = true;
+            lessons[lessonId].current = false;
+            
+            // In localStorage speichern
+            if (!completedLessons.includes(lessonId)) {
+                completedLessons.push(lessonId);
+                localStorage.setItem('completedLessons', JSON.stringify(completedLessons));
+            }
+            
+            // Nächste Lektion freischalten
+            if (lessonId < 8) {
+                lessons[lessonId + 1].locked = false;
+                lessons[lessonId + 1].current = true;
+            }
+            
+            // UI aktualisieren
+            updatePathUI();
+            updateProgress();
+            
+            // Erfolgsmeldung
+            showCompletionMessage(lessons[lessonId].title + ' erfolgreich abgeschlossen!', 'success');
+            
+            // Lektion neu laden um Buttons zu aktualisieren
+            loadLessonFromFile(lessonId, lessons[lessonId].file);
+            
+            // Wenn letzte Lektion abgeschlossen
+            if (lessonId === 8) {
+                showCongratulationsModal();
+            }
+        }
+
+        function updateActiveNode(lessonId) {
+            const pathNodes = document.querySelectorAll('.path-node');
+            pathNodes.forEach((node, index) => {
+                node.classList.remove('active');
+                if (parseInt(node.dataset.lesson) === lessonId) {
+                    node.classList.add('active');
+                }
+            });
+        }
+
+        function updatePathUI() {
+            const pathNodes = document.querySelectorAll('.path-node');
+            
+            pathNodes.forEach(node => {
+                const lessonId = parseInt(node.dataset.lesson);
+                const lesson = lessons[lessonId];
+                const circle = node.querySelector('.node-circle');
+                
+                // Klassen entfernen
+                node.classList.remove('completed', 'current', 'locked');
+                
+                // Status setzen
+                if (lesson.completed) {
+                    node.classList.add('completed');
+                    circle.textContent = '✓';
+                } else if (lesson.current) {
+                    node.classList.add('current');
+                    circle.textContent = lessonId;
+                } else if (lesson.locked) {
+                    node.classList.add('locked');
+                    circle.textContent = '🔒';
+                } else {
+                    circle.textContent = lessonId;
+                }
+            });
+        }
+
+        function updateProgress() {
+            const completedCount = completedLessons.length;
+            const totalLessons = Object.keys(lessons).length;
+            const progress = (completedCount / totalLessons) * 100;
+            
+            document.getElementById('overallProgress').style.width = progress + '%';
+            document.getElementById('progressText').textContent = `${completedCount} von ${totalLessons} Lektionen abgeschlossen`;
+        }
+
+        function showCompletionMessage(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, ${type === 'success' ? 'var(--success-color), #059669' : 'var(--warning-color), #d97706'});
+                color: white;
+                padding: 1rem 2rem;
+                border-radius: 10px;
+                box-shadow: 0 8px 32px rgba(${type === 'success' ? '16, 185, 129' : '245, 158, 11'}, 0.3);
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+                max-width: 400px;
+            `;
+            
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="font-size: 1.2rem;">${type === 'success' ? '🎉' : '⚠️'}</span>
+                    <div>
+                        <div style="font-weight: 600;">${message}</div>
+                        ${type === 'success' && currentLesson < 8 ? '<div style="font-size: 0.9rem; opacity: 0.9;">Nächste Lektion freigeschaltet!</div>' : ''}
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 4000);
+        }
+
+        function showCongratulationsModal() {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 2000;
+                animation: fadeIn 0.5s ease;
+            `;
+            
+            modal.innerHTML = `
+                <div style="
+                    background: var(--card-bg);
+                    border-radius: 20px;
+                    padding: 3rem;
+                    text-align: center;
+                    max-width: 500px;
+                    margin: 2rem;
+                    border: 1px solid var(--accent-color);
+                    box-shadow: 0 20px 50px rgba(0, 255, 136, 0.3);
+                    animation: zoomIn 0.5s ease;
+                ">
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">🏆</div>
+                    <h2 style="color: var(--accent-color); font-size: 2rem; margin-bottom: 1rem;">
+                        Herzlichen Glückwunsch!
+                    </h2>
+                    <p style="color: var(--text-secondary); font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem;">
+                        Du hast alle 8 Lektionen erfolgreich abgeschlossen und bist nun bereit für den echten Handel! 
+                        Denke daran: Das theoretische Wissen ist nur der Anfang - jetzt heißt es üben, üben, üben!
+                    </p>
+                    <button onclick="this.parentElement.parentElement.remove()" style="
+                        background: linear-gradient(135deg, var(--accent-color), #00cc6a);
+                        color: #000;
+                        border: none;
+                        padding: 1rem 2rem;
+                        border-radius: 10px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        font-size: 1.1rem;
+                    ">
+                        🚀 Let's Trade!
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        // Theme Toggle
+        function toggleTheme() {
+            document.body.classList.toggle('theme-light');
+            localStorage.setItem('theme', document.body.classList.contains('theme-light') ? 'light' : 'dark');
+        }
+
+        // Initialisierung
+        function initialize() {
+            // Theme laden
+            if (localStorage.getItem('theme') === 'light') {
+                document.body.classList.add('theme-light');
+            }
+            
+            // Lesson State initialisieren
+            initializeLessonState();
+            
+            // Event Listeners
+            initializePathNodes();
+            
+            // UI aktualisieren
+            updatePathUI();
+            updateProgress();
+            
+            // Erste verfügbare Lektion laden
+            const firstAvailable = Object.entries(lessons).find(([id, lesson]) => !lesson.locked);
+            if (firstAvailable) {
+                const lessonId = parseInt(firstAvailable[0]);
+                const lesson = firstAvailable[1];
+                loadLessonFromFile(lessonId, lesson.file);
+            }
+        }
+
+        // Keyboard Navigation
+        document.addEventListener('keydown', (e) => {
+            if (currentLesson) {
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    goToPreviousLesson();
+                } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    goToNextLesson();
+                }
+            }
+        });
+
+        // Globale Funktionen verfügbar machen
+        window.goToPreviousLesson = goToPreviousLesson;
+        window.goToNextLesson = goToNextLesson;
+        window.completeLesson = completeLesson;
+        window.toggleTheme = toggleTheme;
+
+        // App starten
+        document.addEventListener('DOMContentLoaded', initialize);
+    </script>
+</body>
+</html>
